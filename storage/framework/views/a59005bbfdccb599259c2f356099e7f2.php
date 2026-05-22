@@ -43,15 +43,7 @@
                 <span>🍜</span> Dong Anh Food Map
             </a>
             
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-            
-            <div class="nav-collapse" id="navCollapse">
+            <div class="nav-collapse main-nav-container" id="navCollapse">
                 <nav>
                 <ul class="nav-menu">
                     <li><a href="/" class="nav-link <?php echo e(request()->is('/') && !request()->has('cat') ? 'active' : ''); ?>">Trang chủ</a></li>
@@ -65,27 +57,34 @@
                         <li><a href="/admin/dashboard" class="nav-link <?php echo e(request()->is('admin*') ? 'active' : ''); ?>">Quản lý quán</a></li>
                     <?php endif; ?>
                 </ul>
-            </nav>
+                </nav>
             
-            <div class="user-actions">
-
-                <?php if(session()->has('user_id')): ?>
-                    <span style="font-size: 0.9rem; color: var(--text-muted);">
-                        Chào, <strong style="color: var(--primary);"><?php echo e(session('user_name')); ?></strong>
-                        <?php if(session('user_role') === 'admin'): ?>
-                            (Admin)
-                        <?php elseif(session('user_role') === 'seller'): ?>
-                            (Chủ quán)
-                        <?php endif; ?>
-                    </span>
-                    <form action="/auth/logout" method="POST" style="display: inline;">
-                        <?php echo csrf_field(); ?>
-                        <button type="submit" class="btn-secondary" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng xuất</button>
-                    </form>
-                <?php endif; ?>
-            </div>
-            
+                <div class="user-actions">
+                    <?php if(session()->has('user_id')): ?>
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">
+                            Chào, <strong style="color: var(--primary);"><?php echo e(session('user_name')); ?></strong>
+                            <?php if(session('user_role') === 'admin'): ?>
+                                (Admin)
+                            <?php elseif(session('user_role') === 'seller'): ?>
+                                (Chủ quán)
+                            <?php endif; ?>
+                        </span>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit" class="btn-secondary" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng xuất</button>
+                        </form>
+                    <?php else: ?>
+                        <a href="/auth/login" class="btn-secondary" style="text-decoration: none; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng nhập</a>
+                        <a href="/auth/register" class="btn-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng ký</a>
+                    <?php endif; ?>
+                </div>
             </div> <!-- End nav-collapse -->
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 

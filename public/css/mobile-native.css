@@ -85,6 +85,8 @@
     overflow-y: auto;
     z-index: 9998;
     display: flex !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
 }
 
 .nav-collapse.show {
