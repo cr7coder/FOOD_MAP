@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* Color Palette */
+    --bg-base: #09090b;
+    --bg-surface: #121215;
+    --bg-card: rgba(22, 22, 27, 0.65);
+    --border-glow: rgba(255, 255, 255, 0.1);
+    --border-glow-hover: rgba(255, 126, 41, 0.35);
+    
+    --primary: #ff7e29;
+    --primary-hover: #f04e23;
+    --primary-grad: linear-gradient(135deg, #ff7e29, #f04e23);
+    
+    --accent: #20b2aa;
+    --accent-grad: linear-gradient(135deg, #20b2aa, #008080);
+    
+    --text-main: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --text-dark: #09090b;
+    
+    /* Typography */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    
+    /* Layout constants */
+    --header-height: 72px;
+
+    /* Shadow and Glow system */
+    --shadow-main: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 20px 40px -10px rgba(255, 126, 41, 0.25);
+    --shadow-overlay: 0 20px 50px rgba(0, 0, 0, 0.9);
+    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.3);
+    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.5);
+    --bg-transparent: rgba(9, 9, 11, 0);
+}
+
+[data-theme="light"] {
+    /* Sleek Light Mode Color Palette */
+    --bg-base: #f8fafc; /* Sleeker soft light-blue gray background */
+    --bg-surface: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.7);
+    --bg-card-popup: rgba(255, 255, 255, 0.95);
+    --border-glow: rgba(15, 23, 42, 0.08);
+    --border-glow-hover: rgba(255, 126, 41, 0.35);
+    
+    --text-main: #0f172a; /* Sleek Slate 900 for modern premium text readability */
+    --text-muted: #64748b; /* Slate 500 */
+    --text-dark: #f8fafc;
+    
+    --bg-nav: rgba(255, 255, 255, 0.8);
+    --bg-input: #ffffff;
+    --bg-btn-secondary: rgba(15, 23, 42, 0.05);
+    --bg-btn-secondary-hover: rgba(15, 23, 42, 0.08);
+    --bg-table-hover: rgba(15, 23, 42, 0.02);
+    
+    --scrollbar-thumb: rgba(15, 23, 42, 0.15);
+
+    /* Shadow and Glow system in light mode */
+    --shadow-main: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 20px 40px -10px rgba(255, 126, 41, 0.15);
+    --shadow-overlay: 0 25px 50px rgba(0, 0, 0, 0.1);
+    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.2);
+    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.35);
+    --bg-transparent: rgba(248, 250, 252, 0);
+}

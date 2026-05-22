@@ -1,0 +1,113 @@
+.nav-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    gap: 30px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.5rem;
+    background: var(--primary-grad);
+    -webkit-background-clip: text;
+    background-clip: text; /* Fixed CSS warning at line 224: added standard background-clip */
+    -webkit-text-fill-color: transparent;
+    white-space: nowrap;
+}
+ 
+.mobile-menu-btn {
+    display: none; /* Hidden on desktop */
+}
+
+.nav-collapse {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+    font-family: var(--font-heading);
+    font-weight: 500;
+    flex-wrap: nowrap;
+}
+ 
+.nav-link {
+    white-space: nowrap;
+}
+ 
+.nav-link:hover {
+    color: var(--primary);
+}
+ 
+.nav-link.active {
+    color: var(--primary);
+    position: relative;
+}
+ 
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-grad);
+    border-radius: 2px;
+}
+ 
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    white-space: nowrap;
+}
+ 
+.user-actions span,
+.user-actions strong,
+.user-actions button,
+.user-actions a {
+    white-space: nowrap;
+}
+
+/* Footer styling */
+footer {
+    background: rgba(9, 9, 11, 0.98);
+    border-top: 1px solid var(--border-glow);
+    padding: 40px 0;
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+/* Ensure footer styles remain highly readable and dark in light mode */
+footer, footer p, footer a, footer div, footer span {
+    color: #9ca3af !important;
+}
+footer h1, footer h2, footer h3, footer h4, footer h5, footer h6, footer strong {
+    color: #ffffff !important;
+}
+footer a:hover {
+    color: var(--primary) !important;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.main-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 48px;
+}

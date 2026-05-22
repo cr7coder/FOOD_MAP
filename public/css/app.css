@@ -1,0 +1,27 @@
+/* ==========================================================================
+   TA-FOOD DIGITAL MAP MASTER STYLESHEET (DONG ANH FOOD MAP)
+   ========================================================================== */
+
+/* 1. Global design tokens, fonts, light & dark theme custom variables */
+@import './variables.css';
+
+/* 2. Global resets, glassmorphism templates, standard button states & badges */
+@import './base.css';
+
+/* 3. Global structural layouts, sticky glass header navigations & footer blocks */
+@import './layout.css';
+
+/* 4. Split screens, Leaflet popup wrappers, search panels & category sliders */
+@import './map-search.css';
+
+/* 5. Spotlight eatery listings, detail headers, pricing grids & reviews boxes */
+@import './eatery.css';
+
+/* 6. Premium food tour sliders, mood filters, interactive timeline nodes & journey views */
+@import './tours.css';
+
+/* 7. Admin control modules, delivery area polygon canvases, scratch modals & TikTok video Reels overlays */
+@import './features.css';
+
+/* 8. Media queries, screen breakpoints and mobile responsive system overrides */
+@import './responsive.css';

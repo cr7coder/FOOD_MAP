@@ -1,0 +1,257 @@
+/* Theme specific soft overrides */
+[data-theme="light"] .eatery-card:hover {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="light"] .detail-hero::before {
+    background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(244, 245, 247, 0.95) 100%);
+}
+
+[data-theme="light"] .dish-card {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="light"] .admin-table tr:hover {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="light"] .suggestion-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   GLOBAL PREMIUM MOBILE-NATIVE RESPONSIVE SYSTEM OVERRIDES (WHOLE WEBSITE)
+   ========================================================================== */
+
+/* 📱 Base Container Padding mobile-safety */
+@media (max-width: 576px) {
+    .container {
+        padding: 0 16px !important;
+    }
+}
+
+/* Removed old Header & Navigation Responsive Overrides to mobile-native.css */
+
+/* 📱 Homepage Map & Eatery List Split Layout Responsive overrides */
+@media (max-width: 768px) {
+    .split-screen {
+        flex-direction: column-reverse !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .split-list {
+        width: 100% !important;
+        padding: 16px !important;
+        overflow-y: visible !important;
+    }
+    .split-map-container {
+        width: 100% !important;
+        height: 320px !important;
+        border-left: none !important;
+        border-bottom: 1px solid var(--border-glow) !important;
+    }
+    .reels-floating-fab {
+        top: 15px !important;
+        left: 15px !important;
+        padding: 10px 18px !important;
+        font-size: 0.85rem !important;
+    }
+}
+
+/* 📱 Eatery Cards responsive stack */
+@media (max-width: 576px) {
+    .eatery-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 14px !important;
+        gap: 14px !important;
+        border-radius: 16px !important;
+    }
+    .eatery-img-wrapper {
+        width: 100% !important;
+        height: 180px !important;
+        border-radius: 12px !important;
+    }
+    .eatery-img {
+        border-radius: 12px !important;
+    }
+    .eatery-info {
+        padding: 0 !important;
+    }
+    .eatery-title {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* 📱 Detail Page Layout Responsive Overrides */
+@media (max-width: 992px) {
+    .detail-grid {
+        grid-template-columns: 1fr !important;
+        gap: 28px !important;
+        padding: 24px 0 !important;
+    }
+    .detail-hero {
+        height: 280px !important;
+    }
+    .detail-hero-content {
+        padding-bottom: 24px !important;
+    }
+}
+
+/* 📱 Menu grid & Dishes Responsive overrides */
+@media (max-width: 576px) {
+    .menu-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+    .dish-card {
+        padding: 12px !important;
+        gap: 12px !important;
+    }
+    .dish-img {
+        width: 75px !important;
+        height: 75px !important;
+    }
+}
+
+/* 📱 Admin & Seller dashboard sidebar Responsive overrides */
+@media (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column !important;
+    }
+    .admin-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-glow) !important;
+        padding: 16px !important;
+        gap: 8px !important;
+    }
+    .admin-content {
+        padding: 24px 16px !important;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+        margin-bottom: 24px !important;
+    }
+}
+
+/* 📱 Footer Grid Responsive overrides */
+@media (max-width: 768px) {
+    .footer-grid {
+        grid-template-columns: 1fr !important;
+        gap: 32px !important;
+        text-align: center !important;
+    }
+    .footer-grid ul {
+        align-items: center !important;
+    }
+}
+
+/* Responsive adjustments from original file */
+@media (max-width: 992px) {
+    .split-screen {
+        flex-direction: column-reverse;
+        height: auto;
+    }
+    
+    .split-list {
+        width: 100%;
+        overflow-y: visible;
+    }
+    
+    .split-map-container {
+        width: 100%;
+        height: 400px;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .admin-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-glow);
+    }
+}
+
+/* Styles for responsive TikTok reels phone frame */
+@media (max-width: 580px) {
+    #reelsPhoneFrame {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+    }
+    .nav-arrow-desktop {
+        display: none !important;
+    }
+}
+
+/* FadeIn keyframe */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 📱 Responsive overrides for Food Tour Layout */
+@media (max-width: 992px) {
+    .tour-layout {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 1fr 420px !important;
+        height: calc(100vh - 70px) !important;
+    }
+    .tour-sidebar-panel {
+        order: 2 !important;
+        width: 100% !important;
+        border-right: none !important;
+        border-top: 1px solid var(--border-glow) !important;
+    }
+    .tour-map-panel {
+        order: 1 !important;
+        height: 100% !important;
+    }
+    .start-journey-active .tour-sidebar-panel {
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+/* 💻 Laptop/Mid-sized Screen Header Scale-down Optimization (Prevents menu/auth overlaps) */
+@media (min-width: 992px) and (max-width: 1320px) {
+    .nav-wrapper {
+        gap: 15px !important;
+    }
+    .nav-menu {
+        gap: 16px !important;
+    }
+    .nav-link {
+        font-size: 0.85rem !important;
+    }
+    .user-actions {
+        gap: 8px !important;
+    }
+    .user-actions span {
+        font-size: 0.82rem !important;
+    }
+    .logo {
+        font-size: 1.25rem !important;
+    }
+}
