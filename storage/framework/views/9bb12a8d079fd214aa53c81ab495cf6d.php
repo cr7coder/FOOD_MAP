@@ -32,7 +32,11 @@
     <link rel="stylesheet" media="screen and (max-width: 992px)" href="<?php echo e(asset('css/mobile-native.css')); ?>?v=<?php echo e(time()); ?>">
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
-    <?php echo $__env->yieldContent('seo_schema'); ?>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
 <body>
 
     <!-- Liquid Background Gradient Blobs -->

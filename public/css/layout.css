@@ -40,15 +40,22 @@
 }
  
 .nav-link {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-muted);
     white-space: nowrap;
+    transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
 }
  
 .nav-link:hover {
     color: var(--primary);
+    transform: translateY(-1px);
 }
  
 .nav-link.active {
     color: var(--primary);
+    font-weight: 700;
     position: relative;
 }
  
@@ -58,9 +65,9 @@
     bottom: -6px;
     left: 0;
     width: 100%;
-    height: 2px;
+    height: 3px;
     background: var(--primary-grad);
-    border-radius: 2px;
+    border-radius: 4px;
 }
  
 .user-actions {

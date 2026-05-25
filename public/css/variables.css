@@ -10,8 +10,8 @@
     --border-glow-hover: rgba(255, 126, 41, 0.4);
     
     --primary: #ff7e29;
-    --primary-hover: #f04e23;
-    --primary-grad: linear-gradient(135deg, #ff7e29, #f04e23);
+    --primary-hover: #ff5e00;
+    --primary-grad: linear-gradient(135deg, #ff7e29 0%, #ec4899 100%);
     
     --accent: #20b2aa;
     --accent-grad: linear-gradient(135deg, #20b2aa, #008080);

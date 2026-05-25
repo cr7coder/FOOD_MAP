@@ -22,7 +22,10 @@
     <!-- Mobile Native Overrides (Only load for mobile) -->
     <link rel="stylesheet" media="screen and (max-width: 992px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
-    @yield('styles')
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body style="min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); margin: 0; padding: 0;">
 
