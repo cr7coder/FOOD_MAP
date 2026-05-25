@@ -27,38 +27,7 @@
     </div>
 @endif
 
-<!-- Dynamic Animated Success Status Toast -->
-@if(session('success'))
-    <div id="admin-success-toast" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); z-index: 9999; background: #0f172a; color: #ffffff; border-radius: 16px; padding: 24px 32px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; border: 1px solid rgba(255,255,255,0.1); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 320px; max-width: 90%;">
-        <div style="background: #10b981; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">✓</div>
-        <div>
-            <strong style="display: block; font-size: 1.05rem; color: #ffffff; margin-bottom: 4px;">Thao tác thành công!</strong>
-            <span style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; display: block;">{{ session('success') }}</span>
-        </div>
-        <button type="button" onclick="const t = document.getElementById('admin-success-toast'); t.style.opacity='0'; t.style.transform='translate(-50%, -50%) scale(0.9)'; t.style.pointerEvents='none';" class="btn-admin btn-admin-accent" style="padding: 8px 24px; font-size: 0.78rem; border-radius: 8px; margin-top: 6px; font-weight: bold; width: 100%;">Đồng ý</button>
-    </div>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const toast = document.getElementById('admin-success-toast');
-            if (toast) {
-                setTimeout(() => {
-                    toast.style.transform = 'translate(-50%, -50%) scale(1)';
-                    toast.style.opacity = '1';
-                    toast.style.pointerEvents = 'auto';
-                }, 150);
-                
-                setTimeout(() => {
-                    if (toast.style.opacity !== '0') {
-                        toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
-                        toast.style.opacity = '0';
-                        toast.style.pointerEvents = 'none';
-                    }
-                }, 4000); // Automatically fade out after 4s
-            }
-        });
-    </script>
-@endif
+
 
 <!-- ==========================================================================
      SUB-TAB WORKSPACE SWITCHER
@@ -833,8 +802,8 @@
                                 <th style="width: 130px;">Đánh giá</th>
                                 <th>Nội dung nhận xét</th>
                                 <th style="width: 130px;">Thời gian</th>
-                                @if(session('user_role') === 'admin')
-                                <th style="text-align: center; width: 100px;">Thao tác</th>
+                                @if(session('user_role') === 'admin' || session('user_role') === 'seller')
+                                <th style="text-align: center; width: 120px;">Thao tác</th>
                                 @endif
                             </tr>
                         </thead>
@@ -853,6 +822,31 @@
                                     </td>
                                     <td>
                                         <p style="font-size: 0.86rem; color: var(--admin-text-main); line-height: 1.5; margin: 0; white-space: pre-line;">{{ $rev->comment }}</p>
+                                        
+                                        <!-- Hiển thị phản hồi đã có của chủ quán -->
+                                        @if($rev->seller_reply)
+                                        <div style="margin-top: 8px; padding: 10px 14px; background-color: #f8fafc; border-left: 3px solid var(--admin-primary); border-radius: 6px; font-size: 0.82rem;">
+                                            <strong style="color: var(--admin-primary); display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">💬 Phản hồi của bạn:</strong>
+                                            <p style="margin: 0; color: var(--admin-text-main); font-style: italic;">{{ $rev->seller_reply }}</p>
+                                        </div>
+                                        @endif
+
+                                        <!-- Form phản hồi (Ẩn mặc định) -->
+                                        @if(session('user_role') === 'seller')
+                                        <div id="reply-form-{{ $rev->id }}" style="display: none; margin-top: 10px; padding: 12px; border: 1.5px solid var(--admin-border); border-radius: 8px; background-color: #f8fafc;">
+                                            <form action="/admin/reviews/{{ $rev->id }}/reply" method="POST">
+                                                @csrf
+                                                <div class="admin-form-group" style="margin-bottom: 8px;">
+                                                    <label class="admin-form-label" style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">Nội dung phản hồi khách hàng:</label>
+                                                    <textarea name="seller_reply" rows="2" class="admin-form-input" style="font-size: 0.82rem; padding: 6px 10px;" placeholder="Cảm ơn bạn đã phản hồi tốt về quán. Chúng tôi sẽ cố gắng phát huy tốt hơn nữa...">{{ $rev->seller_reply }}</textarea>
+                                                </div>
+                                                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                                    <button type="button" class="btn-admin btn-admin-secondary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;" onclick="toggleReplyForm({{ $rev->id }})">Hủy</button>
+                                                    <button type="submit" class="btn-admin btn-admin-primary" style="padding: 4px 12px; font-size: 0.72rem; border-radius: 6px;">💾 Lưu phản hồi</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <span style="font-size: 0.76rem; color: var(--admin-text-muted);">
@@ -868,6 +862,12 @@
                                                 🗑️ Xóa
                                             </button>
                                         </form>
+                                    </td>
+                                    @elseif(session('user_role') === 'seller')
+                                    <td style="text-align: center;">
+                                        <button type="button" class="btn-admin {{ $rev->seller_reply ? 'btn-admin-secondary' : 'btn-admin-accent' }}" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; font-weight: 700; cursor: pointer;" onclick="toggleReplyForm({{ $rev->id }})">
+                                            {{ $rev->seller_reply ? '✏️ Sửa PH' : '💬 Phản hồi' }}
+                                        </button>
                                     </td>
                                     @endif
                                 </tr>
@@ -1280,6 +1280,17 @@
     let pickerMap;
     let marker;
     let isMapLocked = hasEatery;
+
+    window.toggleReplyForm = function(reviewId) {
+        const formDiv = document.getElementById('reply-form-' + reviewId);
+        if (formDiv) {
+            if (formDiv.style.display === 'none') {
+                formDiv.style.display = 'block';
+            } else {
+                formDiv.style.display = 'none';
+            }
+        }
+    };
 
     window.toggleMapLock = function() {
         const btn = document.getElementById('btnMapLockToggle');

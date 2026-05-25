@@ -82,6 +82,7 @@ Route::prefix('admin')->group(function () {
 
     // Quản lý đánh giá của khách hàng
     Route::delete('/reviews/{id}', [AdminController::class, 'destroyReview'])->name('admin.review.destroy');
+    Route::post('/reviews/{id}/reply', [AdminController::class, 'replyReview'])->name('admin.review.reply');
 
     // Quản lý tài khoản User (Chỉ dành cho Admin tối cao)
     Route::get('/users', [AdminController::class, 'indexUsers'])->name('admin.users.index');

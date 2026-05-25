@@ -28,8 +28,8 @@
     <!-- Custom Theme Styling -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
-    <!-- Mobile Native Overrides (Only load for mobile) -->
-    <link rel="stylesheet" media="screen and (max-width: 992px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
+    <!-- Mobile Native Overrides (Only load for mobile and high zoom desktops) -->
+    <link rel="stylesheet" media="screen and (max-width: 1200px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
     @yield('seo_schema')

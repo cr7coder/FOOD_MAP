@@ -1,6 +1,4 @@
-@extends('layouts.food-tour')
-
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <style>
     /* Styling Leaflet custom premium popup to match design perfectly */
     .premium-leaflet-popup .leaflet-popup-content-wrapper {
@@ -13,7 +11,7 @@
         color: #0f172a !important;
     }
     
-    @if($tour->mood === 'cooking')
+    <?php if($tour->mood === 'cooking'): ?>
     .tour-layout,
     .premium-leaflet-popup,
     .leaflet-container,
@@ -32,7 +30,7 @@
         background: linear-gradient(to bottom, transparent, #10b981, #059669) !important;
         box-shadow: 0 0 12px rgba(16, 185, 129, 0.8) !important;
     }
-    @endif
+    <?php endif; ?>
     
     .premium-leaflet-popup .leaflet-popup-content {
         margin: 10px !important;
@@ -68,11 +66,11 @@
         transform: scale(1.05) !important;
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('title', $tour->name . ' - Hành trình Ẩm thực Đông Anh')
+<?php $__env->startSection('title', $tour->name . ' - Hành trình Ẩm thực Đông Anh'); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <!-- CSS Canvas for Confetti -->
 <div id="confettiContainer" class="confetti-container"></div>
 
@@ -107,14 +105,16 @@
 
         <!-- Static Hero Banner -->
         <div class="tour-sidebar-hero">
-            <img src="{{ $tour->thumbnail ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=800&q=80' }}" alt="{{ $tour->name }}">
+            <img src="<?php echo e($tour->thumbnail ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=800&q=80'); ?>" alt="<?php echo e($tour->name); ?>">
             <div class="tour-sidebar-hero-overlay">
                 <span style="background: var(--primary-grad, var(--primary)); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; width: fit-content; margin-bottom: 8px;">
-                    {{ $tour->difficulty }}
+                    <?php echo e($tour->difficulty); ?>
+
                 </span>
-                <h1 class="tour-sidebar-title">{{ $tour->name }}</h1>
+                <h1 class="tour-sidebar-title"><?php echo e($tour->name); ?></h1>
                 <p style="font-size: 0.78rem; color: rgba(255,255,255,0.7); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0;">
-                    {{ $tour->description }}
+                    <?php echo e($tour->description); ?>
+
                 </p>
             </div>
         </div>
@@ -128,28 +128,28 @@
                     <span style="font-size: 1.4rem;">⏱️</span>
                     <div>
                         <span style="display:block; font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Thời gian</span>
-                        <strong style="font-size:0.85rem; color:var(--text-main);">{{ $tour->duration }}</strong>
+                        <strong style="font-size:0.85rem; color:var(--text-main);"><?php echo e($tour->duration); ?></strong>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.4rem;">🚶</span>
                     <div>
                         <span style="display:block; font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Khoảng cách</span>
-                        <strong style="font-size:0.85rem; color:var(--text-main);">{{ $tour->distance }}</strong>
+                        <strong style="font-size:0.85rem; color:var(--text-main);"><?php echo e($tour->distance); ?></strong>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.4rem;">💰</span>
                     <div>
                         <span style="display:block; font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Ngân sách</span>
-                        <strong style="font-size:0.85rem; color:var(--text-main);">{{ $tour->budget }}</strong>
+                        <strong style="font-size:0.85rem; color:var(--text-main);"><?php echo e($tour->budget); ?></strong>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.4rem;">🕒</span>
                     <div>
                         <span style="display:block; font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Best Time</span>
-                        <strong style="font-size:0.85rem; color:var(--text-main);">{{ $tour->best_time }}</strong>
+                        <strong style="font-size:0.85rem; color:var(--text-main);"><?php echo e($tour->best_time); ?></strong>
                     </div>
                 </div>
             </div>
@@ -159,13 +159,13 @@
                 <h4 style="font-weight: 800; color: var(--primary); margin-bottom: 8px; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
                     <span>📜</span> Câu chuyện hành trình
                 </h4>
-                <p style="margin: 0;">{{ $tour->story }}</p>
+                <p style="margin: 0;"><?php echo e($tour->story); ?></p>
             </div>
 
             <!-- TIMELINE STOPS -->
             <div>
                 <h4 style="font-weight: 800; color: var(--text-main); font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                    <span>🗺️</span> @if($tour->mood === 'cooking') Lộ trình Trải nghiệm & Tự nấu @else Các Chặng Dừng Chân @endif
+                    <span>🗺️</span> <?php if($tour->mood === 'cooking'): ?> Lộ trình Trải nghiệm & Tự nấu <?php else: ?> Các Chặng Dừng Chân <?php endif; ?>
                 </h4>
                 
                 <div class="timeline-wrapper">
@@ -175,59 +175,61 @@
 
                     <!-- RPG-style Starter Location timeline item -->
                     <div class="timeline-item active" id="start-timeline-item" style="transition: all 0.4s ease;">
-                        <div class="timeline-badge" style="background: @if($tour->mood === 'cooking') linear-gradient(135deg, #10b981 0%, #059669 100%) @else linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) @endif; color: #ffffff; box-shadow: @if($tour->mood === 'cooking') 0 0 10px rgba(16, 185, 129, 0.4) @else 0 0 10px rgba(59, 130, 246, 0.4) @endif; font-size: 0.75rem;">📍</div>
-                        <div class="timeline-card" onclick="focusStartLocation()" style="background: @if($tour->mood === 'cooking') rgba(16, 185, 129, 0.05) @else rgba(59, 130, 246, 0.05) @endif; border: 1.5px solid @if($tour->mood === 'cooking') rgba(16, 185, 129, 0.25) @else rgba(59, 130, 246, 0.25) @endif; box-shadow: 0 0 15px rgba(59, 130, 246, 0.05); cursor: pointer;">
+                        <div class="timeline-badge" style="background: <?php if($tour->mood === 'cooking'): ?> linear-gradient(135deg, #10b981 0%, #059669 100%) <?php else: ?> linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) <?php endif; ?>; color: #ffffff; box-shadow: <?php if($tour->mood === 'cooking'): ?> 0 0 10px rgba(16, 185, 129, 0.4) <?php else: ?> 0 0 10px rgba(59, 130, 246, 0.4) <?php endif; ?>; font-size: 0.75rem;">📍</div>
+                        <div class="timeline-card" onclick="focusStartLocation()" style="background: <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.05) <?php else: ?> rgba(59, 130, 246, 0.05) <?php endif; ?>; border: 1.5px solid <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.25) <?php else: ?> rgba(59, 130, 246, 0.25) <?php endif; ?>; box-shadow: 0 0 15px rgba(59, 130, 246, 0.05); cursor: pointer;">
                             <div class="timeline-card-header">
-                                <h5 class="timeline-card-title" style="color: @if($tour->mood === 'cooking') #10b981 @else #3b82f6 @endif; font-weight: 800; font-size: 0.78rem;">🚩 Điểm Xuất Phát Của Bạn</h5>
-                                <span class="timeline-card-meta" style="background: @if($tour->mood === 'cooking') rgba(16, 185, 129, 0.15) @else rgba(59, 130, 246, 0.15) @endif; color: @if($tour->mood === 'cooking') #10b981 @else #3b82f6 @endif; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 800;">SẴN SÀNG</span>
+                                <h5 class="timeline-card-title" style="color: <?php if($tour->mood === 'cooking'): ?> #10b981 <?php else: ?> #3b82f6 <?php endif; ?>; font-weight: 800; font-size: 0.78rem;">🚩 Điểm Xuất Phát Của Bạn</h5>
+                                <span class="timeline-card-meta" style="background: <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.15) <?php else: ?> rgba(59, 130, 246, 0.15) <?php endif; ?>; color: <?php if($tour->mood === 'cooking'): ?> #10b981 <?php else: ?> #3b82f6 <?php endif; ?>; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 800;">SẴN SÀNG</span>
                             </div>
                             <p style="font-size: 0.72rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
-                                Hệ thống định vị GPS đã sẵn sàng. Hãy bấm nút <strong style="color: var(--primary);">@if($tour->mood === 'cooking') Bắt đầu Trải nghiệm @else Bắt đầu Food Tour @endif</strong> bên dưới để chính thức mở khóa chặng khám phá đầu tiên nhé!
+                                Hệ thống định vị GPS đã sẵn sàng. Hãy bấm nút <strong style="color: var(--primary);"><?php if($tour->mood === 'cooking'): ?> Bắt đầu Trải nghiệm <?php else: ?> Bắt đầu Food Tour <?php endif; ?></strong> bên dưới để chính thức mở khóa chặng khám phá đầu tiên nhé!
                             </p>
                         </div>
                     </div>
 
-                    @foreach($tour->stops as $index => $stop)
-                        <div class="timeline-item" id="stop-item-{{ $index }}" data-index="{{ $index }}" data-lat="{{ $stop->eatery->latitude }}" data-lng="{{ $stop->eatery->longitude }}" data-name="{{ $stop->eatery->name }}">
-                            <div class="timeline-badge">{{ $index + 1 }}</div>
-                            <div class="timeline-card" onclick="selectStop({{ $index }})">
+                    <?php $__currentLoopData = $tour->stops; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $stop): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="timeline-item" id="stop-item-<?php echo e($index); ?>" data-index="<?php echo e($index); ?>" data-lat="<?php echo e($stop->eatery->latitude); ?>" data-lng="<?php echo e($stop->eatery->longitude); ?>" data-name="<?php echo e($stop->eatery->name); ?>">
+                            <div class="timeline-badge"><?php echo e($index + 1); ?></div>
+                            <div class="timeline-card" onclick="selectStop(<?php echo e($index); ?>)">
                                 <div class="timeline-card-header" style="flex-direction: column; align-items: flex-start; gap: 4px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                                        @if($tour->mood === 'cooking')
-                                            @if($index === 0)
+                                        <?php if($tour->mood === 'cooking'): ?>
+                                            <?php if($index === 0): ?>
                                                 <span style="font-size: 0.62rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">🥦 Bước 1: Ghé Chợ Chọn Nguyên Liệu</span>
-                                            @elseif($index === 1)
+                                            <?php elseif($index === 1): ?>
                                                 <span style="font-size: 0.62rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">👩‍🍳 Bước 2: Học làm cùng Nghệ nhân</span>
-                                            @elseif($index === 2)
+                                            <?php elseif($index === 2): ?>
                                                 <span style="font-size: 0.62rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">🔥 Bước 3: Tự nấu & Thưởng thức</span>
-                                            @else
-                                                <span style="font-size: 0.62rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">✨ Bước {{ $index + 1 }}: Trải nghiệm bản địa</span>
-                                            @endif
-                                        @endif
+                                            <?php else: ?>
+                                                <span style="font-size: 0.62rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px;">✨ Bước <?php echo e($index + 1); ?>: Trải nghiệm bản địa</span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                     
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 4px;">
                                         <h5 class="timeline-card-title" style="margin: 0; font-size: 0.8rem; font-weight: 800; color: var(--text-main);">
-                                            {{ $stop->eatery->category->icon ?: '🍜' }} {{ $stop->eatery->name }}
+                                            <?php echo e($stop->eatery->category->icon ?: '🍜'); ?> <?php echo e($stop->eatery->name); ?>
+
                                         </h5>
-                                        <span class="timeline-card-meta">⏱️ {{ $stop->estimated_time ?: '45 phút' }}</span>
+                                        <span class="timeline-card-meta">⏱️ <?php echo e($stop->estimated_time ?: '45 phút'); ?></span>
                                     </div>
                                 </div>
                                 <p style="font-size: 0.72rem; color: var(--text-muted); margin: 6px 0 0 0; display: flex; align-items: center; gap: 4px;">
-                                    <span>📍</span> {{ $stop->eatery->address }}
+                                    <span>📍</span> <?php echo e($stop->eatery->address); ?>
+
                                 </p>
                                 
                                 <!-- Detailed story toggled when active -->
                                 <div class="timeline-card-story">
                                     <div style="position: relative; height: 120px; border-radius: 8px; overflow: hidden; margin-bottom: 10px;">
-                                        <img src="{{ $stop->eatery->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80' }}" style="width:100%; height:100%; object-fit:cover;">
+                                        <img src="<?php echo e($stop->eatery->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'); ?>" style="width:100%; height:100%; object-fit:cover;">
                                     </div>
-                                    <p style="margin: 0 0 12px 0;">{{ $stop->stop_story }}</p>
+                                    <p style="margin: 0 0 12px 0;"><?php echo e($stop->stop_story); ?></p>
 
-                                    @if($tour->mood === 'cooking')
+                                    <?php if($tour->mood === 'cooking'): ?>
                                         <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px; margin-bottom: 12px; font-size: 0.72rem; line-height: 1.45; animation: fadeIn 0.4s ease;">
-                                            @if($tour->slug === 'tu-tay-lam-dac-san-co-loa')
-                                                @if($index === 0)
+                                            <?php if($tour->slug === 'tu-tay-lam-dac-san-co-loa'): ?>
+                                                <?php if($index === 0): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛍️</span>
                                                         <div><strong style="color: #10b981;">Cần mua:</strong> Gạo nếp cái hoa vàng ngon & rau sống tươi ven sông Đuống.</div>
@@ -240,7 +242,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Lựa nông sản quê tươi rói và tập mặc cả duyên dáng chuẩn chợ quê.</div>
                                                     </div>
-                                                @elseif($index === 1)
+                                                <?php elseif($index === 1): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛠️</span>
                                                         <div><strong style="color: #10b981;">Chuẩn bị:</strong> Bột gạo tẻ ngâm ủ chua, khuôn gỗ ép & cối xay đá cổ truyền.</div>
@@ -253,7 +255,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Tự tay xoay cối xay bột, ép bún vào nồi nước sôi sùng sục vớt ăn liền.</div>
                                                     </div>
-                                                @elseif($index === 2)
+                                                <?php elseif($index === 2): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🍳</span>
                                                         <div><strong style="color: #10b981;">Tự nấu gì:</strong> Bún thịt nướng ngói mộc mạc thơm lừng chấm mắm chanh ớt.</div>
@@ -266,9 +268,9 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Quạt bếp lò than hoa, nướng thịt trên ngói đất và thưởng thức đĩa bún tự tay làm 100%.</div>
                                                     </div>
-                                                @endif
-                                            @elseif($tour->slug === 'goi-banh-chung-xanh-tranh-khuc')
-                                                @if($index === 0)
+                                                <?php endif; ?>
+                                            <?php elseif($tour->slug === 'goi-banh-chung-xanh-tranh-khuc'): ?>
+                                                <?php if($index === 0): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛍️</span>
                                                         <div><strong style="color: #10b981;">Cần mua:</strong> Lá dong rừng bản to xanh mướt & bó lạt giang dẻo dai.</div>
@@ -281,7 +283,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Đo kích thước lá dong tươi bằng gang tay và học cách tước cuống lá dong nghệ thuật.</div>
                                                     </div>
-                                                @elseif($index === 1)
+                                                <?php elseif($index === 1): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛠️</span>
                                                         <div><strong style="color: #10b981;">Chuẩn bị:</strong> Gạo nếp nhung đã vo sạch, đậu xanh đồ nhuyễn, thịt ba chỉ ướp tiêu đen.</div>
@@ -294,7 +296,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Học gói bánh vuông vức không cần khuôn, xếp bánh đều vào nồi củi đỏ rực.</div>
                                                     </div>
-                                                @elseif($index === 2)
+                                                <?php elseif($index === 2): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🍳</span>
                                                         <div><strong style="color: #10b981;">Tự nấu gì:</strong> Bánh chưng nóng hổi vớt lò ăn kèm hành muối chua ngọt giòn rụm.</div>
@@ -307,9 +309,9 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Thưởng thức đĩa bánh chưng nóng nổi khói nghi ngút bên đầm nước lộng gió Vân Trì.</div>
                                                     </div>
-                                                @endif
-                                            @elseif($tour->slug === 'u-tuong-nep-dat-nung-van-ha')
-                                                @if($index === 0)
+                                                <?php endif; ?>
+                                            <?php elseif($tour->slug === 'u-tuong-nep-dat-nung-van-ha'): ?>
+                                                <?php if($index === 0): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛍️</span>
                                                         <div><strong style="color: #10b981;">Cần mua:</strong> Vại sành đất nung Hương Canh cỡ nhỏ & nia tre đan thủ công.</div>
@@ -322,7 +324,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Gõ nhẹ vại sành nghe tiếng kêu đanh giòn để chọn chiếc kín kẽ nhất.</div>
                                                     </div>
-                                                @elseif($index === 1)
+                                                <?php elseif($index === 1): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🛠️</span>
                                                         <div><strong style="color: #10b981;">Chuẩn bị:</strong> Gạo nếp đồ xôi vàng óng, lá nhãn tơ tươi rói, nước giếng đá ong cổ.</div>
@@ -335,7 +337,7 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Đồ xôi nếp vàng, rải đều lên nia, phủ lá nhãn tơ ủ mốc tương tự nhiên.</div>
                                                     </div>
-                                                @elseif($index === 2)
+                                                <?php elseif($index === 2): ?>
                                                     <div style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px;">
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">🍳</span>
                                                         <div><strong style="color: #10b981;">Tự nấu gì:</strong> Nước chấm chao tương nếp béo ngậy ăn kèm rau muống luộc giòn.</div>
@@ -348,38 +350,38 @@
                                                         <span style="font-size: 0.95rem; flex-shrink: 0; margin-top: 1px;">✨</span>
                                                         <div><strong style="color: #10b981;">Trải nghiệm:</strong> Vừa ngắm trọn vẹn cầu Nhật Tân tráng lệ vừa thưởng thức bát nước tương bùi ngọt tự làm.</div>
                                                     </div>
-                                                @endif
-                                            @endif
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                     
                                     <div style="display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; flex-wrap: wrap;">
                                         <!-- Check-in button -->
-                                        <button class="checkin-action-btn" onclick="triggerCheckIn(event, {{ $index }})" style="flex: 1 1 100%; padding: 10px 12px; border-radius: 8px; background: @if($tour->mood === 'cooking') linear-gradient(135deg, #10b981 0%, #059669 100%) @else #ff7e29 @endif; border: none; color: #ffffff; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.3s ease; margin-bottom: 4px;">
-                                            <span class="check-icon-{{ $index }}">✍️</span> <span class="check-text-{{ $index }}">Đánh giá & Check-in</span>
+                                        <button class="checkin-action-btn" onclick="triggerCheckIn(event, <?php echo e($index); ?>)" style="flex: 1 1 100%; padding: 10px 12px; border-radius: 8px; background: <?php if($tour->mood === 'cooking'): ?> linear-gradient(135deg, #10b981 0%, #059669 100%) <?php else: ?> #ff7e29 <?php endif; ?>; border: none; color: #ffffff; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.3s ease; margin-bottom: 4px;">
+                                            <span class="check-icon-<?php echo e($index); ?>">✍️</span> <span class="check-text-<?php echo e($index); ?>">Đánh giá & Check-in</span>
                                         </button>
                                         
                                         <!-- Directions link -->
-                                        <a href="https://www.google.com/maps/dir/?api=1{{ $index === 0 ? '' : '&origin='.$tour->stops[$index - 1]->eatery->latitude.','.$tour->stops[$index - 1]->eatery->longitude }}&destination={{ $stop->eatery->latitude }},{{ $stop->eatery->longitude }}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: @if($tour->mood === 'cooking') rgba(16, 185, 129, 0.4) @else rgba(255, 126, 41, 0.4) @endif; color: var(--primary);">
+                                        <a href="https://www.google.com/maps/dir/?api=1<?php echo e($index === 0 ? '' : '&origin='.$tour->stops[$index - 1]->eatery->latitude.','.$tour->stops[$index - 1]->eatery->longitude); ?>&destination=<?php echo e($stop->eatery->latitude); ?>,<?php echo e($stop->eatery->longitude); ?>" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.4) <?php else: ?> rgba(255, 126, 41, 0.4) <?php endif; ?>; color: var(--primary);">
                                             🗺️ Chỉ đường
                                         </a>
 
                                         <!-- Quick show details link -->
-                                        <a href="/dia-diem/dac-san/{{ $stop->eatery->slug }}" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">
+                                        <a href="/dia-diem/dac-san/<?php echo e($stop->eatery->slug); ?>" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">
                                             Chi tiết quán
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
             <!-- Start Journey Mode Activation Panel -->
             <div id="setupControlsPanel" style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px;">
-                <button class="btn-primary start-journey-btn" onclick="enterJourneyMode()" style="width: 100%; background: @if($tour->mood === 'cooking') linear-gradient(135deg, #10b981 0%, #059669 100%) @else var(--primary-grad) @endif; box-shadow: @if($tour->mood === 'cooking') 0 8px 24px rgba(16, 185, 129, 0.3) @else 0 8px 24px rgba(255, 126, 41, 0.3) @endif; padding: 12px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    🚀 @if($tour->mood === 'cooking') Bắt đầu Trải nghiệm & Tự nấu @else Bắt đầu Food Tour @endif
+                <button class="btn-primary start-journey-btn" onclick="enterJourneyMode()" style="width: 100%; background: <?php if($tour->mood === 'cooking'): ?> linear-gradient(135deg, #10b981 0%, #059669 100%) <?php else: ?> var(--primary-grad) <?php endif; ?>; box-shadow: <?php if($tour->mood === 'cooking'): ?> 0 8px 24px rgba(16, 185, 129, 0.3) <?php else: ?> 0 8px 24px rgba(255, 126, 41, 0.3) <?php endif; ?>; padding: 12px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    🚀 <?php if($tour->mood === 'cooking'): ?> Bắt đầu Trải nghiệm & Tự nấu <?php else: ?> Bắt đầu Food Tour <?php endif; ?>
                 </button>
                 
                 <button class="btn-secondary" onclick="startCinematicShowcase()" style="width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--border-glow); background: rgba(255,255,255,0.02); color: var(--text-main); cursor: pointer;">
@@ -416,9 +418,9 @@
     </div>
 
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@php
+<?php
     $mappedStops = $tour->stops->map(function($stop) {
         return [
             'id' => $stop->eatery->id,
@@ -432,14 +434,14 @@
             'slug' => $stop->eatery->slug
         ];
     });
-@endphp
+?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
     // 1. Parse stops coordinates from Eloquent collection
-    const stopsData = @json($mappedStops);
-    const isUserLoggedIn = @json(auth()->check());
-    const tourMood = @json($tour->mood);
+    const stopsData = <?php echo json_encode($mappedStops, 15, 512) ?>;
+    const isUserLoggedIn = <?php echo json_encode(auth()->check(), 15, 512) ?>;
+    const tourMood = <?php echo json_encode($tour->mood, 15, 512) ?>;
 
     let map = null;
     let markersList = [];
@@ -509,12 +511,12 @@
             completedStops: Array.from(completedStops),
             checkInReviews: checkInReviews
         };
-        localStorage.setItem(`food_tour_state_{{ $tour->slug }}`, JSON.stringify(state));
+        localStorage.setItem(`food_tour_state_<?php echo e($tour->slug); ?>`, JSON.stringify(state));
     }
 
     // Load active food tour progress from LocalStorage
     function loadTourStateFromLocalStorage() {
-        const saved = localStorage.getItem(`food_tour_state_{{ $tour->slug }}`);
+        const saved = localStorage.getItem(`food_tour_state_<?php echo e($tour->slug); ?>`);
         if (!saved) return false;
         try {
             const state = JSON.parse(saved);
@@ -1055,7 +1057,7 @@
 
     function exitJourneyMode() {
         isJourneyMode = false;
-        localStorage.removeItem(`food_tour_state_{{ $tour->slug }}`);
+        localStorage.removeItem(`food_tour_state_<?php echo e($tour->slug); ?>`);
         
         // Restore start timeline item state
         const startItem = document.getElementById('start-timeline-item');
@@ -1423,12 +1425,12 @@
     function exitAndGoHome() {
         closeCompletionModal();
         exitJourneyMode();
-        const targetUrl = '{{ $tour->mood }}' === 'cooking' ? '/cooking-tours' : '/food-tours';
+        const targetUrl = '<?php echo e($tour->mood); ?>' === 'cooking' ? '/cooking-tours' : '/food-tours';
         window.location.href = targetUrl;
     }
 
     function shareCompletion() {
-        const tourName = "{{ $tour->name }}";
+        const tourName = "<?php echo e($tour->name); ?>";
         const shareText = `🏆 Tôi đã hoàn thành xuất sắc chuyến hành trình Food Tour "${tourName}" trên Bản đồ số Ẩm thực Đông Anh! Khám phá ngay chặng đường ẩm thực tuyệt vời tại đây nhé:`;
         const shareUrl = window.location.href;
 
@@ -1829,11 +1831,11 @@
                 : false
         };
 
-        fetch('/api/food-tours/{{ $tour->id }}/diary', {
+        fetch('/api/food-tours/<?php echo e($tour->id); ?>/diary', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                 'Accept': 'application/json'
             },
             body: JSON.stringify(payload)
@@ -1846,7 +1848,7 @@
                 exitJourneyMode();
                 
                 // Redirect back to respective food tours / cooking tours list page!
-                const targetUrl = '{{ $tour->mood }}' === 'cooking' ? '/cooking-tours' : '/food-tours';
+                const targetUrl = '<?php echo e($tour->mood); ?>' === 'cooking' ? '/cooking-tours' : '/food-tours';
                 window.location.href = targetUrl;
             } else {
                 alert("❌ Lỗi khi lưu nhật ký: " + (data.message || "Vui lòng thử lại sau."));
@@ -2077,7 +2079,7 @@
         <div style="text-align: center; margin-bottom: 10px;">
             <span style="font-size: 2rem; display: block; animation: bounce 2s infinite; margin-bottom: 2px;">🏆</span>
             <span style="background: rgba(255,126,41,0.1); color: var(--primary); padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.6px; display: inline-block; margin-bottom: 3px;">CHỨNG NHẬN HOÀN THÀNH</span>
-            <h2 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0 0 2px 0; line-height: 1.2;">{{ $tour->name }}</h2>
+            <h2 style="font-size: 1.25rem; font-weight: 900; color: #0f172a; margin: 0 0 2px 0; line-height: 1.2;"><?php echo e($tour->name); ?></h2>
             <p style="font-size: 0.75rem; color: #64748b; margin: 0;">Chúc mừng bạn đã chinh phục 100% chặng đường!</p>
         </div>
         
@@ -2111,24 +2113,24 @@
                 <input type="file" id="tourCoverInput" accept="image/*" onchange="handleTourCoverSelection(event)" style="display: none;" />
             </div>
  
-            @if($tour->is_ai_generated && $tour->status === 'draft')
+            <?php if($tour->is_ai_generated && $tour->status === 'draft'): ?>
             <!-- 🌍 Chia sẻ lên Cộng đồng AI Tour (chỉ hiện với AI Tour) -->
-            <div id="shareCommunityBox" style="margin-bottom: 8px; padding: 10px 12px; border-radius: 10px; background: @if($tour->mood === 'cooking') linear-gradient(135deg, rgba(16,185,129,0.08), rgba(52,211,153,0.05)) @else linear-gradient(135deg, rgba(255,126,41,0.08), rgba(255,180,80,0.05)) @endif; border: 1.5px solid @if($tour->mood === 'cooking') rgba(16,185,129,0.25) @else rgba(255,126,41,0.25) @endif;">
+            <div id="shareCommunityBox" style="margin-bottom: 8px; padding: 10px 12px; border-radius: 10px; background: <?php if($tour->mood === 'cooking'): ?> linear-gradient(135deg, rgba(16,185,129,0.08), rgba(52,211,153,0.05)) <?php else: ?> linear-gradient(135deg, rgba(255,126,41,0.08), rgba(255,180,80,0.05)) <?php endif; ?>; border: 1.5px solid <?php if($tour->mood === 'cooking'): ?> rgba(16,185,129,0.25) <?php else: ?> rgba(255,126,41,0.25) <?php endif; ?>;">
                 <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
                     <div style="position: relative; flex-shrink: 0; margin-top: 1px;">
-                        <input type="checkbox" id="shareToCommunityToggle" style="width: 16px; height: 16px; accent-color: @if($tour->mood === 'cooking') #10b981 @else #ff7e29 @endif; cursor: pointer;">
+                        <input type="checkbox" id="shareToCommunityToggle" style="width: 16px; height: 16px; accent-color: <?php if($tour->mood === 'cooking'): ?> #10b981 <?php else: ?> #ff7e29 <?php endif; ?>; cursor: pointer;">
                     </div>
                     <div>
                         <span style="font-size: 0.78rem; font-weight: 800; color: #334155; display: block; line-height: 1.3;">
-                            🌍 Chia sẻ lộ trình này lên cộng đồng @if($tour->mood === 'cooking') Hành trình @else Food Tour @endif
+                            🌍 Chia sẻ lộ trình này lên cộng đồng <?php if($tour->mood === 'cooking'): ?> Hành trình <?php else: ?> Food Tour <?php endif; ?>
                         </span>
                         <span style="font-size: 0.7rem; color: #64748b; display: block; margin-top: 2px; line-height: 1.4;">
-                            Lộ trình sẽ hiển thị công khai trong <strong style="color: @if($tour->mood === 'cooking') #10b981 @else #ff7e29 @endif;">72 giờ</strong> để người dùng khác có thể khám phá và trải nghiệm.
+                            Lộ trình sẽ hiển thị công khai trong <strong style="color: <?php if($tour->mood === 'cooking'): ?> #10b981 <?php else: ?> #ff7e29 <?php endif; ?>;">72 giờ</strong> để người dùng khác có thể khám phá và trải nghiệm.
                         </span>
                     </div>
                 </label>
             </div>
-            @endif
+            <?php endif; ?>
 
             <!-- 3. Overall Comment Input -->
             <div style="margin-bottom: 8px;">
@@ -2152,7 +2154,7 @@
         
         <div style="display: flex; flex-direction: column; gap: 6px;">
             <!-- Save Journey Diary: primary completion success action! -->
-            <button onclick="saveJourneyDiary()" class="btn-primary" style="width: 100%; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: @if($tour->mood === 'cooking') 0 0 10px rgba(16, 185, 129, 0.25) @else 0 0 10px rgba(255, 126, 41, 0.25) @endif; background: @if($tour->mood === 'cooking') linear-gradient(135deg, #10b981 0%, #059669 100%) @else linear-gradient(135deg, #ff7e29 0%, #ff5e00 100%) @endif;">
+            <button onclick="saveJourneyDiary()" class="btn-primary" style="width: 100%; padding: 8px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: <?php if($tour->mood === 'cooking'): ?> 0 0 10px rgba(16, 185, 129, 0.25) <?php else: ?> 0 0 10px rgba(255, 126, 41, 0.25) <?php endif; ?>; background: <?php if($tour->mood === 'cooking'): ?> linear-gradient(135deg, #10b981 0%, #059669 100%) <?php else: ?> linear-gradient(135deg, #ff7e29 0%, #ff5e00 100%) <?php endif; ?>;">
                 💾 Lưu Nhật Ký Chuyến Đi (Hoàn Thành)
             </button>
             <div style="display: flex; gap: 6px;">
@@ -2232,7 +2234,7 @@
 </div>
 
 <!-- 16. Community Diaries Modal -->
-@if(isset($diaries) && count($diaries) > 0)
+<?php if(isset($diaries) && count($diaries) > 0): ?>
 <div id="communityDiariesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10005; align-items: center; justify-content: center; animation: fadeIn 0.3s ease;">
     <div style="width: 90%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column; padding: 24px 20px; border-radius: 24px; background: rgba(26, 26, 38, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1.5px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4); color: #ffffff; position: relative;">
         
@@ -2240,94 +2242,101 @@
         
         <h3 style="font-weight: 800; color: #ffffff; font-size: 1.25rem; margin: 0 0 16px 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px;">
             📖 Nhật ký Cộng đồng
-            <span style="font-size: 0.75rem; background: rgba(255,126,41,0.15); border: 1px solid rgba(255,126,41,0.3); color: #ffb03a; padding: 3px 10px; border-radius: 20px; font-weight: 800;">{{ count($diaries) }} đánh giá</span>
+            <span style="font-size: 0.75rem; background: rgba(255,126,41,0.15); border: 1px solid rgba(255,126,41,0.3); color: #ffb03a; padding: 3px 10px; border-radius: 20px; font-weight: 800;"><?php echo e(count($diaries)); ?> đánh giá</span>
         </h3>
         
         <!-- scrollable content -->
         <div style="flex: 1; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 16px;">
-            @foreach($diaries as $diary)
+            <?php $__currentLoopData = $diaries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $diary): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div style="padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); transition: transform 0.2s;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ff7e29 0%, #ff5e00 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; box-shadow: 0 2px 8px rgba(255, 126, 41, 0.4);">
-                                {{ substr($diary->user ? $diary->user->name : 'TK', 0, 2) }}
+                                <?php echo e(substr($diary->user ? $diary->user->name : 'TK', 0, 2)); ?>
+
                             </div>
                             <div>
                                 <strong style="font-size: 0.85rem; color: #ffffff; display: block;">
-                                    {{ $diary->user ? $diary->user->name : 'Thực khách Food Tour' }}
+                                    <?php echo e($diary->user ? $diary->user->name : 'Thực khách Food Tour'); ?>
+
                                 </strong>
                                 <span style="font-size: 0.65rem; color: rgba(255,255,255,0.5); display: block; margin-top: 1px;">
-                                    📅 {{ $diary->created_at->format('d/m/Y H:i') }}
+                                    📅 <?php echo e($diary->created_at->format('d/m/Y H:i')); ?>
+
                                 </span>
                             </div>
                         </div>
-                        @if($diary->rating)
+                        <?php if($diary->rating): ?>
                         <div style="color: #ffb03a; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 3px; background: rgba(255,176,58,0.15); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(255,176,58,0.2);">
-                            <span>⭐</span><strong>{{ $diary->rating }}</strong>
+                            <span>⭐</span><strong><?php echo e($diary->rating); ?></strong>
                         </div>
-                        @else
+                        <?php else: ?>
                         <div style="color: #10b981; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 3px; background: rgba(16, 185, 129, 0.15); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2);">
                             <span>✅</span><strong>Hoàn thành</strong>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                     
-                    @if($diary->comment)
+                    <?php if($diary->comment): ?>
                     <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: rgba(255,255,255,0.8); font-style: italic; line-height: 1.5;">
-                        "{{ $diary->comment }}"
+                        "<?php echo e($diary->comment); ?>"
                     </p>
-                    @endif
+                    <?php endif; ?>
                     
-                    @if($diary->image_path)
+                    <?php if($diary->image_path): ?>
                         <div style="position: relative; height: 160px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                            <img src="{{ $diary->image_path }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="<?php echo e($diary->image_path); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <span style="position: absolute; bottom: 8px; right: 8px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); font-size: 0.6rem; color: #ffffff; padding: 4px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase;">📸 Kỷ niệm Selfie</span>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Mini stop-by-stop check-in list preview -->
-                    @if(!empty($diary->stop_reviews))
+                    <?php if(!empty($diary->stop_reviews)): ?>
                         <div style="margin-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px;">
                             <span style="font-size: 0.65rem; color: rgba(255,255,255,0.5); display: block; margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📍 Check-in tại các chặng dừng:</span>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
-                                @foreach($diary->stop_reviews as $stopIdx => $stopRev)
-                                    @php
+                                <?php $__currentLoopData = $diary->stop_reviews; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $stopIdx => $stopRev): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $stopEatery = $tour->stops[$stopIdx]->eatery ?? null;
-                                    @endphp
-                                    @if($stopEatery)
+                                    ?>
+                                    <?php if($stopEatery): ?>
                                         <div style="background: rgba(255,255,255,0.02); border-radius: 10px; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.05);">
                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                                 <span style="font-size: 0.75rem; font-weight: 800; color: #ffffff;">
-                                                    {{ $stopEatery->category->icon ?: '🍜' }} {{ $stopEatery->name }}
+                                                    <?php echo e($stopEatery->category->icon ?: '🍜'); ?> <?php echo e($stopEatery->name); ?>
+
                                                 </span>
                                                 <span style="color: #ffb03a; font-size: 0.65rem; display: flex; align-items: center; gap: 2px;">
-                                                    @if(!empty($stopRev['rating']))
-                                                        ⭐{{ $stopRev['rating'] }}
-                                                    @else
+                                                    <?php if(!empty($stopRev['rating'])): ?>
+                                                        ⭐<?php echo e($stopRev['rating']); ?>
+
+                                                    <?php else: ?>
                                                         ✅ Đã đến
-                                                    @endif
+                                                    <?php endif; ?>
                                                 </span>
                                             </div>
-                                            @if(!empty($stopRev['comment']))
+                                            <?php if(!empty($stopRev['comment'])): ?>
                                             <p style="margin: 0; font-size: 0.75rem; color: rgba(255,255,255,0.6); font-style: italic; line-height: 1.4;">
-                                                "{{ $stopRev['comment'] }}"
+                                                "<?php echo e($stopRev['comment']); ?>"
                                             </p>
-                                            @endif
-                                            @if(!empty($stopRev['image_path']))
+                                            <?php endif; ?>
+                                            <?php if(!empty($stopRev['image_path'])): ?>
                                                 <div style="position: relative; height: 100px; border-radius: 8px; overflow: hidden; margin-top: 6px; border: 1px solid rgba(255,255,255,0.08);">
-                                                    <img src="{{ $stopRev['image_path'] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                    <img src="<?php echo e($stopRev['image_path']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
-                                @endforeach
+                                    <?php endif; ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
 </div>
-@endif
-@endsection
+<?php endif; ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.food-tour', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\FOODDA\FOOD_MAP\resources\views/food-tours/show.blade.php ENDPATH**/ ?>

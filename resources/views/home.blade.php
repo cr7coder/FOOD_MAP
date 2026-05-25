@@ -133,68 +133,56 @@
 </section>
 
 <!-- Fullscreen Reels Modal -->
-<div id="reelsModal" class="reels-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: rgba(8, 8, 12, 0.96); backdrop-filter: blur(12px); align-items: center; justify-content: center; transition: opacity 0.3s;">
-    <!-- Close button -->
-    <button onclick="closeReelsModal()" style="position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.1); border: none; font-size: 1.5rem; color: #fff; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10002; transition: all 0.25s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
-    
-    <!-- Reel Container Frame -->
-    <div style="position: relative; width: 380px; height: 90%; max-height: 720px; background: #000; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; border: 1.5px solid rgba(255,255,255,0.1); z-index: 10001;" id="reelsPhoneFrame">
-        
-        <!-- Navigation arrows (Desktop helper) -->
-        <button onclick="prevReel()" style="position: absolute; left: -60px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); width: 44px; height: 44px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.25s; border: none;" class="nav-arrow-desktop">▲</button>
-        <button onclick="nextReel()" style="position: absolute; right: -60px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); width: 44px; height: 44px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.25s; border: none;" class="nav-arrow-desktop">▼</button>
+<div id="reelsModal" class="reels-overlay" style="display: none;">
+    <!-- Navigation arrows (Desktop helper) - Placed outside overflow: hidden container -->
+    <button id="searchPrevReelBtn" onclick="searchPrevReel()" style="position: absolute; left: calc(50% - 250px); top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); width: 48px; height: 48px; border-radius: 50%; color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 1.4rem; transition: all 0.25s; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" class="nav-arrow-desktop">◀</button>
+    <button id="searchNextReelBtn" onclick="searchNextReel()" style="position: absolute; right: calc(50% - 250px); top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); width: 48px; height: 48px; border-radius: 50%; color: #fff; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 1.4rem; transition: all 0.25s; z-index: 100000; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" class="nav-arrow-desktop">▶</button>
 
-        <!-- Player wrapper -->
-        <div id="reelPlayerWrapper" style="width: 100%; height: 100%; position: relative;">
-            <!-- Player content dynamically loaded by JS -->
-            <div id="reelLoadingSpinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted);">
-                <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear;"></div>
-                <span style="font-size: 0.85rem; font-family: var(--font-heading);">Đang tải Tour...</span>
-            </div>
-        </div>
-
-        <!-- Float Interactive Overlay -->
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.9) 70%); display: flex; flex-direction: column; gap: 15px; pointer-events: none; z-index: 1000;">
+    <div class="reels-container glass-panel">
+        <div class="reels-video-wrapper">
+            <!-- Dynamic video / iframe player container -->
+            <div id="reelPlayerWrapper" style="width: 100%; height: 100%; position: absolute; inset: 0; z-index: 1;"></div>
             
-            <!-- Video Info details -->
-            <div style="color: #fff; pointer-events: auto;">
-                <h4 id="reelVideoTitle" style="font-size: 0.95rem; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; text-shadow: 0 2px 4px rgba(0,0,0,0.8); margin-bottom: 4px;">Tiêu đề Video</h4>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="font-size: 0.72rem; background: rgba(0,242,254,0.15); color: #00f2fe; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(0,242,254,0.3); font-weight: 800; font-family: var(--font-heading);" id="reelVideoTypeBadge">TikTok</span>
-                </div>
+            <div class="reels-header-controls" style="z-index: 10;">
+                <span class="reels-badge-live">🎥 REVIEW THỰC TẾ</span>
+                <button class="reels-close-btn" style="pointer-events: auto;" onclick="closeReelsModal()">✕</button>
             </div>
-
-            <!-- Restaurant Card (Sync with map) -->
-            <div class="glass-panel" style="padding: 10px 12px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.15); background: rgba(15,15,20,0.75); backdrop-filter: blur(8px); pointer-events: auto;" id="reelEateryCard">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <img id="reelEateryImg" src="" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
-                    <div style="display: flex; flex-direction: column;">
-                        <span id="reelEateryName" style="font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.2;">Tên quán ăn</span>
-                        <span id="reelEateryCommune" style="font-size: 0.68rem; color: rgba(255,255,255,0.6); margin-top: 1px;">Xã Đông Anh</span>
-                    </div>
-                </div>
-                <button onclick="reelFocusEatery()" style="background: var(--primary-grad); border: none; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; font-size: 0.95rem; box-shadow: 0 0 10px rgba(255,126,41,0.5); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Xem trên Bản đồ">📍</button>
+            
+            <div class="reels-overlay-info" style="z-index: 10; bottom: 20px; left: 16px; right: 80px;">
+                <h3 class="reels-eatery-name" id="reelsEateryName" style="font-size: 1.05rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.95); margin: 0; font-family: var(--font-heading); color: #ffffff;">Bún Mạch Tràng Cổ Loa</h3>
+                <p class="reels-desc" id="reelsVideoDesc" style="display: none !important;"></p>
+                <span class="reels-signature-tag" style="display: none !important;"></span>
             </div>
-
+            
+            <!-- Double click/Tap overlay to fly hearts -->
+            <div id="reelTapOverlay" style="position: absolute; inset: 0; z-index: 5; pointer-events: auto;" onclick="triggerDoubleTapHeart(event)"></div>
         </div>
-
-        <!-- Floating Sidebar Actions (Hearts, Share) -->
-        <div style="position: absolute; right: 12px; bottom: 130px; display: flex; flex-direction: column; align-items: center; gap: 18px; z-index: 1000; pointer-events: auto;">
-            <!-- Heart like action -->
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;" onclick="likeCurrentReel()">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #ff3366; backdrop-filter: blur(8px); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'" id="reelHeartBtn">❤️</div>
-                <span id="reelLikesCount" style="font-size: 0.72rem; color: #fff; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">1,250</span>
+        
+        <!-- Right Action sidebar (Premium Glassmorphic Cinema style) -->
+        <div class="reels-side-actions" style="right: 14px; bottom: 50px; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" id="reelsLikeBtn" onclick="toggleReelsLike()" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" stroke-width="2" style="filter: drop-shadow(0 0 4px rgba(255, 51, 102, 0.6));"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>
+                <span class="reels-action-label" id="reelsLikeCount" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">3.8K</span>
             </div>
-            <!-- Share video link -->
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;" onclick="shareCurrentReel()">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; backdrop-filter: blur(8px); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">🔗</div>
-                <span style="font-size: 0.68rem; color: #fff; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">Chia sẻ</span>
+            
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" onclick="alert('Đã thêm quán ăn này vào Danh sách Yêu thích của bạn!')" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffb800" stroke="#ffb800" stroke-width="2" style="filter: drop-shadow(0 0 4px rgba(255, 184, 0, 0.6));"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </button>
+                <span class="reels-action-label" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">4.8</span>
             </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã sao chép liên kết chia sẻ review của quán!');" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px rgba(255,255,255,0.4));"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                </button>
+                <span class="reels-action-label" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">Chia sẻ</span>
+            </div>
+            
+            <div class="reels-music-disc" style="border: 2px solid var(--primary); background: radial-gradient(circle, #f04e23 30%, #000 70%); font-size: 0.95rem; box-shadow: 0 0 10px rgba(240, 78, 35, 0.5);">🍜</div>
         </div>
-
-        <!-- Floating hearts container (pulsing hearts rising) -->
-        <div id="reelsHeartsContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 999;"></div>
-
     </div>
 </div>
 
@@ -232,19 +220,25 @@
     document.addEventListener("DOMContentLoaded", function() {
         // 2. Thiết lập bản đồ Leaflet tâm vị trí Đông Anh (huyện lỵ)
         map = L.map('map', {
-            zoomControl: false // Chúng ta sẽ tùy chỉnh vị trí nút zoom
+            zoomControl: false, // Chúng ta sẽ tùy chỉnh vị trí nút zoom
+            zoomSnap: 0.5,       // Bước zoom 0.5 giúp phản hồi nhanh nhạy
+            zoomDelta: 0.5,      // Độ nhảy zoom mỗi lần cuộn
+            wheelPxPerZoomLevel: 60, // Tốc độ zoom tiêu chuẩn nhanh & mượt
+            zoomAnimation: true,
+            fadeAnimation: true,
+            markerZoomAnimation: true
         }).setView([21.1352, 105.8458], 13);
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối
+        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối (Sử dụng Google Maps chính thức cho bản đồ sáng)
         let currentTheme = localStorage.getItem('theme') || 'dark';
         let tileUrl = currentTheme === 'light' 
-            ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+            ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
             : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             
         let activeTileLayer = L.tileLayer(tileUrl, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
@@ -253,12 +247,12 @@
         document.addEventListener('theme-changed', function(e) {
             const nextTheme = e.detail.theme;
             const nextTileUrl = nextTheme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
                 : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             
             map.removeLayer(activeTileLayer);
             activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                attribution: nextTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(map);
@@ -300,7 +294,17 @@
                         iconAnchor: [14, 14]
                     });
 
+                    const signatureDishName = catSlug === 'bun-pho' ? 'Phở Bò Tái Lăn Cao Lỗ' : 
+                                             (catSlug === 'dac-san-dia-phuong' ? 'Bún Mạch Tràng Trộn Nghệ' : 
+                                             (catSlug === 'lau-nuong' ? 'Lẩu Nướng Sườn Sụn Cổ Loa' : 'Món Ngon Đặc Trưng'));
+
                     // Nội dung popup hiển thị nhanh
+                    const approvedVideos = eat.review_videos || eat.reviewVideos || [];
+                    const hasVideo = approvedVideos.length > 0;
+                    const videoBtn = hasVideo 
+                        ? `<button onclick="openReelsModal('${eat.slug}', '${eat.name.replace(/'/g, "\\'")}', '${signatureDishName}', '${eat.image_path}')" class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading); background: rgba(255, 126, 41, 0.08); border-color: rgba(255, 126, 41, 0.25); color: var(--primary); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 126, 41, 0.15)'" onmouseout="this.style.background='rgba(255, 126, 41, 0.08)'">🎬 Video</button>`
+                        : '';
+
                     const popupContent = `
                         <div class="map-popup-card">
                             <img src="${eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'}" class="map-popup-img">
@@ -308,7 +312,10 @@
                             <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0;">📍 Xã ${communeName}</p>
                             <div class="map-popup-footer">
                                 <span class="rating-stars">⭐ ${ratingVal}</span>
-                                <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading);">Xem quán</a>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    ${videoBtn}
+                                    <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading);">Xem quán</a>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -696,11 +703,15 @@
     // DYNAMIC TIKTOK REELS-STYLE PLAYER FOR TÓP TÓP FOOD TOUR
     // ==========================================================================
     let reelsList = [];
+    // 7. Immersive TikTok Reels Video Player
+    let currentLikeCount = 3800;
+    let isLiked = false;
+    let currentEateryReels = [];
     let currentReelIndex = 0;
-    let touchStartY = 0;
-    let touchEndY = 0;
+    let currentEateryName = '';
+    let currentSpecialtyName = '';
 
-    // Helper functions to extract IDs
+    // Helper functions to extract video IDs
     function getTikTokVideoId(url) {
         if (url.includes('vt.tiktok.com')) {
             return null; // Let iframe render standard fallback
@@ -718,226 +729,160 @@
         return (match && match[1] && match[2] && match[2].length === 11) ? match[2] : (match && match[1] && match[1].length === 11 ? match[1] : null);
     }
 
-    window.openReelsModal = function() {
-        const modal = document.getElementById('reelsModal');
-        modal.style.display = 'flex';
-        modal.style.opacity = '1';
+    window.openReelsModal = function(eaterySlug, eateryName, specialtyName, imagePath) {
+        currentEateryName = eateryName;
+        currentSpecialtyName = specialtyName;
         
-        // Show spinner initially
-        document.getElementById('reelPlayerWrapper').innerHTML = `
-            <div id="reelLoadingSpinner" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted);">
-                <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear;"></div>
-                <span style="font-size: 0.85rem; font-family: var(--font-heading);">Đang tải Tour...</span>
-            </div>
-        `;
-
-        fetch('/api/videos')
-            .then(res => res.json())
-            .then(data => {
-                reelsList = data;
-                if (reelsList.length === 0) {
-                    document.getElementById('reelPlayerWrapper').innerHTML = `
-                        <div style="text-align: center; color: #fff; padding: 40px 20px; font-family: var(--font-heading); width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
-                            <span style="font-size: 2.5rem;">🎬</span>
-                            <h4 style="font-size: 1.1rem; font-weight: 700;">Chưa có Video Review nào!</h4>
-                            <p style="font-size: 0.8rem; opacity: 0.7; max-width: 250px;">Hãy đăng nhập trang quản trị để thêm video review đầu tiên cho đặc sản của bạn.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                currentReelIndex = 0;
-                loadReel(currentReelIndex);
-                setupSwipeGestures();
-            })
-            .catch(err => {
-                console.error("Lỗi lấy dữ liệu video:", err);
-                document.getElementById('reelPlayerWrapper').innerHTML = `
-                    <div style="text-align: center; color: #fff; padding: 20px;">
-                        <span>⚠️ Không thể tải dữ liệu.</span>
-                    </div>
-                `;
-            });
-    };
-
-    window.closeReelsModal = function() {
-        const modal = document.getElementById('reelsModal');
-        modal.style.opacity = '0';
-        setTimeout(() => {
-            modal.style.display = 'none';
-            // Clear content to stop any playing videos/iframes immediately
-            document.getElementById('reelPlayerWrapper').innerHTML = '';
-        }, 300);
-    };
-
-    window.loadReel = function(index) {
-        if (index < 0 || index >= reelsList.length) return;
-        currentReelIndex = index;
-        const reel = reelsList[index];
-
-        // Update titles, badges, and likes
-        document.getElementById('reelVideoTitle').innerText = reel.title;
-        
-        const typeBadge = document.getElementById('reelVideoTypeBadge');
-        typeBadge.innerText = reel.video_type.toUpperCase();
-        if (reel.video_type === 'tiktok') {
-            typeBadge.style.background = 'rgba(0, 242, 254, 0.15)';
-            typeBadge.style.color = '#00f2fe';
-            typeBadge.style.borderColor = 'rgba(0, 242, 254, 0.3)';
-        } else if (reel.video_type === 'youtube_shorts') {
-            typeBadge.style.background = 'rgba(255, 0, 0, 0.15)';
-            typeBadge.style.color = '#ff0000';
-            typeBadge.style.borderColor = 'rgba(255, 0, 0, 0.3)';
-        } else {
-            typeBadge.style.background = 'rgba(255, 126, 41, 0.15)';
-            typeBadge.style.color = 'var(--primary)';
-            typeBadge.style.borderColor = 'rgba(255, 126, 41, 0.3)';
+        // Find eatery and its approved videos
+        const eat = eateries.find(e => e.slug === eaterySlug);
+        let approvedVideos = [];
+        if (eat && eat.review_videos) {
+            approvedVideos = eat.review_videos;
         }
-
-        document.getElementById('reelLikesCount').innerText = reel.likes_count.toLocaleString();
         
-        // Update eatery card info
-        document.getElementById('reelEateryName').innerText = reel.eatery.name;
-        document.getElementById('reelEateryCommune').innerText = `📍 ${reel.eatery.address}`;
-        document.getElementById('reelEateryImg').src = reel.eatery.image_path || 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=100&q=80';
+        if (approvedVideos.length === 0) {
+            // Fallback mock video if no specific video is linked
+            currentEateryReels = [{
+                video_url: 'https://assets.mixkit.co/videos/preview/mixkit-chef-preparing-a-fresh-vegetable-salad-32860-large.mp4',
+                video_type: 'local'
+            }];
+        } else {
+            currentEateryReels = approvedVideos;
+        }
+        
+        currentReelIndex = 0;
+        document.getElementById('reelsModal').style.display = 'flex';
+        
+        playReelAtIndex(currentReelIndex);
+    };
 
-        // Load media content safely
+    function playReelAtIndex(index) {
+        if (index < 0 || index >= currentEateryReels.length) return;
+        
+        const reel = currentEateryReels[index];
+        document.getElementById('reelsEateryName').innerText = currentEateryName;
+        
+        // Dynamic description including video count
+        const videoIndicator = currentEateryReels.length > 1 ? `[Video ${index + 1}/${currentEateryReels.length}] ` : '';
+        document.getElementById('reelsVideoDesc').innerText = `${videoIndicator}Khám phá món ngon tại "${currentEateryName}". Đặc sản "${currentSpecialtyName}" đang làm nức lòng thực khách gần xa bởi hương vị đậm chất truyền thống Đông Anh!`;
+        document.querySelector('.reels-signature-tag').innerText = `🌟 Món đặc trưng: ${currentSpecialtyName}`;
+        
+        // Update navigation arrows visibility
+        const prevBtn = document.getElementById('searchPrevReelBtn');
+        const nextBtn = document.getElementById('searchNextReelBtn');
+        if (prevBtn && nextBtn) {
+            prevBtn.style.display = index > 0 ? 'flex' : 'none';
+            nextBtn.style.display = index < currentEateryReels.length - 1 ? 'flex' : 'none';
+        }
+        
         const wrapper = document.getElementById('reelPlayerWrapper');
         wrapper.innerHTML = ''; // Clear previous player
+        
+        let videoUrl = reel.video_url;
+        let videoType = reel.video_type;
 
-        if (reel.video_type === 'tiktok') {
-            const videoId = getTikTokVideoId(reel.video_url);
-            if (videoId) {
-                wrapper.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${videoId}" style="width: 100%; height: 100%; border: none; background: #000;" allowfullscreen allow="autoplay; encrypted-media;"></iframe>`;
+        // Dynamically hide/show the right side action panel for YouTube videos
+        const sideActions = document.querySelector('.reels-side-actions');
+        const tapOverlay = document.getElementById('reelTapOverlay');
+        const isIframe = videoType === 'youtube_shorts' || videoType === 'tiktok' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
+        
+        if (sideActions) {
+            if (isIframe) {
+                sideActions.style.display = 'none';
             } else {
-                wrapper.innerHTML = `<iframe src="${reel.video_url}" style="width: 100%; height: 100%; border: none; background: #000;" allowfullscreen allow="autoplay;"></iframe>`;
+                sideActions.style.display = 'flex';
             }
-        } else if (reel.video_type === 'youtube_shorts') {
-            const shortsId = getYouTubeShortsId(reel.video_url);
-            if (shortsId) {
-                wrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${shortsId}?autoplay=1&mute=0&loop=1&playlist=${shortsId}&controls=0" style="width: 100%; height: 100%; border: none; background: #000;" allowfullscreen allow="autoplay; encrypted-media;"></iframe>`;
+        }
+
+        // Allow touch, click, zoom gestures to go directly to YouTube/TikTok player by setting pointer-events: none
+        if (tapOverlay) {
+            if (isIframe) {
+                tapOverlay.style.pointerEvents = 'none';
             } else {
-                wrapper.innerHTML = `<iframe src="${reel.video_url}" style="width: 100%; height: 100%; border: none; background: #000;" allowfullscreen allow="autoplay;"></iframe>`;
+                tapOverlay.style.pointerEvents = 'auto';
+            }
+        }
+
+        if (videoType === 'tiktok') {
+            const videoId = getTikTokVideoId(videoUrl);
+            if (videoId) {
+                wrapper.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${videoId}" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay; encrypted-media;"></iframe>`;
+            } else {
+                wrapper.innerHTML = `<iframe src="${videoUrl}" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay;"></iframe>`;
+            }
+        } else if (videoType === 'youtube_shorts' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+            const shortsId = getYouTubeShortsId(videoUrl);
+            if (shortsId) {
+                wrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${shortsId}?autoplay=1" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay; encrypted-media;"></iframe>`;
+            } else {
+                wrapper.innerHTML = `<iframe src="${videoUrl}" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay;"></iframe>`;
             }
         } else {
             // Local direct mp4 storage file
-            wrapper.innerHTML = `<video src="${reel.video_url}" autoplay loop muted playsinline controls style="width: 100%; height: 100%; object-fit: cover; background: #000;"></video>`;
+            wrapper.innerHTML = `<video src="${videoUrl}" autoplay loop muted playsinline controls style="width: 100%; height: 100%; object-fit: cover; background: #000; pointer-events: auto;"></video>`;
         }
-    };
+    }
 
-    window.prevReel = function() {
+    window.searchPrevReel = function() {
         if (currentReelIndex > 0) {
-            loadReel(currentReelIndex - 1);
+            currentReelIndex--;
+            playReelAtIndex(currentReelIndex);
         }
     };
 
-    window.nextReel = function() {
-        if (currentReelIndex < reelsList.length - 1) {
-            loadReel(currentReelIndex + 1);
+    window.searchNextReel = function() {
+        if (currentReelIndex < currentEateryReels.length - 1) {
+            currentReelIndex++;
+            playReelAtIndex(currentReelIndex);
         }
     };
 
-    // Mobile Swipe Gestures
-    function setupSwipeGestures() {
-        const frame = document.getElementById('reelsPhoneFrame');
-        if (!frame) return;
+    window.closeReelsModal = function() {
+        document.getElementById('reelPlayerWrapper').innerHTML = ''; // Clear player
+        document.getElementById('reelsModal').style.display = 'none';
+    };
 
-        frame.addEventListener('touchstart', e => {
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        frame.addEventListener('touchend', e => {
-            touchEndY = e.changedTouches[0].screenY;
-            handleSwipeDirection();
-        }, { passive: true });
-    }
-
-    function handleSwipeDirection() {
-        const swipeThreshold = 50;
-        const diff = touchStartY - touchEndY;
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0) {
-                nextReel();
-            } else {
-                prevReel();
-            }
-        }
-    }
-
-    // Like Action & Floating Heart Animation
-    window.likeCurrentReel = function() {
-        if (reelsList.length === 0) return;
-        const reel = reelsList[currentReelIndex];
-
-        createFloatingHeart();
-
-        reel.likes_count++;
-        document.getElementById('reelLikesCount').innerText = reel.likes_count.toLocaleString();
+    window.toggleReelsLike = function() {
+        const likeBtn = document.getElementById('reelsLikeBtn');
+        const countSpan = document.getElementById('reelsLikeCount');
         
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        fetch(`/api/videos/${reel.id}/like`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': token
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                reel.likes_count = data.likes_count;
-                document.getElementById('reelLikesCount').innerText = data.likes_count.toLocaleString();
-            }
-        })
-        .catch(err => console.error("Lỗi tăng lượt thích:", err));
+        if (isLiked) {
+            isLiked = false;
+            currentLikeCount--;
+            likeBtn.querySelector('span').style.color = '#fff';
+        } else {
+            isLiked = true;
+            currentLikeCount++;
+            likeBtn.querySelector('span').style.color = '#ff3366';
+            
+            // Tim bay từ tâm
+            spawnSingleHeart(window.innerWidth / 2, window.innerHeight / 2);
+        }
+        countSpan.innerText = (currentLikeCount / 1000).toFixed(1) + 'K';
     };
 
-    function createFloatingHeart() {
-        const container = document.getElementById('reelsHeartsContainer');
-        if (!container) return;
+    window.triggerDoubleTapHeart = function(event) {
+        spawnSingleHeart(event.clientX, event.clientY);
+        if (!isLiked) {
+            toggleReelsLike();
+        }
+    };
 
+    function spawnSingleHeart(x, y) {
+        const container = document.getElementById('reelsModal');
         const heart = document.createElement('div');
+        heart.className = 'floating-heart';
         heart.innerHTML = '❤️';
-        heart.style.position = 'absolute';
-        heart.style.bottom = '130px';
-        heart.style.right = '20px';
-        heart.style.fontSize = (Math.random() * 15 + 20) + 'px';
-        heart.style.opacity = '1';
-        heart.style.pointerEvents = 'none';
-        heart.style.transition = 'all 1s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+        heart.style.left = x + 'px';
+        heart.style.top = y + 'px';
         
-        const drift = (Math.random() * 80 - 40);
+        const dx = (Math.random() * 120 - 60) + 'px';
+        const rot = (Math.random() * 70 - 35) + 'deg';
+        heart.style.setProperty('--dx', dx);
+        heart.style.setProperty('--rot', rot);
+        
         container.appendChild(heart);
-
-        setTimeout(() => {
-            heart.style.transform = `translate(${drift}px, -200px) scale(1.5)`;
-            heart.style.opacity = '0';
-        }, 50);
-
-        setTimeout(() => {
-            heart.remove();
-        }, 1050);
+        setTimeout(() => heart.remove(), 1000);
     }
-
-    // Copy Reel link
-    window.shareCurrentReel = function() {
-        if (reelsList.length === 0) return;
-        const reel = reelsList[currentReelIndex];
-        const shareUrl = window.location.origin + '/dia-diem/dac-san/' + reel.eatery.slug;
-        
-        navigator.clipboard.writeText(shareUrl)
-            .then(() => {
-                alert(`🔗 Đã sao chép liên kết chia sẻ của quán "${reel.eatery.name}" vào khay nhớ tạm!`);
-            })
-            .catch(err => console.error("Không thể sao chép:", err));
-    };
-
-    // Synced Map Trigger: Close modal and fly to eatery on Leaflet map
-    window.reelFocusEatery = function() {
-        if (reelsList.length === 0) return;
-        const reel = reelsList[currentReelIndex];
-        
-        closeReelsModal();
-        focusOnEatery(reel.eatery.latitude, reel.eatery.longitude, reel.eatery.slug);
-    };
 </script>
 @endsection

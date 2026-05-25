@@ -86,10 +86,22 @@
                 <span>📊</span> Dashboard Thống Kê
             </a>
             
+            @php
+                $sellerEatery = null;
+                if (session('user_role') === 'seller') {
+                    $sellerEatery = \App\Models\Eatery::where('user_id', session('user_id'))->first();
+                }
+            @endphp
+
             @if(isset($eatery) && $eatery)
             <div class="admin-sidebar-section-title">Đang điều phối</div>
             <a href="/admin/eateries/{{ $eatery->id }}/edit" class="admin-menu-item active">
                 <span>⚙️</span> {{ Str::limit($eatery->name, 18, '...') }}
+            </a>
+            @elseif($sellerEatery)
+            <div class="admin-sidebar-section-title">Quán của tôi</div>
+            <a href="/admin/eateries/{{ $sellerEatery->id }}/edit" class="admin-menu-item {{ request()->is('admin/eateries/' . $sellerEatery->id . '/edit') ? 'active' : '' }}">
+                <span>⚙️</span> {{ Str::limit($sellerEatery->name, 18, '...') }}
             </a>
             @endif
 

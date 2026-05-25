@@ -959,6 +959,33 @@ class AdminController extends Controller
     }
 
     /**
+     * Phản hồi nhận xét của khách hàng (Dành riêng cho Seller sở hữu cơ sở)
+     */
+    public function replyReview(Request $request, $id)
+    {
+        $this->verifyAdmin();
+        
+        $request->validate([
+            'seller_reply' => 'nullable|string|max:1000',
+        ], [
+            'seller_reply.max' => 'Nội dung phản hồi không được vượt quá 1000 ký tự!',
+        ]);
+
+        $review = \App\Models\Review::findOrFail($id);
+        $eatery = Eatery::findOrFail($review->eatery_id);
+
+        // Security check: Seller must own this eatery
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền phản hồi nhận xét của cơ sở này!');
+        }
+
+        $review->seller_reply = $request->input('seller_reply');
+        $review->save();
+
+        return redirect()->back()->with('success', 'Đã lưu phản hồi của bạn tới khách hàng!');
+    }
+
+    /**
      * Danh sách tài khoản User với tính năng AJAX Tìm kiếm, Lọc trạng thái, Phân trang
      */
     public function indexUsers(Request $request)

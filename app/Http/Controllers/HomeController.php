@@ -18,7 +18,9 @@ class HomeController extends Controller
         $selectedCatSlug = $request->query('cat');
         $selectedComSlug = $request->query('com');
         
-        $query = Eatery::with(['category', 'commune'])->active();
+        $query = Eatery::with(['category', 'commune', 'reviewVideos' => function($q) {
+            $q->where('status', 'approved');
+        }])->active();
         
         if ($selectedCatSlug) {
             $query->whereHas('category', function($q) use ($selectedCatSlug) {
@@ -35,13 +37,17 @@ class HomeController extends Controller
         $eateries = $query->get();
         
         // Quán nổi bật
-        $featuredEateries = Eatery::with(['category', 'commune'])
+        $featuredEateries = Eatery::with(['category', 'commune', 'reviewVideos' => function($q) {
+                $q->where('status', 'approved');
+            }])
             ->active()
             ->where('is_featured', true)
             ->get();
             
         // Đặc sản địa phương
-        $specialties = Eatery::with(['category', 'commune'])
+        $specialties = Eatery::with(['category', 'commune', 'reviewVideos' => function($q) {
+                $q->where('status', 'approved');
+            }])
             ->active()
             ->whereHas('category', function($q) {
                 $q->where('slug', 'dac-san-dia-phuong');

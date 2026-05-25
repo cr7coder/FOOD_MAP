@@ -12,6 +12,10 @@ class AuthController extends Controller
     public function showLogin(Request $request)
     {
         if (Auth::check() || session()->has('user_id')) {
+            $role = session('user_role') ?: (Auth::user() ? Auth::user()->role : 'user');
+            if ($role === 'admin' || $role === 'seller') {
+                return redirect('/admin/dashboard');
+            }
             return redirect('/');
         }
         if ($request->has('redirect')) {
@@ -39,7 +43,7 @@ class AuthController extends Controller
                 'user_role' => $user->role,
             ]);
 
-            if ($user->role === 'admin') {
+            if ($user->role === 'admin' || $user->role === 'seller') {
                 return redirect()->intended('/admin/dashboard');
             }
             return redirect()->intended('/');
@@ -53,6 +57,10 @@ class AuthController extends Controller
     public function showRegister(Request $request)
     {
         if (Auth::check() || session()->has('user_id')) {
+            $role = session('user_role') ?: (Auth::user() ? Auth::user()->role : 'user');
+            if ($role === 'admin' || $role === 'seller') {
+                return redirect('/admin/dashboard');
+            }
             return redirect('/');
         }
         if ($request->has('redirect')) {
@@ -97,6 +105,9 @@ class AuthController extends Controller
             'user_role' => $user->role,
         ]);
 
+        if ($user->role === 'seller' || $user->role === 'admin') {
+            return redirect('/admin/dashboard')->with('success', 'Đăng ký tài khoản thành công!');
+        }
         return redirect('/')->with('success', 'Đăng ký tài khoản thành công!');
     }
 

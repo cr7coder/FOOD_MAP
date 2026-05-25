@@ -6,21 +6,12 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
     <script>
-        // Force light theme
         document.documentElement.setAttribute('data-theme', 'light');
     </script>
     
     <!-- SEO Meta Tags -->
-    <title><?php echo $__env->yieldContent('title', 'Bản đồ số Ẩm thực Đông Anh - Dong Anh Food Map'); ?></title>
-    <meta name="description" content="<?php echo $__env->yieldContent('meta_description', 'Bản đồ số Ẩm thực Đông Anh - Số hóa toàn bộ nhà hàng, quán ăn, khách sạn và đặc sản tại Đông Anh. Chỉ đường nhanh, xem thực đơn đặc trưng, liên kết Google Maps.'); ?>">
-    <meta name="keywords" content="ẩm thực đông anh, bản đồ ẩm thực, quán ngon đông anh, bún mạch tràng cổ loa, đặc sản đông anh, khách sạn đông anh, ăn gì đông anh">
-    
-    <!-- OpenGraph Social Tags -->
-    <meta property="og:site_name" content="Dong Anh Food Map">
-    <meta property="og:title" content="<?php echo $__env->yieldContent('title', 'Bản đồ số Ẩm thực Đông Anh - Dong Anh Food Map'); ?>">
-    <meta property="og:description" content="<?php echo $__env->yieldContent('meta_description', 'Bản đồ số Ẩm thực Đông Anh - Số hóa nhà hàng, quán ăn, khách sạn và đặc sản.'); ?>">
-    <meta property="og:image" content="<?php echo $__env->yieldContent('og_image', 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=800&q=80'); ?>">
-    <meta property="og:type" content="website">
+    <title><?php echo $__env->yieldContent('title', 'Hành trình Ẩm thực Đông Anh - Dong Anh Food Map'); ?></title>
+    <meta name="description" content="<?php echo $__env->yieldContent('meta_description', 'Khám phá hành trình ẩm thực, văn hóa và lịch sử Đông Anh với bản đồ số Cinematic thông minh.'); ?>">
     
     <!-- Leaflet.js Map Assets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -31,10 +22,9 @@
     <!-- Mobile Native Overrides (Only load for mobile and high zoom desktops) -->
     <link rel="stylesheet" media="screen and (max-width: 1200px)" href="<?php echo e(asset('css/mobile-native.css')); ?>?v=<?php echo e(time()); ?>">
     
-    <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
-    <?php echo $__env->yieldContent('seo_schema'); ?>
+    <?php echo $__env->yieldContent('styles'); ?>
 </head>
-<body>
+<body style="min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-base); color: var(--text-main); font-family: var(--font-body); margin: 0; padding: 0;">
 
     <!-- Sticky Glass Navigation Header -->
     <header class="glass-nav">
@@ -88,45 +78,13 @@
         </div>
     </header>
 
-    <!-- Main Content Slot -->
-    <main>
+    <!-- Main Content Area -->
+    <main style="flex: 1; display: flex; flex-direction: column; width: 100%;">
         <?php echo $__env->yieldContent('content'); ?>
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-grid">
-                <div>
-                    <h3 class="logo" style="margin-bottom: 16px; font-size: 1.3rem;">🍜 Dong Anh Food Map</h3>
-                    <p style="font-size: 0.85rem; line-height: 1.6; max-width: 480px;">
-                        Bản đồ số Ẩm thực Đông Anh là giải pháp công nghệ số hóa toàn bộ quán ăn, nhà hàng, quán cafe, khách sạn, nhà nghỉ và quảng bá các món ăn đặc sản truyền thống của huyện Đông Anh, Hà Nội. Hỗ trợ chuyển đổi số và nâng tầm văn hóa du lịch địa phương.
-                    </p>
-                </div>
-                <div>
-                    <h4 style="color: var(--text-main); margin-bottom: 16px; font-size: 1rem;">Liên kết nhanh</h4>
-                    <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
-                        <li><a href="/" style="hover: color: var(--primary);">Trang chủ</a></li>
-                        <li><a href="/tim-kiem" style="hover: color: var(--primary);">Bản đồ số</a></li>
-                        <li><a href="/?cat=dac-san-dia-phuong" style="hover: color: var(--primary);">Đặc sản Cổ Loa & Đông Anh</a></li>
-                        <li><a href="/auth/login" style="hover: color: var(--primary);">Đăng nhập quản trị viên</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 style="color: var(--text-main); margin-bottom: 16px; font-size: 1rem;">Liên hệ hỗ trợ</h4>
-                    <p style="font-size: 0.85rem; line-height: 1.6;">
-                        📍 TTHC xã Đông Anh,Thành phố Hà Nội
-                        📞 Điện thoại: 024.3123.4567<br>
-                        ✉️ Email: info@donganh.hanoi.gov.vn<br>
-                        🌐 Website: donganh.hanoi.gov.vn
-                    </p>
-                </div>
-            </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
-                &copy; 2026 Bản đồ số Ẩm thực Đông Anh (Dong Anh Food Map). Tất cả quyền được bảo lưu. Phát triển bởi Phòng Văn Xã Hội Xã Đông Anh
-            </div>
-        </div>
-    </footer>
+    <!-- Optional Footer Slot (Rendered only on list pages, omitted on fullscreen maps) -->
+    <?php echo $__env->yieldContent('footer'); ?>
 
     <!-- Leaflet.js Map Library -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -149,4 +107,4 @@
     <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 </html>
-<?php /**PATH D:\FOODDA\FOOD_MAP\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\FOODDA\FOOD_MAP\resources\views/layouts/food-tour.blade.php ENDPATH**/ ?>

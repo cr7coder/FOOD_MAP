@@ -339,19 +339,25 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Thiết lập map Leaflet
         searchMap = L.map('searchMap', {
-            zoomControl: false
+            zoomControl: false,
+            zoomSnap: 0.5,       // Bước zoom 0.5 giúp phản hồi nhanh nhạy
+            zoomDelta: 0.5,      // Độ nhảy zoom mỗi lần cuộn
+            wheelPxPerZoomLevel: 60, // Tốc độ zoom tiêu chuẩn nhanh & mượt
+            zoomAnimation: true,
+            fadeAnimation: true,
+            markerZoomAnimation: true
         }).setView([21.1352, 105.8458], 12);
         
         L.control.zoom({ position: 'bottomright' }).addTo(searchMap);
 
-        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối
+        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối (Sử dụng Google Maps chính thức cho bản đồ sáng)
         let currentTheme = localStorage.getItem('theme') || 'dark';
         let tileUrl = currentTheme === 'light' 
-            ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+            ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
             : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             
         let activeTileLayer = L.tileLayer(tileUrl, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(searchMap);
@@ -360,12 +366,12 @@
         document.addEventListener('theme-changed', function(e) {
             const nextTheme = e.detail.theme;
             const nextTileUrl = nextTheme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
                 : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             
             searchMap.removeLayer(activeTileLayer);
             activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                attribution: nextTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(searchMap);
@@ -406,22 +412,21 @@
                 // Get approved video reviews for this eatery
                 const approvedVideos = eat.review_videos || [];
                 const hasVideo = approvedVideos.length > 0;
-                const buttonText = hasVideo ? `🎥 Xem Video Review (${approvedVideos.length})` : '🎥 Đông Anh Food Tour';
+                const videoBtn = hasVideo 
+                    ? `<button onclick="openReelsModal('${eat.slug}', '${eat.name.replace(/'/g, "\\'")}', '${signatureDishName}', '${eat.image_path}')" class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading); background: rgba(255, 126, 41, 0.08); border-color: rgba(255, 126, 41, 0.25); color: var(--primary); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 126, 41, 0.15)'" onmouseout="this.style.background='rgba(255, 126, 41, 0.08)'">🎬 Video</button>`
+                    : '';
 
                 const popupContent = `
                     <div class="map-popup-card">
                         <img src="${eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'}" class="map-popup-img">
                         <h4 class="map-popup-title">${eat.name}</h4>
                         <p style="font-size: 0.76rem; color: var(--text-muted); margin: 2px 0;">📍 ${eat.address}</p>
-                        
-                        <!-- Premium Video Review Modal trigger button -->
-                        <button type="button" class="btn-accent" onclick="openReelsModal('${eat.slug}', '${eat.name.replace(/'/g, "\\'")}', '${signatureDishName}', '${eat.image_path}')" style="width: 100%; justify-content: center; font-size: 0.75rem; padding: 5px 0; border-radius: 6px; margin: 6px 0; gap: 4px;">
-                            ${buttonText}
-                        </button>
-                        
-                        <div class="map-popup-footer">
+                        <div class="map-popup-footer" style="margin-top: 8px;">
                             <span class="rating-stars" style="font-size: 0.8rem;">⭐ ${parseFloat(eat.rating).toFixed(1)}</span>
-                            <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;">Chi tiết</a>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                ${videoBtn}
+                                <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;">Chi tiết</a>
+                            </div>
                         </div>
                     </div>
                 `;
