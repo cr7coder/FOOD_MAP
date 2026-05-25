@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
     <!-- Mobile Native Overrides (Only load for mobile) -->
-    <link rel="stylesheet" media="screen and (max-width: 992px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
+    <link rel="stylesheet" media="screen and (max-width: 1200px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
     <!-- Premium Google Fonts -->

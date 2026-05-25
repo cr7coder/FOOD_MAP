@@ -11,7 +11,7 @@
         gap: 24px;
     }
     
-    @media (max-width: 992px) {
+    @media (max-width: 1200px) {
         .search-detail-grid {
             grid-template-columns: 1fr !important;
             gap: 20px;
@@ -338,8 +338,8 @@
             viewportWidth: width,
             viewportHeight: height,
             isMobile: width <= 768,
-            isTablet: width > 768 && width <= 992,
-            isDesktop: width > 992,
+            isTablet: width > 768 && width <= 1200,
+            isDesktop: width > 1200,
             orientation: height > width ? 'portrait' : 'landscape'
         };
     }

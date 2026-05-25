@@ -85,7 +85,7 @@
 }
 
 /* 📱 Detail Page Layout Responsive Overrides */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .detail-grid {
         grid-template-columns: 1fr !important;
         gap: 28px !important;
@@ -150,7 +150,7 @@
 }
 
 /* Responsive adjustments from original file */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .split-screen {
         flex-direction: column-reverse;
         height: auto;
@@ -212,7 +212,7 @@
 }
 
 /* 📱 Responsive overrides for Food Tour Layout */
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
     .tour-layout {
         grid-template-columns: 1fr !important;
         grid-template-rows: 1fr 420px !important;
@@ -235,7 +235,7 @@
 }
 
 /* 💻 Laptop/Mid-sized Screen Header Scale-down Optimization (Prevents menu/auth overlaps) */
-@media (min-width: 992px) and (max-width: 1440px) {
+@media (min-width: 1200px) and (max-width: 1440px) {
     .nav-wrapper {
         gap: 15px !important;
     }
