@@ -930,7 +930,7 @@
             let utterance = null;
             let isSpeaking = false;
 
-            const audioText = `{!! isset($dossier) ? addslashes($dossier['audio_narrative']) : '' !!}`;
+            const audioText = {!! json_encode(isset($dossier) ? $dossier['audio_narrative'] : '') !!};
 
             playBtn.addEventListener("click", function() {
                 if (!synth) {

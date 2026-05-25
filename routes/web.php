@@ -49,7 +49,7 @@ Route::post('/auth/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 // --- ADMIN SIDE ROUTES (Giao diện quản trị viên) ---
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware('admin.seller')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/eateries/create', [AdminController::class, 'createEatery'])->name('admin.eatery.create');
     Route::post('/eateries', [AdminController::class, 'storeEatery'])->name('admin.eatery.store');
