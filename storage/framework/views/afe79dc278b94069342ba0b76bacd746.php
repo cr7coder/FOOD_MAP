@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Tìm kiếm địa điểm - Bản đồ số Ẩm thực Đông Anh'); ?>
 
-@section('title', 'Tìm kiếm địa điểm - Bản đồ số Ẩm thực Đông Anh')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <style>
     /* 📱 RESPONSIVE & MOBILE-NATIVE UPGRADES FOR SEARCH & MAP split-page */
     .search-detail-grid {
@@ -130,7 +128,7 @@
                         <!-- Text Keyword Input -->
                         <div class="review-form-group">
                             <label class="review-form-label" style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Từ khóa tìm kiếm</label>
-                            <input type="text" name="q" id="sidebarSearchInput" value="{{ $keyword }}" class="form-input" placeholder="Tên quán, món ăn..." style="font-size: 0.85rem;">
+                            <input type="text" name="q" id="sidebarSearchInput" value="<?php echo e($keyword); ?>" class="form-input" placeholder="Tên quán, món ăn..." style="font-size: 0.85rem;">
                         </div>
                         
                         <!-- Category Select Dropdown -->
@@ -138,11 +136,12 @@
                             <label class="review-form-label" style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Danh mục ẩm thực</label>
                             <select name="category_id" class="form-input" style="font-size: 0.85rem;">
                                 <option value="">-- Tất cả danh mục --</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}" {{ $catId == $cat->id ? 'selected' : '' }}>
-                                        {{ $cat->icon }} {{ $cat->name }}
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cat->id); ?>" <?php echo e($catId == $cat->id ? 'selected' : ''); ?>>
+                                        <?php echo e($cat->icon); ?> <?php echo e($cat->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         
@@ -151,11 +150,12 @@
                             <label class="review-form-label" style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Khu vực (Xã / Thị trấn)</label>
                             <select name="commune_id" class="form-input" style="font-size: 0.85rem;">
                                 <option value="">-- Tất cả khu vực --</option>
-                                @foreach($communes as $com)
-                                    <option value="{{ $com->id }}" {{ $comId == $com->id ? 'selected' : '' }}>
-                                        📍 {{ $com->name }}
+                                <?php $__currentLoopData = $communes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $com): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($com->id); ?>" <?php echo e($comId == $com->id ? 'selected' : ''); ?>>
+                                        📍 <?php echo e($com->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
 
@@ -192,54 +192,57 @@
             <h2 style="font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                 <span>📋</span> Kết quả tìm kiếm
                 <span id="searchCountSpan" style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal; margin-left: auto;">
-                    Tìm thấy {{ $eateries->count() }} địa điểm phù hợp
+                    Tìm thấy <?php echo e($eateries->count()); ?> địa điểm phù hợp
                 </span>
             </h2>
             
-            @if($eateries->count() > 0)
+            <?php if($eateries->count() > 0): ?>
                 <div style="display: grid; grid-template-columns: 1fr; gap: 16px;" id="searchCardsContainer">
-                    @foreach($eateries as $eat)
+                    <?php $__currentLoopData = $eateries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $eat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="eatery-card glass-panel" 
-                             data-slug="{{ $eat->slug }}"
-                             data-name="{{ $eat->name }}"
-                             data-address="{{ $eat->address }}"
-                             data-desc="{{ $eat->description }}"
-                             data-category="{{ $eat->category_id }}"
-                             data-commune="{{ $eat->commune_id }}"
-                             onclick="focusSearchMap({{ $eat->latitude }}, {{ $eat->longitude }}, '{{ $eat->slug }}')">
+                             data-slug="<?php echo e($eat->slug); ?>"
+                             data-name="<?php echo e($eat->name); ?>"
+                             data-address="<?php echo e($eat->address); ?>"
+                             data-desc="<?php echo e($eat->description); ?>"
+                             data-category="<?php echo e($eat->category_id); ?>"
+                             data-commune="<?php echo e($eat->commune_id); ?>"
+                             onclick="focusSearchMap(<?php echo e($eat->latitude); ?>, <?php echo e($eat->longitude); ?>, '<?php echo e($eat->slug); ?>')">
                             <div class="eatery-img-wrapper" style="width: 120px; height: 120px;">
-                                <img src="{{ $eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80' }}" class="eatery-img" alt="{{ $eat->name }}">
+                                <img src="<?php echo e($eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'); ?>" class="eatery-img" alt="<?php echo e($eat->name); ?>">
                             </div>
                             <div class="eatery-info">
                                 <div class="eatery-header">
                                     <div>
-                                        <span class="tag-badge" style="padding: 2px 8px; font-size: 0.7rem; margin-right: 6px;">{{ $eat->category->icon }} {{ $eat->category->name }}</span>
-                                        <h3 class="eatery-title" style="display: inline-block; font-size: 1.15rem; margin-top: 4px;">{{ $eat->name }}</h3>
+                                        <span class="tag-badge" style="padding: 2px 8px; font-size: 0.7rem; margin-right: 6px;"><?php echo e($eat->category->icon); ?> <?php echo e($eat->category->name); ?></span>
+                                        <h3 class="eatery-title" style="display: inline-block; font-size: 1.15rem; margin-top: 4px;"><?php echo e($eat->name); ?></h3>
                                     </div>
                                     <div class="rating-stars">
-                                        <span>⭐</span> {{ $eat->average_rating }}
+                                        <span>⭐</span> <?php echo e($eat->average_rating); ?>
+
                                     </div>
                                 </div>
-                                <p class="eatery-desc" style="-webkit-line-clamp: 2;">{{ $eat->description }}</p>
+                                <p class="eatery-desc" style="-webkit-line-clamp: 2;"><?php echo e($eat->description); ?></p>
                                 <div class="eatery-footer" style="margin-top: 4px;">
                                     <div class="eatery-meta-item">
-                                        <span>📍</span> {{ $eat->address }}
+                                        <span>📍</span> <?php echo e($eat->address); ?>
+
                                     </div>
                                     <div class="eatery-meta-item" style="color: var(--primary); font-weight: 700; font-family: var(--font-heading);">
-                                        {{ $eat->price_range }}
+                                        <?php echo e($eat->price_range); ?>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @else
+            <?php else: ?>
                 <div class="glass-panel" style="padding: 60px 40px; text-align: center; color: var(--text-muted);">
                     <p style="font-size: 1.3rem; margin-bottom: 8px; color: var(--text-main);">😔 Rất tiếc, không tìm thấy kết quả</p>
                     <p style="font-size: 0.9rem;">Thử tìm kiếm với từ khóa khác (ví dụ: *"Bún Mạch Tràng"*, *"Cafe"*, *"Lẩu"*) hoặc điều chỉnh lại danh mục và khu vực xã lọc.</p>
                     <a href="/tim-kiem" class="btn-primary" style="margin-top: 20px; font-size: 0.9rem;">Xem toàn bộ địa điểm</a>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
         
     </div>
@@ -327,12 +330,12 @@
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
     // Khởi tạo các marker tìm kiếm từ PHP
-    const eateries = @json($eateries);
+    const eateries = <?php echo json_encode($eateries, 15, 512) ?>;
     let searchMap;
     let markers = {};
 
@@ -1162,4 +1165,6 @@
     }
 
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\FOODDA\FOOD_MAP\resources\views/search.blade.php ENDPATH**/ ?>

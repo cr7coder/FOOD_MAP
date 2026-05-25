@@ -166,7 +166,7 @@
                                 <span class="admin-badge admin-badge-primary">{{ $eat->category->icon }} {{ $eat->category->name }}</span>
                             </td>
                             <td>
-                                <span style="font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main);">Xã {{ $eat->commune->name }}</span>
+                                <span style="font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main);">{{ $eat->commune->name }}</span>
                             </td>
                             <td>
                                 <span style="font-size: 0.88rem; font-weight: 700; color: var(--admin-primary);">{{ $eat->phone ?: 'Chưa có' }}</span>

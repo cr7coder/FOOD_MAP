@@ -130,7 +130,7 @@
                                 <option value="">-- Chọn Xã --</option>
                                 @foreach($communes as $com)
                                     <option value="{{ $com->id }}" {{ old('commune_id', $eatery ? $eatery->commune_id : '') == $com->id ? 'selected' : '' }}>
-                                        📍 Xã {{ $com->name }}
+                                        📍 {{ $com->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -1223,32 +1223,48 @@
 <!-- ==========================================================================
      MODAL XEM TRỰC TIẾP VIDEO REVIEW
      ========================================================================== -->
-<div id="watchVideoModal" class="admin-reels-overlay" style="display: none;">
-    <div class="admin-card" style="width: 100%; max-width: 440px; padding: 20px; position: relative; border-radius: 16px; background-color: #0f0a20; box-shadow: 0 10px 25px rgba(0,0,0,0.35); overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-        <button type="button" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #ffffff; font-size: 1.15rem; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;" onclick="closeWatchVideoModal()">✕</button>
+<div id="watchVideoModal" class="admin-reels-overlay" style="display: none; background: rgba(8, 5, 18, 0.85); backdrop-filter: blur(15px); z-index: 11000;">
+    <div class="admin-card" style="width: 100%; max-width: 420px; padding: 24px; position: relative; border-radius: 28px; background: rgba(20, 15, 38, 0.75); backdrop-filter: blur(25px); box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 40px rgba(240, 78, 35, 0.25), inset 0 1px 0 rgba(255,255,255,0.2); overflow: hidden; border: 1.5px solid rgba(255,255,255,0.15); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
         
-        <h4 id="watchVideoTitle" style="color: #ffffff; font-size: 0.95rem; font-weight: 700; margin: 0 0 14px 0; padding-right: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎥 Xem Video Review</h4>
+        <!-- Glowing Close Button -->
+        <button type="button" style="position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'; this.style.borderColor='#ef4444'; this.style.transform='rotate(90deg)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.transform='rotate(0deg)';" onclick="closeWatchVideoModal()">✕</button>
+        
+        <!-- Premium Pulsing Live Dot Header -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span style="display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 12px #ef4444; animation: blink 1.2s infinite alternate;"></span>
+            <h4 id="watchVideoTitle" style="color: #ffffff; font-size: 1.05rem; font-weight: 800; margin: 0; padding-right: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Outfit', sans-serif; text-shadow: 0 0 8px rgba(255,255,255,0.3);">🎥 Xem Video Review</h4>
+        </div>
         
         <!-- Local HTML5 Video Player Container -->
-        <div id="watchLocalContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
-            <video id="watchVideoPlayer" controls style="width: 100%; height: 100%; object-fit: contain;"></video>
+        <div id="watchLocalContainer" style="display: none; width: 100%; height: 520px; background-color: #000000; border-radius: 20px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <video id="watchVideoPlayer" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
         </div>
 
         <!-- YouTube Shorts Iframe Container -->
-        <div id="watchYoutubeContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
+        <div id="watchYoutubeContainer" style="display: none; width: 100%; height: 520px; background-color: #000000; border-radius: 20px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <iframe id="watchYoutubePlayer" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
         </div>
 
         <!-- TikTok Embed Container -->
-        <div id="watchTiktokContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden; align-items: center; justify-content: center; padding: 20px;">
-            <div style="text-align: center; color: rgba(255,255,255,0.85); padding: 20px;">
-                <p style="font-size: 1.5rem; margin-bottom: 12px;">📱</p>
-                <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;">Video Tiktok ngắn</p>
-                <p style="font-size: 0.78rem; color: rgba(255,255,255,0.6); line-height: 1.4; margin-bottom: 20px;">Trình quản trị đề xuất mở link TikTok trực tiếp hoặc nhúng để trải nghiệm mượt mà nhất!</p>
-                <a id="watchTiktokLink" href="" target="_blank" class="btn-admin btn-admin-accent" style="padding: 10px 24px; font-size: 0.82rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                    🔗 Mở Trên TikTok
+        <div id="watchTiktokContainer" style="display: none; width: 100%; height: 520px; background-color: #0c081c; border-radius: 20px; overflow: hidden; align-items: center; justify-content: center; padding: 24px; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="text-align: center; color: rgba(255,255,255,0.9); padding: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 16px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">📱</div>
+                <h5 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Video Tiktok ngắn</h5>
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 24px; padding: 0 10px;">Để có trải nghiệm mượt mà, tốc độ cao và đầy đủ tính năng tương tác của TikTok, hãy mở xem trực tiếp trên nền tảng nguồn!</p>
+                <a id="watchTiktokLink" href="" target="_blank" class="btn-admin" style="background: var(--primary-grad); border: none; padding: 12px 28px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; box-shadow: 0 4px 15px rgba(240, 78, 35, 0.4); transition: all 0.25s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(240, 78, 35, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(240, 78, 35, 0.4)';">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Mở Trên TikTok
                 </a>
             </div>
+        </div>
+        
+        <!-- Premium Meta Info Pill under player -->
+        <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <span>🌐 Nguồn phát: Tự động nhận diện</span>
+            <span style="color: #10b981; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
+                Sẵn sàng phát
+            </span>
         </div>
     </div>
 </div>
