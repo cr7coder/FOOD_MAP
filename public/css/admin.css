@@ -707,7 +707,7 @@ textarea.admin-form-input {
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .admin-sidebar-nav {
         display: none; /* Mobile navigation overlay handles it or falls back to header */
     }

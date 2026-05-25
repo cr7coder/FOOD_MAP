@@ -75,7 +75,10 @@ class HomeController extends Controller
     public function sitemap()
     {
         $eateries = Eatery::active()->get();
-        return response()->view('sitemap', compact('eateries'))
+        $officialTours = \App\Models\FoodTour::public()->get();
+        $communityTours = \App\Models\FoodTour::community()->get();
+        
+        return response()->view('sitemap', compact('eateries', 'officialTours', 'communityTours'))
                          ->header('Content-Type', 'text/xml');
     }
 

@@ -11,7 +11,7 @@
         gap: 24px;
     }
     
-    @media (max-width: 992px) {
+    @media (max-width: 1024px) {
         .search-detail-grid {
             grid-template-columns: 1fr !important;
             gap: 20px;
@@ -336,7 +336,43 @@
     let searchMap;
     let markers = {};
 
+    // Hàm lấy thông số màn hình động để cấu hình UI tương đối (relative specs)
+    function getScreenSpecs() {
+        const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+        return {
+            viewportWidth: width,
+            viewportHeight: height,
+            isMobile: width <= 768,
+            isTablet: width > 768 && width <= 1024,
+            isDesktop: width > 1024,
+            orientation: height > width ? 'portrait' : 'landscape'
+        };
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
+        // Căn chỉnh chiều cao container của bản đồ tương đối với chiều cao màn hình người dùng
+        const adjustMapContainerHeight = () => {
+            const specs = getScreenSpecs();
+            const mapContainer = document.querySelector('.search-map-container');
+            if (mapContainer) {
+                if (specs.isMobile) {
+                    const relativeHeight = Math.max(260, Math.min(380, specs.viewportHeight * 0.35));
+                    mapContainer.style.setProperty('height', `${relativeHeight}px`, 'important');
+                } else if (specs.isTablet) {
+                    mapContainer.style.setProperty('height', '340px', 'important');
+                } else {
+                    mapContainer.style.setProperty('height', '400px', 'important');
+                }
+            }
+        };
+
+        // Chạy căn chỉnh chiều cao lần đầu
+        adjustMapContainerHeight();
+
+        const specs = getScreenSpecs();
+        const initialZoom = specs.isMobile ? 11.5 : 12.5;
+
         // Thiết lập map Leaflet
         searchMap = L.map('searchMap', {
             zoomControl: false,
@@ -346,37 +382,16 @@
             zoomAnimation: true,
             fadeAnimation: true,
             markerZoomAnimation: true
-        }).setView([21.1352, 105.8458], 12);
-        
+        }).setView([21.1352, 105.8458], initialZoom);
+
         L.control.zoom({ position: 'bottomright' }).addTo(searchMap);
 
-        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối (Sử dụng Google Maps chính thức cho bản đồ sáng)
-        let currentTheme = localStorage.getItem('theme') || 'dark';
-        let tileUrl = currentTheme === 'light' 
-            ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
-            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-        let activeTileLayer = L.tileLayer(tileUrl, {
-            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
+        // 3. Sử dụng Tileset bản đồ màu sáng mặc định (Voyager)
+        let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(searchMap);
-
-        // Lắng nghe sự kiện đổi chế độ Sáng/Tối để đổi lớp nền bản đồ tức thì
-        document.addEventListener('theme-changed', function(e) {
-            const nextTheme = e.detail.theme;
-            const nextTileUrl = nextTheme === 'light'
-                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
-                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-            searchMap.removeLayer(activeTileLayer);
-            activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: nextTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 20
-            }).addTo(searchMap);
-        });
-
         const group = [];
 
         // Khởi tạo GPS Giả lập và Vòng tròn Bán kính tìm kiếm của Khách hàng
@@ -440,9 +455,11 @@
             }
         });
 
-        // Tự động zoom ôm trọn kết quả ban đầu
+        // Tự động zoom ôm trọn kết quả ban đầu tương đối theo thiết bị
         if (group.length > 0) {
-            searchMap.fitBounds(group, { padding: [40, 40] });
+            const specs = getScreenSpecs();
+            const boundsPadding = specs.isMobile ? [15, 15] : [40, 40];
+            searchMap.fitBounds(group, { padding: boundsPadding });
         }
 
         // 6. Tính năng lọc Real-Time Sidebar nâng cao (Từ khóa + Category + Commune + Bán kính GPS + Trạng thái đóng mở)
@@ -518,9 +535,11 @@
                 countSpan.innerText = `Tìm thấy ${matchCount} địa điểm phù hợp`;
             }
 
-            // Tự động zoom map để ôm trọn các kết quả còn hiển thị
+            // Tự động zoom map để ôm trọn các kết quả còn hiển thị tương đối theo thiết bị
             if (group.length > 0) {
-                searchMap.fitBounds(group, { padding: [40, 40] });
+                const specs = getScreenSpecs();
+                const boundsPadding = specs.isMobile ? [15, 15] : [40, 40];
+                searchMap.fitBounds(group, { padding: boundsPadding });
             }
 
             // Hiển thị hoặc ẩn thông báo không tìm thấy kết quả
@@ -808,7 +827,9 @@
             lineJoin: 'round'
         }).addTo(searchMap);
         
-        searchMap.fitBounds(activeTrailPolyline.getBounds(), { padding: [50, 50] });
+        const specs = getScreenSpecs();
+        const trailPadding = specs.isMobile ? [20, 20] : [50, 50];
+        searchMap.fitBounds(activeTrailPolyline.getBounds(), { padding: trailPadding });
         
         // Hiển thị hộp điều khiển nổi trên bản đồ
         const floatingInfo = document.createElement('div');

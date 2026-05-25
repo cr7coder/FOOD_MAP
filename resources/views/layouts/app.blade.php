@@ -28,13 +28,23 @@
     <!-- Custom Theme Styling -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
-    <!-- Mobile Native Overrides (Only load for mobile and high zoom desktops) -->
-    <link rel="stylesheet" media="screen and (max-width: 1200px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
+    <!-- Mobile Native Overrides (Only load for mobile) -->
+    <link rel="stylesheet" media="screen and (max-width: 1024px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
-    @yield('seo_schema')
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <!-- Liquid Background Gradient Blobs -->
+    <div class="liquid-bg-container">
+        <div class="liquid-blob blob-1"></div>
+        <div class="liquid-blob blob-2"></div>
+        <div class="liquid-blob blob-3"></div>
+    </div>
 
     <!-- Sticky Glass Navigation Header -->
     <header class="glass-nav">

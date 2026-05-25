@@ -1168,29 +1168,10 @@
             scrollWheelZoom: false
         }).setView([eateryLat, eateryLng], 15);
 
-        // Lớp nền phù hợp chế độ Sáng/Tối (Sử dụng Google Maps chính thức cho bản đồ sáng)
-        let currentTheme = localStorage.getItem('theme') || 'dark';
-        let tileUrl = currentTheme === 'light' 
-            ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
-            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-        let activeTileLayer = L.tileLayer(tileUrl, {
-            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO'
+        // Lớp nền màu sáng mặc định (Voyager)
+        let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(miniMap);
-
-        // Lắng nghe sự kiện đổi chế độ Sáng/Tối để đổi lớp nền bản đồ tức thì
-        document.addEventListener('theme-changed', function(e) {
-            const nextTheme = e.detail.theme;
-            const nextTileUrl = nextTheme === 'light'
-                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
-                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-            miniMap.removeLayer(activeTileLayer);
-            activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: nextTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO'
-            }).addTo(miniMap);
-        });
-
         // Custom Marker
         const customIcon = L.divIcon({
             html: `<div style="background-color: var(--primary); width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">${categoryIcon}</div>`,
@@ -1256,7 +1237,7 @@
             let utterance = null;
             let isSpeaking = false;
 
-            const audioText = `{!! isset($dossier) ? addslashes($dossier['audio_narrative']) : '' !!}`;
+            const audioText = {!! json_encode(isset($dossier) ? $dossier['audio_narrative'] : '') !!};
 
             playBtn.addEventListener("click", function() {
                 if (!synth) {
