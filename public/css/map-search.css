@@ -130,7 +130,7 @@
 /* Category Grid Slider */
 .categories-slider {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 16px;
     overflow-x: auto;
     padding: 10px 4px 20px;

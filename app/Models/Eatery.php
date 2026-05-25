@@ -266,4 +266,36 @@ class Eatery extends Model
     {
         return $this->hasMany(ReviewVideo::class);
     }
+
+    /**
+     * Food Safety Certificate Relationship (1-1)
+     */
+    public function foodSafetyCertificate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(FoodSafetyCertificate::class);
+    }
+
+    /**
+     * Food Supply Contracts Relationship (1-N)
+     */
+    public function foodSupplyContracts(): HasMany
+    {
+        return $this->hasMany(FoodSupplyContract::class)->orderBy('signed_at', 'desc');
+    }
+
+    /**
+     * Purchase Invoices Relationship (1-N)
+     */
+    public function purchaseInvoices(): HasMany
+    {
+        return $this->hasMany(PurchaseInvoice::class)->orderBy('invoice_date', 'desc');
+    }
+
+    /**
+     * Daily Food Logs Relationship (1-N)
+     */
+    public function dailyFoodLogs(): HasMany
+    {
+        return $this->hasMany(DailyFoodLog::class)->orderBy('log_date', 'desc');
+    }
 }

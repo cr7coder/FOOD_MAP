@@ -46,7 +46,7 @@
     
     <!-- Left column: Scrollable feed of eateries -->
     <div class="split-list">
-        <div>
+        <div id="listHeaderContainer">
             <?php if($selectedCatSlug === 'dac-san-dia-phuong'): ?>
                 <div style="margin-bottom: 20px; border-bottom: 1.5px dashed rgba(212, 175, 55, 0.3); padding-bottom: 16px;">
                     <span class="heritage-badge" style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; border: 1px solid rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.1); color: #ffb300; padding: 4px 10px; border-radius: 20px; display: inline-block;">🏛️ BẢN ĐỒ DI SẢN SỐ CỐ ĐÔ</span>
@@ -61,66 +61,68 @@
                     </p>
                 </div>
             <?php else: ?>
-                <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                    <span>📍</span> 
+                <h2 style="font-size: 1.25rem; margin: 6px 0 0 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; color: var(--text-main);">
+                    <span style="margin-right: 4px;">📍</span> 
                     <?php if($selectedCatSlug): ?>
                         Danh sách: <span style="color: var(--primary);"><?php echo e($categories->where('slug', $selectedCatSlug)->first()->name); ?></span>
                     <?php else: ?>
                         Địa điểm nổi bật tại Đông Anh
                     <?php endif; ?>
-                    <span id="resultsCountSpan" style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal; margin-left: auto;">
+                    <span id="resultsCountSpan" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 6px; display: inline-block; white-space: nowrap;">
                         (<?php echo e($eateries->count()); ?> kết quả)
                     </span>
                 </h2>
             <?php endif; ?>
         </div>
         
-        <?php if($eateries->count() > 0): ?>
-            <?php $__currentLoopData = $eateries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $eat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="eatery-card glass-panel" 
-                     data-slug="<?php echo e($eat->slug); ?>"
-                     data-name="<?php echo e($eat->name); ?>"
-                     data-address="<?php echo e($eat->address); ?>"
-                     data-desc="<?php echo e($eat->description); ?>"
-                     data-commune="<?php echo e($eat->commune->name); ?>"
-                     data-category="<?php echo e($eat->category->slug); ?>"
-                     onclick="focusOnEatery(<?php echo e($eat->latitude); ?>, <?php echo e($eat->longitude); ?>, '<?php echo e($eat->slug); ?>')">
-                    <div class="eatery-img-wrapper">
-                        <img src="<?php echo e($eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'); ?>" class="eatery-img" alt="<?php echo e($eat->name); ?>">
-                        <div style="position: absolute; top: 8px; left: 8px; max-width: calc(100% - 16px); display: flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
-                            <span><?php echo e($eat->category->icon); ?></span>
-                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($eat->category->name); ?></span>
+        <div id="eateriesListContainer" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
+            <?php if($eateries->count() > 0): ?>
+                <?php $__currentLoopData = $eateries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $eat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="eatery-card glass-panel" 
+                         data-slug="<?php echo e($eat->slug); ?>"
+                         data-name="<?php echo e($eat->name); ?>"
+                         data-address="<?php echo e($eat->address); ?>"
+                         data-desc="<?php echo e($eat->description); ?>"
+                         data-commune="<?php echo e($eat->commune->name); ?>"
+                         data-category="<?php echo e($eat->category->slug); ?>"
+                         onclick="focusOnEatery(<?php echo e($eat->latitude); ?>, <?php echo e($eat->longitude); ?>, '<?php echo e($eat->slug); ?>')">
+                        <div class="eatery-img-wrapper">
+                            <img src="<?php echo e($eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'); ?>" class="eatery-img" alt="<?php echo e($eat->name); ?>">
+                            <div style="position: absolute; top: 8px; left: 8px; max-width: calc(100% - 16px); display: flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
+                                <span><?php echo e($eat->category->icon); ?></span>
+                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($eat->category->name); ?></span>
+                            </div>
+                        </div>
+                        <div class="eatery-info">
+                            <div class="eatery-header">
+                                <h3 class="eatery-title"><?php echo e($eat->name); ?></h3>
+                                <div class="rating-stars">
+                                    <span>⭐</span> <?php echo e($eat->average_rating); ?>
+
+                                </div>
+                            </div>
+                            <p class="eatery-desc"><?php echo e($eat->description); ?></p>
+                            <div class="eatery-footer">
+                                <div class="eatery-meta-item">
+                                    <span>📍</span> <?php echo e($eat->commune->name); ?>
+
+                                </div>
+                                <div class="eatery-meta-item" style="color: var(--primary); font-weight: 600;">
+                                    <?php echo e($eat->price_range); ?>
+
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="eatery-info">
-                        <div class="eatery-header">
-                            <h3 class="eatery-title"><?php echo e($eat->name); ?></h3>
-                            <div class="rating-stars">
-                                <span>⭐</span> <?php echo e($eat->average_rating); ?>
-
-                            </div>
-                        </div>
-                        <p class="eatery-desc"><?php echo e($eat->description); ?></p>
-                        <div class="eatery-footer">
-                            <div class="eatery-meta-item">
-                                <span>📍</span> <?php echo e($eat->commune->name); ?>
-
-                            </div>
-                            <div class="eatery-meta-item" style="color: var(--primary); font-weight: 600;">
-                                <?php echo e($eat->price_range); ?>
-
-                            </div>
-                        </div>
-                    </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php else: ?>
+                <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">
+                    <p style="font-size: 1.2rem; margin-bottom: 8px;">😔 Không tìm thấy địa điểm nào phù hợp</p>
+                    <p style="font-size: 0.9rem;">Hãy thử lọc danh mục khác hoặc xóa bộ lọc để khám phá lại toàn bộ Đông Anh!</p>
+                    <a href="/" class="btn-primary" style="margin-top: 16px; padding: 8px 16px; text-decoration: none; display: inline-block;">Xem tất cả</a>
                 </div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        <?php else: ?>
-            <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-muted);">
-                <p style="font-size: 1.2rem; margin-bottom: 8px;">😔 Không tìm thấy địa điểm nào phù hợp</p>
-                <p style="font-size: 0.9rem;">Hãy thử lọc danh mục khác hoặc xóa bộ lọc để khám phá lại toàn bộ Đông Anh!</p>
-                <a href="/" class="btn-primary" style="margin-top: 16px; padding: 8px 16px;">Xem tất cả</a>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
     
     <!-- Right column: Premium Leaflet map -->
@@ -196,6 +198,7 @@
 
     </div>
 </div>
+
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
@@ -204,6 +207,28 @@
     const eateries = <?php echo json_encode($eateries, 15, 512) ?>;
     let map;
     let markers = {};
+
+    // Hàm tự động cuộn thẻ danh mục được chọn vào chính giữa thanh trượt trơn tru (Google Maps/Airbnb Style)
+    function centerActiveCategoryCard(cardElement) {
+        const slider = document.querySelector('.categories-slider');
+        if (!slider || !cardElement) return;
+
+        const sliderWidth = slider.clientWidth;
+        const sliderRect = slider.getBoundingClientRect();
+        const cardRect = cardElement.getBoundingClientRect();
+        
+        // Vị trí thực tế của thẻ so với điểm bắt đầu của nội dung trượt (kể cả khi đã cuộn)
+        const relativeLeft = cardRect.left - sliderRect.left + slider.scrollLeft;
+        const cardWidth = cardElement.clientWidth;
+
+        // Tính toán khoảng cách để đưa thẻ về giữa
+        const targetScrollLeft = relativeLeft - (sliderWidth / 2) + (cardWidth / 2);
+
+        slider.scrollTo({
+            left: targetScrollLeft,
+            behavior: 'smooth'
+        });
+    }
 
     document.addEventListener("DOMContentLoaded", function() {
         // 2. Thiết lập bản đồ Leaflet tâm vị trí Đông Anh (huyện lỵ)
@@ -240,48 +265,66 @@
             }).addTo(map);
         });
 
-        // 4. Vẽ các địa điểm lên Bản đồ
-        eateries.forEach(function(eat) {
-            if (eat.latitude && eat.longitude) {
-                // Biểu tượng Marker tùy chỉnh dựa trên danh mục để người dùng phân biệt trực quan
-                let categoryColor = '#ff7e29'; // Mặc định cam
-                if (eat.category.slug === 'bun-pho') categoryColor = '#ff3366';
-                if (eat.category.slug === 'lau-nuong') categoryColor = '#ff3300';
-                if (eat.category.slug === 'quan-cafe') categoryColor = '#20b2aa';
-                if (eat.category.slug === 'khach-san-nha-nghi') categoryColor = '#9d4edd';
-                if (eat.category.slug === 'dac-san-dia-phuong') categoryColor = '#38b000';
-                if (eat.category.slug === 'cho-truyen-thong') categoryColor = '#e63946';
-                if (eat.category.slug === 'cho-dan-sinh') categoryColor = '#f77f00';
-                if (eat.category.slug === 'sieu-thi') categoryColor = '#4361ee';
-                if (eat.category.slug === 'cua-hang-tien-ich') categoryColor = '#7209b7';
+        // 4. Định nghĩa hàm vẽ các địa điểm lên Bản đồ (Hỗ trợ gọi lại khi lọc AJAX)
+        window.renderEateryMarkers = function(eateriesList) {
+            // Xóa toàn bộ markers cũ trên bản đồ
+            Object.values(markers).forEach(marker => {
+                map.removeLayer(marker);
+            });
+            markers = {};
 
-                const customIcon = L.divIcon({
-                    html: `<div style="background-color: ${categoryColor}; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">${eat.category.icon}</div>`,
-                    className: 'custom-leaflet-marker',
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
-                });
-
-                // Nội dung popup hiển thị nhanh
-                const popupContent = `
-                    <div class="map-popup-card">
-                        <img src="${eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'}" class="map-popup-img">
-                        <h4 class="map-popup-title">${eat.name}</h4>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0;">📍 Xã ${eat.commune.name}</p>
-                        <div class="map-popup-footer">
-                            <span class="rating-stars">⭐ ${parseFloat(eat.rating).toFixed(1)}</span>
-                            <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading);">Xem quán</a>
-                        </div>
-                    </div>
-                `;
-
-                const marker = L.marker([eat.latitude, eat.longitude], { icon: customIcon })
-                    .bindPopup(popupContent)
-                    .addTo(map);
+            eateriesList.forEach(function(eat) {
+                if (eat.latitude && eat.longitude) {
+                    // Biểu tượng Marker tùy chỉnh dựa trên danh mục để người dùng phân biệt trực quan
+                    let categoryColor = '#ff7e29'; // Mặc định cam
+                    const catSlug = eat.category ? (eat.category.slug || eat.category) : '';
                     
-                markers[eat.slug] = marker;
-            }
-        });
+                    if (catSlug === 'bun-pho') categoryColor = '#ff3366';
+                    else if (catSlug === 'lau-nuong') categoryColor = '#ff3300';
+                    else if (catSlug === 'quan-cafe') categoryColor = '#20b2aa';
+                    else if (catSlug === 'khach-san-nha-nghi') categoryColor = '#9d4edd';
+                    else if (catSlug === 'dac-san-dia-phuong') categoryColor = '#38b000';
+                    else if (catSlug === 'cho-truyen-thong') categoryColor = '#e63946';
+                    else if (catSlug === 'cho-dan-sinh') categoryColor = '#f77f00';
+                    else if (catSlug === 'sieu-thi') categoryColor = '#4361ee';
+                    else if (catSlug === 'cua-hang-tien-ich') categoryColor = '#7209b7';
+
+                    const catIcon = eat.category ? (eat.category.icon || '📍') : '📍';
+                    const catName = eat.category ? (eat.category.name || '') : '';
+                    const communeName = eat.commune ? (eat.commune.name || eat.commune) : '';
+                    const ratingVal = eat.average_rating || (eat.rating ? parseFloat(eat.rating).toFixed(1) : '5.0');
+
+                    const customIcon = L.divIcon({
+                        html: `<div style="background-color: ${categoryColor}; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">${catIcon}</div>`,
+                        className: 'custom-leaflet-marker',
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    });
+
+                    // Nội dung popup hiển thị nhanh
+                    const popupContent = `
+                        <div class="map-popup-card">
+                            <img src="${eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'}" class="map-popup-img">
+                            <h4 class="map-popup-title">${eat.name}</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0;">📍 Xã ${communeName}</p>
+                            <div class="map-popup-footer">
+                                <span class="rating-stars">⭐ ${ratingVal}</span>
+                                <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading);">Xem quán</a>
+                            </div>
+                        </div>
+                    `;
+
+                    const marker = L.marker([eat.latitude, eat.longitude], { icon: customIcon })
+                        .bindPopup(popupContent)
+                        .addTo(map);
+                        
+                    markers[eat.slug] = marker;
+                }
+            });
+        };
+
+        // Vẽ danh sách quán ăn ban đầu lên Bản đồ
+        window.renderEateryMarkers(eateries);
 
         // 5. Logic tìm kiếm gõ real-time cực nhạy + Autocomplete gợi ý
         const searchInput = document.getElementById("searchInput");
@@ -420,12 +463,67 @@
                 suggestionDropdown.style.display = "none";
             }
         });
+
+        // 9. Lắng nghe click danh mục để lọc AJAX (Không reload trang, mượt mà kiểu SPA)
+        const catCards = document.querySelectorAll('.category-card');
+        catCards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const href = this.getAttribute('href');
+                const urlParams = new URLSearchParams(href.split('?')[1] || '');
+                const slug = urlParams.get('cat') || '';
+                
+                // Đánh dấu nút đang chọn
+                catCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Tự động cuộn thẻ được click vào chính giữa thanh trượt ngang
+                centerActiveCategoryCard(this);
+                
+                // Gọi bộ lọc AJAX
+                if (window.filterCategoryAjax) {
+                    window.filterCategoryAjax(slug, href);
+                }
+            });
+        });
+
+        // Tự động cuộn thẻ danh mục đang active vào chính giữa khi nạp trang lần đầu
+        const activeCard = document.querySelector('.category-card.active');
+        if (activeCard) {
+            setTimeout(() => {
+                centerActiveCategoryCard(activeCard);
+            }, 300);
+        }
+
+        // 7. Tự động cuộn xuống danh sách quán ăn khi người dùng lọc theo Danh mục trên Mobile
+        <?php if(request()->has('cat')): ?>
+        setTimeout(() => {
+            if (window.innerWidth <= 768) {
+                const splitList = document.querySelector('.split-list');
+                if (splitList) {
+                    window.scrollTo({
+                        top: splitList.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }, 500);
+        <?php endif; ?>
+
     });
 
     // 6. Hàm đồng bộ click card bên trái -> di chuyển camera map qua phải và mở popup marker tương ứng
     function focusOnEatery(lat, lng, slug) {
         if (map && markers[slug]) {
-            map.flyTo([lat, lng], 16, {
+            let targetLat = lat;
+            // Trên mobile, dịch chuyển tâm bản đồ lên phía bắc (lat + offset) để đẩy marker xuống phía dưới,
+            // giúp phần popup hiển thị trọn vẹn trong khung bản đồ nhỏ (320px) không bị che khuất ở cạnh trên.
+            if (window.innerWidth <= 768) {
+                targetLat = lat + 0.0018;
+            }
+
+            map.flyTo([targetLat, lng], 16, {
                 animate: true,
                 duration: 1.2
             });
@@ -433,18 +531,167 @@
                 markers[slug].openPopup();
             }, 1000);
             
-            // Cuộn màn hình lên vị trí bản đồ trên mobile
+            // Cuộn màn hình lên vị trí bản đồ trên mobile chuẩn xác ngay dưới thanh Header sticky (64px)
             if (window.innerWidth <= 992) {
-                const mapContainer = document.getElementById('map');
+                const mapContainer = document.querySelector('.split-map-container');
                 if (mapContainer) {
-                    mapContainer.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
+                    window.scrollTo({
+                        top: mapContainer.offsetTop - 64,
+                        behavior: 'smooth'
                     });
                 }
             }
         }
     }
+
+
+
+    // 10. Logic lọc danh mục qua AJAX mượt mà (SPA style, không reload trang!)
+    window.filterCategoryAjax = function(slug, href) {
+        const eateriesContainer = document.getElementById('eateriesListContainer');
+        const headerContainer = document.getElementById('listHeaderContainer');
+        
+        if (!eateriesContainer) return;
+        
+        // Thêm hiệu ứng mờ mượt khi tải
+        eateriesContainer.style.opacity = '0.4';
+        eateriesContainer.style.transition = 'opacity 0.2s ease';
+        
+        // Tạo URL request API
+        const ajaxUrl = href + (href.includes('?') ? '&' : '?') + 'ajax=1';
+        
+        fetch(ajaxUrl)
+            .then(res => res.json())
+            .then(data => {
+                // Cập nhật URL trình duyệt (không reload trang)
+                history.pushState(null, '', href);
+                
+                // Vẽ lại markers trên bản đồ
+                if (window.renderEateryMarkers) {
+                    window.renderEateryMarkers(data.eateries);
+                }
+                
+                // Cập nhật tiêu đề header của danh sách
+                if (headerContainer) {
+                    if (slug === 'dac-san-dia-phuong') {
+                        headerContainer.innerHTML = `
+                            <div style="margin-bottom: 20px; border-bottom: 1.5px dashed rgba(212, 175, 55, 0.3); padding-bottom: 16px;">
+                                <span class="heritage-badge" style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; border: 1px solid rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.1); color: #ffb300; padding: 4px 10px; border-radius: 20px; display: inline-block;">🏛️ BẢN ĐỒ DI SẢN SỐ CỐ ĐÔ</span>
+                                <h2 style="font-size: 1.6rem; font-family: var(--font-heading); font-weight: 800; margin: 4px 0 6px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <span style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Không Gian Số Di Sản Ẩm Thực</span>
+                                    <span id="resultsCountSpan" style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">
+                                        (${data.eateries.length} di sản)
+                                    </span>
+                                </h2>
+                                <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
+                                    Khám phá nguồn gốc lịch sử, câu chuyện làng nghề và gặp gỡ các nghệ nhân gìn giữ tinh hoa ẩm thực Kinh Bắc qua hàng ngàn năm dựng nước & giữ nước.
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        const activeCard = document.querySelector('.category-card.active');
+                        const catName = activeCard ? activeCard.querySelector('.cat-name').innerText : 'Tất cả';
+                        const titleText = slug ? `Danh sách: <span style="color: var(--primary);">${catName}</span>` : `Địa điểm nổi bật tại Đông Anh`;
+                        
+                        headerContainer.innerHTML = `
+                            <h2 style="font-size: 1.25rem; margin: 6px 0 0 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; color: var(--text-main);">
+                                <span style="margin-right: 4px;">📍</span> 
+                                ${titleText}
+                                <span id="resultsCountSpan" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 6px; display: inline-block; white-space: nowrap;">
+                                    (${data.eateries.length} kết quả)
+                                </span>
+                            </h2>
+                        `;
+                    }
+                }
+                
+                // Re-render danh sách quán ăn
+                if (data.eateries.length > 0) {
+                    let cardsHtml = '';
+                    data.eateries.forEach(eat => {
+                        const imgUrl = eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80';
+                        const ratingVal = eat.average_rating || (eat.rating ? parseFloat(eat.rating).toFixed(1) : '5.0');
+                        const communeName = eat.commune ? (eat.commune.name || eat.commune) : '';
+                        const categoryIcon = eat.category ? (eat.category.icon || '') : '';
+                        const categoryName = eat.category ? (eat.category.name || '') : '';
+                        const categorySlug = eat.category ? (eat.category.slug || '') : '';
+
+                        cardsHtml += `
+                            <div class="eatery-card glass-panel" 
+                                 data-slug="${eat.slug}"
+                                 data-name="${eat.name}"
+                                 data-address="${eat.address}"
+                                 data-desc="${eat.description}"
+                                 data-commune="${communeName}"
+                                 data-category="${categorySlug}"
+                                 style="animation: fadeIn 0.4s ease forwards;"
+                                 onclick="focusOnEatery(${eat.latitude}, ${eat.longitude}, '${eat.slug}')">
+                                <div class="eatery-img-wrapper">
+                                    <img src="${imgUrl}" class="eatery-img" alt="${eat.name}">
+                                    <div style="position: absolute; top: 8px; left: 8px; max-width: calc(100% - 16px); display: flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
+                                        <span>${categoryIcon}</span>
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${categoryName}</span>
+                                    </div>
+                                </div>
+                                <div class="eatery-info">
+                                    <div class="eatery-header">
+                                        <h3 class="eatery-title">${eat.name}</h3>
+                                        <div class="rating-stars">
+                                            <span>⭐</span> ${ratingVal}
+                                        </div>
+                                    </div>
+                                    <p class="eatery-desc">${eat.description}</p>
+                                    <div class="eatery-footer">
+                                        <div class="eatery-meta-item">
+                                            <span>📍</span> ${communeName}
+                                        </div>
+                                        <div class="eatery-meta-item" style="color: var(--primary); font-weight: 600;">
+                                            ${eat.price_range}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    eateriesContainer.innerHTML = cardsHtml;
+                } else {
+                    eateriesContainer.innerHTML = `
+                        <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">
+                            <p style="font-size: 1.2rem; margin-bottom: 8px; color: var(--text-main);">😔 Không tìm thấy địa điểm nào phù hợp</p>
+                            <p style="font-size: 0.9rem;">Hãy thử lọc danh mục khác hoặc xóa bộ lọc để khám phá lại toàn bộ Đông Anh!</p>
+                            <a href="/" class="btn-primary" style="margin-top: 16px; padding: 8px 16px; text-decoration: none; display: inline-block;">Xem tất cả</a>
+                        </div>
+                    `;
+                    // Tự động gắn sự kiện click cho nút "Xem tất cả" vừa tạo mới qua ajax
+                    const viewAllBtn = eateriesContainer.querySelector('a');
+                    if (viewAllBtn) {
+                        viewAllBtn.addEventListener('click', function(evt) {
+                            evt.preventDefault();
+                            const allCatCard = document.querySelector('.category-card[href="/"]');
+                            if (allCatCard) allCatCard.click();
+                        });
+                    }
+                }
+                
+                // Mở lại độ mờ
+                eateriesContainer.style.opacity = '1';
+                
+                // Tự động cuộn xuống danh sách quán ăn trên di động
+                if (window.innerWidth <= 768) {
+                    const splitList = document.querySelector('.split-list');
+                    if (splitList) {
+                        window.scrollTo({
+                            top: splitList.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("AJAX loading error:", err);
+                eateriesContainer.style.opacity = '1';
+            });
+    };
 
     // ==========================================================================
     // DYNAMIC TIKTOK REELS-STYLE PLAYER FOR TÓP TÓP FOOD TOUR

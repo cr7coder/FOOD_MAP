@@ -171,7 +171,14 @@ class AdminController extends Controller
     {
         $this->verifyAdmin();
 
-        $eatery = Eatery::with('dishes')->findOrFail($id);
+        $eatery = Eatery::with([
+            'dishes',
+            'reviewVideos',
+            'foodSafetyCertificate',
+            'foodSupplyContracts',
+            'purchaseInvoices',
+            'dailyFoodLogs'
+        ])->findOrFail($id);
         
         // Ngăn chặn Seller chỉnh sửa quán ăn của người khác
         if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
@@ -397,6 +404,57 @@ class AdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Thêm món ăn vào thực đơn thành công!');
+    }
+
+    /**
+     * Cập nhật thông tin món ăn trong thực đơn
+     */
+    public function updateDish(Request $request, $id)
+    {
+        $this->verifyAdmin();
+
+        $request->validate([
+            'dish_name' => 'required|string|max:100',
+            'dish_price' => 'required|numeric|min:0',
+            'dish_description' => 'nullable|string',
+            'dish_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'dish_image_url' => 'nullable|url',
+            'is_signature' => 'nullable|boolean',
+        ]);
+
+        $dish = \App\Models\Dish::findOrFail($id);
+        $eatery = Eatery::findOrFail($dish->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
+        }
+
+        $imagePath = $dish->image_path;
+
+        // Xử lý upload ảnh món ăn mới qua Google Drive (có fallback cục bộ)
+        if ($request->hasFile('dish_image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('dish_image'), 'dishes');
+        } elseif ($request->has('dish_image_url')) {
+            if ($request->dish_image_url) {
+                $url = $request->dish_image_url;
+                if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
+                    $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
+                } else {
+                    $imagePath = $url;
+                }
+            } else {
+                $imagePath = null;
+            }
+        }
+
+        $dish->update([
+            'name' => $request->dish_name,
+            'price' => $request->dish_price,
+            'description' => $request->dish_description,
+            'image_path' => $imagePath,
+            'is_signature' => $request->has('is_signature'),
+        ]);
+
+        return redirect()->back()->with('success', 'Cập nhật món ăn thành công!');
     }
 
     /**
@@ -668,6 +726,195 @@ class AdminController extends Controller
         $video->delete();
 
         return redirect()->back()->with('success', '🗑️ Xóa video review thành công!');
+    }
+
+    /**
+     * Cập nhật Giấy Chứng Nhận An Toàn Thực Phẩm
+     */
+    public function storeFoodSafetyCertificate(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'certificate_number' => 'required|string|max:100',
+            'issued_by' => 'required|string|max:150',
+            'issued_at' => 'required|date',
+            'expired_at' => 'required|date|after:issued_at',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền cập nhật hồ sơ của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/certificates/default-cert.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'certificates');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\FoodSafetyCertificate::updateOrCreate(
+            ['eatery_id' => $request->eatery_id],
+            [
+                'certificate_number' => $request->certificate_number,
+                'issued_by' => $request->issued_by,
+                'issued_at' => $request->issued_at,
+                'expired_at' => $request->expired_at,
+                'image_path' => $imagePath,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Cập nhật Giấy chứng nhận ATTP thành công!');
+    }
+
+    /**
+     * Ghi nhật ký kiểm tra an toàn thực phẩm hàng ngày
+     */
+    public function storeDailyFoodLog(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'log_date' => 'required|date',
+            'ingredients_origin' => 'required|string|max:255',
+            'storage_condition' => 'required|string|max:255',
+            'checker_name' => 'required|string|max:100',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
+        }
+
+        \App\Models\DailyFoodLog::create([
+            'eatery_id' => $request->eatery_id,
+            'log_date' => $request->log_date,
+            'ingredients_origin' => $request->ingredients_origin,
+            'storage_condition' => $request->storage_condition,
+            'checker_name' => $request->checker_name,
+        ]);
+
+        return redirect()->back()->with('success', 'Ghi nhật ký kiểm tra vệ sinh hàng ngày thành công!');
+    }
+
+    /**
+     * Thêm hợp đồng cung cấp thực phẩm
+     */
+    public function storeFoodSupplyContract(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'supplier_name' => 'required|string|max:150',
+            'items_supplied' => 'required|string|max:255',
+            'signed_at' => 'required|date',
+            'expired_at' => 'required|date|after:signed_at',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/contracts/default-contract.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'contracts');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\FoodSupplyContract::create([
+            'eatery_id' => $request->eatery_id,
+            'supplier_name' => $request->supplier_name,
+            'items_supplied' => $request->items_supplied,
+            'signed_at' => $request->signed_at,
+            'expired_at' => $request->expired_at,
+            'image_path' => $imagePath,
+        ]);
+
+        return redirect()->back()->with('success', 'Thêm mới hợp đồng cung cấp thành công!');
+    }
+
+    /**
+     * Thêm hóa đơn mua bán thực phẩm
+     */
+    public function storePurchaseInvoice(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'supplier_name' => 'required|string|max:150',
+            'items_summary' => 'required|string|max:255',
+            'invoice_date' => 'required|date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/invoices/default-invoice.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'invoices');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\PurchaseInvoice::create([
+            'eatery_id' => $request->eatery_id,
+            'supplier_name' => $request->supplier_name,
+            'items_summary' => $request->items_summary,
+            'invoice_date' => $request->invoice_date,
+            'image_path' => $imagePath,
+        ]);
+
+        return redirect()->back()->with('success', 'Thêm mới hóa đơn mua bán thành công!');
+    }
+
+    public function destroyFoodSupplyContract($id)
+    {
+        $this->verifyAdmin();
+        $contract = \App\Models\FoodSupplyContract::findOrFail($id);
+        $eatery = Eatery::findOrFail($contract->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
+        }
+
+        $contract->delete();
+        return redirect()->back()->with('success', 'Xóa hợp đồng thành công!');
+    }
+
+    public function destroyPurchaseInvoice($id)
+    {
+        $this->verifyAdmin();
+        $invoice = \App\Models\PurchaseInvoice::findOrFail($id);
+        $eatery = Eatery::findOrFail($invoice->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
+        }
+
+        $invoice->delete();
+        return redirect()->back()->with('success', 'Xóa hóa đơn thành công!');
+    }
+
+    public function destroyDailyFoodLog($id)
+    {
+        $this->verifyAdmin();
+        $log = \App\Models\DailyFoodLog::findOrFail($id);
+        $eatery = Eatery::findOrFail($log->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
+        }
+
+        $log->delete();
+        return redirect()->back()->with('success', 'Xóa nhật ký kiểm tra thành công!');
     }
 }
 

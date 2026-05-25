@@ -1,343 +1,946 @@
-<?php $__env->startSection('title', ($eatery ? 'Sửa địa điểm: ' . $eatery->name : 'Thêm địa điểm mới') . ' - Dong Anh Food Map'); ?>
+<?php $__env->startSection('title', ($eatery ? '⚙️ Quản lý: ' . $eatery->name : 'Thêm địa điểm mới')); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="container" style="padding-top: 40px; padding-bottom: 60px;">
-    <div class="admin-layout">
+
+<!-- Welcome Workspace Banner -->
+<div class="admin-welcome-banner" style="background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 1.45rem;">🏢 <?php echo e($eatery ? $eatery->name : 'Thêm cơ sở mới'); ?></h1>
+        <p><?php echo e($eatery ? 'Không gian làm việc & điều phối hồ sơ pháp lý cơ sở' : 'Khai báo hồ sơ ban đầu cho cơ sở kinh doanh mới'); ?></p>
+    </div>
+    <div style="font-size: 2rem;">⚙️</div>
+</div>
+
+<!-- Errors Alert Banner -->
+<?php if($errors->any()): ?>
+    <div class="admin-alert admin-alert-warning" style="background-color: #fee2e2; border-color: #fecaca; color: #b91c1c;">
+        <div>
+            <strong style="display: block; margin-bottom: 6px;">⚠️ Vui lòng hoàn thiện các trường thông tin hợp lệ:</strong>
+            <ul style="padding-left: 20px; font-size: 0.85rem;">
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </ul>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Success Status Alert Banner -->
+<?php if(session('success')): ?>
+    <div class="admin-alert admin-alert-success">
+        <span>🎉</span>
+        <div>
+            <strong>Thành công!</strong> <?php echo e(session('success')); ?>
+
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- ==========================================================================
+     SUB-TAB WORKSPACE SWITCHER
+     ========================================================================== -->
+<div class="admin-sub-tabs">
+    <button type="button" class="admin-sub-tab-btn active" onclick="switchSubTab(event, 'tab-info')">
+        📍 1. Thông tin & Bản đồ
+    </button>
+    <?php if($eatery): ?>
+    <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-dishes')">
+        🍔 2. Thực đơn món ngon (<?php echo e($eatery->dishes->count()); ?>)
+    </button>
+    <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-videos')">
+        🎥 3. Video Review của quán (<?php echo e($eatery->reviewVideos->count()); ?>)
+    </button>
+    <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-attp')">
+        🛡️ 4. Giấy VSATTP & Nhật ký
+    </button>
+    <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-contracts')">
+        🧾 5. Hợp đồng & Hóa đơn
+    </button>
+    <?php endif; ?>
+</div>
+
+<!-- ==========================================================================
+     TAB 1: BASIC INFO & MAP COORDINATES PICKER
+     ========================================================================== -->
+<div id="tab-info" class="admin-tab-section" style="display: block;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <span>📍</span> Hồ sơ & Định vị cơ sở GPS
+            </h2>
+        </div>
         
-        <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar glass-panel">
-            <h3 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 8px;">
-                ⚙️ Menu Quản Trị
-            </h3>
-            <a href="/admin/dashboard" class="admin-menu-item">
-                <span>📊</span> Tổng quan số liệu
-            </a>
-            <?php if(session('user_role') === 'admin'): ?>
-            <a href="/admin/eateries/create" class="admin-menu-item <?php echo e(!$eatery ? 'active' : ''); ?>">
-                <span>➕</span> Thêm địa điểm mới
-            </a>
-            <?php endif; ?>
-            <a href="/" class="admin-menu-item">
-                <span>🗺️</span> Xem Bản đồ tổng
-            </a>
-        </aside>
-        
-        <!-- Main Form Area -->
-        <div class="admin-content">
-            
-            <div style="margin-bottom: 30px;">
-                <h1 style="font-size: 2rem; font-family: var(--font-heading); background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; padding: 8px 0; line-height: 1.3;">
-                    <?php echo e($eatery ? 'Sửa thông tin địa điểm' : 'Thêm địa điểm ẩm thực'); ?>
-
-                </h1>
-                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">
-                    <?php echo e($eatery ? 'Thay đổi thông tin chi tiết của: ' . $eatery->name : 'Tạo mới một cửa hàng, nhà hàng, cafe, khách sạn hoặc đặc sản Đông Anh'); ?>
-
-                </p>
-            </div>
-
-            <!-- Error List Banner -->
-            <?php if($errors->any()): ?>
-                <div class="glass-panel" style="background: rgba(240, 78, 35, 0.1); border-color: var(--primary-hover); padding: 14px 20px; border-radius: 8px; margin-bottom: 24px; color: var(--primary); font-size: 0.85rem;">
-                    <strong style="display: block; margin-bottom: 6px;">⚠️ Vui lòng sửa lại các thông tin lỗi dưới đây:</strong>
-                    <ul style="padding-left: 20px;">
-                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <li><?php echo e($error); ?></li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
-
-            <!-- Form Content -->
-            <div class="glass-panel" style="padding: 32px;">
-                <form action="<?php echo e($eatery ? '/admin/eateries/' . $eatery->id : '/admin/eateries'); ?>" method="POST" enctype="multipart/form-data">
-                    <?php echo csrf_field(); ?>
-                    <?php if($eatery): ?>
-                        <?php echo method_field('PUT'); ?>
-                    <?php endif; ?>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                        
-                        <!-- LEFT column (Text inputs) -->
-                        <div>
-                            <!-- Tên Quán -->
-                            <div class="review-form-group">
-                                <label class="review-form-label">Tên cơ sở / địa điểm <span style="color: var(--primary);">*</span></label>
-                                <input type="text" name="name" class="form-input" required placeholder="Ví dụ: Bún Mạch Tràng Cổ Loa" value="<?php echo e(old('name', $eatery ? $eatery->name : '')); ?>">
-                            </div>
-                            
-                            <!-- Danh mục và Xã -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Loại hình / Danh mục <span style="color: var(--primary);">*</span></label>
-                                    <select name="category_id" class="form-input" required>
-                                        <option value="">-- Chọn danh mục --</option>
-                                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($cat->id); ?>" <?php echo e(old('category_id', $eatery ? $eatery->category_id : '') == $cat->id ? 'selected' : ''); ?>>
-                                                <?php echo e($cat->icon); ?> <?php echo e($cat->name); ?>
-
-                                            </option>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                    </select>
-                                </div>
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Khu vực Xã / Thị trấn <span style="color: var(--primary);">*</span></label>
-                                    <select name="commune_id" class="form-input" required>
-                                        <option value="">-- Chọn Xã --</option>
-                                        <?php $__currentLoopData = $communes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $com): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                            <option value="<?php echo e($com->id); ?>" <?php echo e(old('commune_id', $eatery ? $eatery->commune_id : '') == $com->id ? 'selected' : ''); ?>>
-                                                📍 Xã <?php echo e($com->name); ?>
-
-                                            </option>
-                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Địa chỉ chi tiết -->
-                            <div class="review-form-group">
-                                <label class="review-form-label">Địa chỉ chi tiết <span style="color: var(--primary);">*</span></label>
-                                <input type="text" name="address" class="form-input" required placeholder="Ví dụ: Thôn Mạch Tràng, Xã Cổ Loa, Đông Anh" value="<?php echo e(old('address', $eatery ? $eatery->address : '')); ?>">
-                            </div>
-                            
-                            <!-- Điện thoại & Giờ mở cửa -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Số điện thoại liên hệ</label>
-                                    <input type="text" name="phone" class="form-input" placeholder="Ví dụ: 0987654321" value="<?php echo e(old('phone', $eatery ? $eatery->phone : '')); ?>">
-                                </div>
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Giờ mở cửa</label>
-                                    <input type="text" name="opening_hours" class="form-input" placeholder="Ví dụ: 06:00 - 21:00" value="<?php echo e(old('opening_hours', $eatery ? $eatery->opening_hours : '')); ?>">
-                                </div>
-                            </div>
-                            
-                            <!-- Mức giá & Khác -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Mức giá tham khảo</label>
-                                    <input type="text" name="price_range" class="form-input" placeholder="Ví dụ: 30.000đ - 70.000đ" value="<?php echo e(old('price_range', $eatery ? $eatery->price_range : '')); ?>">
-                                </div>
-                                <?php if(session('user_role') === 'admin'): ?>
-                                <div class="review-form-group" style="display: flex; align-items: center; padding-top: 35px;">
-                                    <label style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem;">
-                                        <input type="checkbox" name="is_featured" value="1" <?php echo e(old('is_featured', $eatery ? $eatery->is_featured : false) ? 'checked' : ''); ?> style="width: 18px; height: 18px; accent-color: var(--primary);">
-                                        <strong>⭐ Đánh dấu là Địa điểm nổi bật</strong>
-                                    </label>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <!-- Upload ảnh -->
-                            <div class="review-form-group">
-                                <label class="review-form-label">Ảnh đại diện (Upload từ thiết bị)</label>
-                                <input type="file" name="image" class="form-input" accept="image/*" style="padding: 8px 16px;">
-                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">Chấp nhận định dạng file ảnh jpg, png dung lượng &lt; 10MB</span>
-                            </div>
-                            
-                            <div class="review-form-group">
-                                <label class="review-form-label">Hoặc Đường dẫn ảnh URL (Nếu không muốn upload)</label>
-                                <input type="url" name="image_url" class="form-input" placeholder="https://example.com/photo.jpg" value="<?php echo e(old('image_url', $eatery && !Str::startsWith($eatery->image_path, '/uploads') ? $eatery->image_path : '')); ?>">
-                            </div>
-                        </div>
-                        
-                        <!-- RIGHT column (Map coordinates picker & Description) -->
-                        <div>
-                            <!-- Tự động lấy tọa độ từ Google Maps Link -->
-                            <div class="review-form-group">
-                                <label class="review-form-label" style="display: flex; justify-content: space-between;">
-                                    <span>🔗 Dán đường dẫn Google Maps để lấy tọa độ tự động</span>
-                                    <span style="color: var(--accent); font-weight: 500;">(Hỗ trợ cả link chia sẻ maps.app.goo.gl)</span>
-                                </label>
-                                <div style="display: flex; gap: 12px;">
-                                    <input type="url" id="gmapsUrlInput" class="form-input" placeholder="Ví dụ: https://maps.app.goo.gl/6F4vV18TNTa2o77q8 hoặc desktop maps link..." style="flex: 1; min-width: 0;">
-                                    <button type="button" id="btnExtractCoords" class="btn-primary" style="padding: 0 20px; font-size: 0.9rem; white-space: nowrap; cursor: pointer;">
-                                        ⚡ Trích xuất
-                                    </button>
-                                </div>
-                                <span id="gmapsHelperText" style="font-size: 0.8rem; display: block; margin-top: 6px;"></span>
-                            </div>
-
-                            <!-- Kinh độ & Vĩ độ -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Vĩ độ (Latitude) <span style="color: var(--primary);">*</span></label>
-                                    <input type="number" step="any" name="latitude" id="latInput" class="form-input" required placeholder="Vĩ độ GPS..." value="<?php echo e(old('latitude', $eatery ? $eatery->latitude : '')); ?>">
-                                </div>
-                                <div class="review-form-group">
-                                    <label class="review-form-label">Kinh độ (Longitude) <span style="color: var(--primary);">*</span></label>
-                                    <input type="number" step="any" name="longitude" id="lngInput" class="form-input" required placeholder="Kinh độ GPS..." value="<?php echo e(old('longitude', $eatery ? $eatery->longitude : '')); ?>">
-                                </div>
-                            </div>
-                            
-                            <!-- Map Coordinates Picker Widget -->
-                            <div class="review-form-group">
-                                <label class="review-form-label" style="display: flex; justify-content: space-between;">
-                                    <span>🎯 Bộ chọn vị trí trực quan trên Bản đồ</span>
-                                    <span style="color: var(--accent); font-weight: 500;">(Nhấp chuột lên bản đồ để lấy tọa độ tự động)</span>
-                                </label>
-                                <div class="coordinates-picker-map" id="pickerMap"></div>
-                            </div>
-                            
-                            <!-- Giới thiệu quán -->
-                            <div class="review-form-group" style="margin-top: 20px;">
-                                <label class="review-form-label">Giới thiệu tóm tắt quán ăn / khách sạn</label>
-                                <textarea name="description" class="form-input" rows="5" placeholder="Nhập các đặc điểm nổi bật, lịch sử món ăn hoặc không gian phục vụ..." style="resize: vertical;"><?php echo e(old('description', $eatery ? $eatery->description : '')); ?></textarea>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    
-                    <!-- Action Submit -->
-                    <div style="border-top: 1px solid var(--border-glow); padding-top: 24px; margin-top: 24px; display: flex; justify-content: flex-end; gap: 16px;">
-                        <a href="/admin/dashboard" class="btn-secondary">Hủy bỏ</a>
-                        <button type="submit" class="btn-primary" style="padding: 12px 32px;">
-                            <?php echo e($eatery ? 'Cập nhật địa điểm' : 'Lưu lại & Số hóa'); ?>
-
-                        </button>
-                    </div>
-                    
-                </form>
-            </div>
-
-            <!-- Xuất Mã QR Code Thông Minh cho Cửa hàng -->
+        <form action="<?php echo e($eatery ? '/admin/eateries/' . $eatery->id : '/admin/eateries'); ?>" method="POST" enctype="multipart/form-data">
+            <?php echo csrf_field(); ?>
             <?php if($eatery): ?>
-                <div class="glass-panel" style="padding: 24px; margin-top: 30px; display: flex; gap: 24px; align-items: center; background: rgba(32, 178, 170, 0.05); border-color: var(--accent);">
-                    <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?php echo e(urlencode(url('/dia-diem/dac-san/' . $eatery->slug))); ?>" alt="QR Code" style="width: 140px; height: 140px; display: block; mix-blend-mode: multiply;">
-                    </div>
-                    <div>
-                        <h2 style="font-size: 1.3rem; font-family: var(--font-heading); color: var(--accent); margin-bottom: 8px;">📲 QR Code Cửa Hàng Thông Minh</h2>
-                        <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 12px;">Mã QR Code này trỏ thẳng đến trang chi tiết của địa điểm này trên hệ thống Bản đồ Ẩm thực.</p>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;"><strong>💡 Mẹo kinh doanh:</strong> Lưu hình ảnh mã QR này và in ra đặt tại bàn ăn. Khách hàng quét mã sẽ được dẫn thẳng vào trang để xem thực đơn đặc trưng và để lại Đánh giá 5 Sao!</p>
-                    </div>
-                </div>
-
-                <!-- Quản lý Thực đơn & Món ăn đặc trưng -->
-                <div class="glass-panel" style="padding: 32px; margin-top: 30px;">
-                    <h2 style="font-size: 1.5rem; margin-bottom: 20px; font-family: var(--font-heading); color: var(--primary); display: flex; align-items: center; gap: 8px;">
-                        <span>📖</span> Quản lý Thực đơn & Món ăn đặc trưng
-                    </h2>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">
-                        Thêm các món ăn tiêu biểu của quán để hiển thị trực quan lên trang chi tiết, giúp người dùng dễ dàng tìm kiếm và xem thực đơn đặc trưng.
-                    </p>
-
-                    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 24px;">
-                        
-                        <!-- Left: Current Dishes List -->
-                        <div>
-                            <h3 style="font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 6px;">
-                                <span>📋</span> Danh sách món ăn hiện tại (<?php echo e($eatery->dishes->count()); ?>)
-                            </h3>
-
-                            <?php if($eatery->dishes->count() > 0): ?>
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-                                    <?php $__currentLoopData = $eatery->dishes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dish): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <div class="dish-card glass-panel" style="display: flex; gap: 16px; padding: 12px; align-items: center; position: relative;">
-                                            <img src="<?php echo e($dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80&q=80'); ?>" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover;" alt="<?php echo e($dish->name); ?>">
-                                            <div style="flex: 1;">
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <h4 style="font-size: 1.05rem; font-weight: 600; margin: 0; color: var(--text-main);"><?php echo e($dish->name); ?></h4>
-                                                    <?php if($dish->is_signature): ?>
-                                                        <span class="tag-badge" style="background: var(--primary); padding: 1px 6px; font-size: 0.65rem; font-weight: 700; color: white; border-radius: 4px;">★ Đặc trưng</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;"><?php echo e($dish->description ?: 'Chưa có mô tả ngắn'); ?></p>
-                                                <span style="font-weight: 700; color: var(--accent); font-size: 0.95rem; margin-top: 4px; display: inline-block;"><?php echo e(number_format($dish->price, 0, ',', '.')); ?>đ</span>
-                                            </div>
-                                            <div style="display: flex; gap: 8px;">
-                                                <!-- Toggle Signature form -->
-                                                <form action="/admin/dishes/<?php echo e($dish->id); ?>/toggle-signature" method="POST">
-                                                    <?php echo csrf_field(); ?>
-                                                    <button type="submit" class="btn-secondary" style="padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; border-color: var(--border-glow);" title="Bật/Tắt món đặc trưng">
-                                                        <?php echo e($dish->is_signature ? '★ Gỡ đặc trưng' : '☆ Đặt đặc trưng'); ?>
-
-                                                    </button>
-                                                </form>
-
-                                                <!-- Delete form -->
-                                                <form action="/admin/dishes/<?php echo e($dish->id); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa món này khỏi thực đơn?')">
-                                                    <?php echo csrf_field(); ?>
-                                                    <?php echo method_field('DELETE'); ?>
-                                                    <button type="submit" class="btn-secondary" style="padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; color: #ff3333; border-color: rgba(255, 51, 51, 0.2);" title="Xóa món ăn">
-                                                        🗑️ Xóa
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-muted); background: rgba(255,255,255,0.01);">
-                                    <p style="font-size: 0.9rem;">Thực đơn hiện tại đang trống.</p>
-                                    <p style="font-size: 0.8rem; margin-top: 4px;">Hãy sử dụng form bên phải để thêm món ăn đầu tiên của quán!</p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Right: Add New Dish Form -->
-                        <div>
-                            <div class="glass-panel" style="padding: 20px; background: rgba(255,255,255,0.015); border-color: var(--border-glow);">
-                                <h3 style="font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; color: var(--accent);">
-                                    <span>➕</span> Thêm món mới
-                                </h3>
-                                
-                                <form action="/admin/dishes" method="POST" enctype="multipart/form-data">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
-
-                                    <div class="review-form-group">
-                                        <label class="review-form-label" style="font-size: 0.8rem;">Tên món ăn <span style="color: var(--primary);">*</span></label>
-                                        <input type="text" name="dish_name" class="form-input" required placeholder="Ví dụ: Bún chả nguội..." style="font-size: 0.85rem; padding: 8px 12px;">
-                                    </div>
-
-                                    <div class="review-form-group">
-                                        <label class="review-form-label" style="font-size: 0.8rem;">Giá bán (VNĐ) <span style="color: var(--primary);">*</span></label>
-                                        <input type="number" name="dish_price" class="form-input" required placeholder="Ví dụ: 35000" style="font-size: 0.85rem; padding: 8px 12px;">
-                                    </div>
-
-                                    <div class="review-form-group">
-                                        <label class="review-form-label" style="font-size: 0.8rem;">Mô tả ngắn</label>
-                                        <textarea name="dish_description" class="form-input" rows="2" placeholder="Ví dụ: Bún chả truyền thống kèm nước dùng..." style="font-size: 0.85rem; padding: 8px 12px; resize: vertical;"></textarea>
-                                    </div>
-
-                                    <div class="review-form-group">
-                                        <label class="review-form-label" style="font-size: 0.8rem;">Ảnh món ăn (Upload)</label>
-                                        <input type="file" name="dish_image" class="form-input" accept="image/*" style="font-size: 0.8rem; padding: 6px 12px;">
-                                    </div>
-
-                                    <div class="review-form-group">
-                                        <label class="review-form-label" style="font-size: 0.8rem;">Hoặc Ảnh URL</label>
-                                        <input type="url" name="dish_image_url" class="form-input" placeholder="https://example.com/dish.jpg" style="font-size: 0.85rem; padding: 8px 12px;">
-                                    </div>
-
-                                    <div class="review-form-group" style="display: flex; align-items: center; margin-top: 15px;">
-                                        <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
-                                            <input type="checkbox" name="is_signature" value="1" style="width: 16px; height: 16px; accent-color: var(--primary);">
-                                            <strong>★ Là món đặc trưng nổi bật</strong>
-                                        </label>
-                                    </div>
-
-                                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 15px; font-size: 0.85rem; padding: 10px 0;">
-                                        Lưu món ăn
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="glass-panel" style="padding: 20px; text-align: center; margin-top: 30px; color: var(--text-muted); background: rgba(255,255,255,0.01);">
-                    <p style="font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        <span>💡</span> <em>Sau khi lưu/tạo mới thông tin địa điểm này thành công, bạn sẽ có thể thêm và quản lý chi tiết thực đơn / món ăn đặc trưng ngay tại trang sửa (Edit).</em>
-                    </p>
-                </div>
+                <?php echo method_field('PUT'); ?>
             <?php endif; ?>
+
+            <div class="admin-split-layout">
+                
+                <!-- Left Details Column -->
+                <div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Tên cơ sở / quán ăn / khách sạn <span style="color: var(--admin-danger);">*</span></label>
+                        <input type="text" name="name" class="admin-form-input" required placeholder="Ví dụ: Bún chả Hùng Thái Cổ Loa" value="<?php echo e(old('name', $eatery ? $eatery->name : '')); ?>">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Phân loại danh mục <span style="color: var(--admin-danger);">*</span></label>
+                            <select name="category_id" class="admin-form-input" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cat->id); ?>" <?php echo e(old('category_id', $eatery ? $eatery->category_id : '') == $cat->id ? 'selected' : ''); ?>>
+                                        <?php echo e($cat->icon); ?> <?php echo e($cat->name); ?>
+
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Địa bàn xã / Thị trấn <span style="color: var(--admin-danger);">*</span></label>
+                            <select name="commune_id" class="admin-form-input" required>
+                                <option value="">-- Chọn Xã --</option>
+                                <?php $__currentLoopData = $communes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $com): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($com->id); ?>" <?php echo e(old('commune_id', $eatery ? $eatery->commune_id : '') == $com->id ? 'selected' : ''); ?>>
+                                        📍 Xã <?php echo e($com->name); ?>
+
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Địa chỉ chi tiết <span style="color: var(--admin-danger);">*</span></label>
+                        <input type="text" name="address" class="admin-form-input" required placeholder="Ví dụ: Thôn Mạch Tràng, Xã Cổ Loa, Đông Anh" value="<?php echo e(old('address', $eatery ? $eatery->address : '')); ?>">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Số điện thoại liên hệ</label>
+                            <input type="text" name="phone" class="admin-form-input" placeholder="Ví dụ: 0987654321" value="<?php echo e(old('phone', $eatery ? $eatery->phone : '')); ?>">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Giờ mở cửa</label>
+                            <input type="text" name="opening_hours" class="admin-form-input" placeholder="Ví dụ: 06:00 - 22:00" value="<?php echo e(old('opening_hours', $eatery ? $eatery->opening_hours : '')); ?>">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Mức giá tham khảo</label>
+                            <input type="text" name="price_range" class="admin-form-input" placeholder="Ví dụ: 30.000đ - 80.000đ" value="<?php echo e(old('price_range', $eatery ? $eatery->price_range : '')); ?>">
+                        </div>
+                        <?php if(session('user_role') === 'admin'): ?>
+                        <div class="admin-form-group" style="display: flex; align-items: center; padding-top: 32px;">
+                            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 700; color: var(--admin-text-main);">
+                                <input type="checkbox" name="is_featured" value="1" <?php echo e(old('is_featured', $eatery ? $eatery->is_featured : false) ? 'checked' : ''); ?> style="width: 17px; height: 17px; accent-color: var(--admin-primary); cursor: pointer;">
+                                ⭐ Đánh dấu địa điểm nổi bật
+                            </label>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Ảnh đại diện cơ sở (Upload)</label>
+                        <input type="file" name="image" class="admin-form-input" accept="image/*" style="padding: 6px 12px;">
+                        <?php if($eatery && $eatery->image_path): ?>
+                            <span style="font-size: 0.75rem; color: var(--admin-text-muted); display: block; margin-top: 5px;">Ảnh hiện tại: <code><?php echo e($eatery->image_path); ?></code></span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Hoặc Đường dẫn ảnh (URL)</label>
+                        <input type="url" name="image_url" class="admin-form-input" placeholder="https://example.com/eatery.jpg" value="<?php echo e(old('image_url', $eatery && !Str::startsWith($eatery->image_path, '/uploads') ? $eatery->image_path : '')); ?>">
+                    </div>
+                </div>
+
+                <!-- Right Map Picker Column -->
+                <div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" style="display: flex; justify-content: space-between;">
+                            <span>🔗 Tự động lấy tọa độ qua link Google Maps</span>
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="url" id="gmapsUrlInput" class="admin-form-input" placeholder="Dán liên kết Google Maps của quán vào đây..." style="flex: 1;">
+                            <button type="button" id="btnExtractCoords" class="btn-admin btn-admin-accent">
+                                ⚡ Giải mã GPS
+                            </button>
+                        </div>
+                        <span id="gmapsHelperText" style="font-size: 0.76rem; display: block; margin-top: 6px; font-weight: 500;"></span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Vĩ độ (Latitude) <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="number" step="any" name="latitude" id="latInput" class="admin-form-input" required placeholder="Ví dụ: 21.1182" value="<?php echo e(old('latitude', $eatery ? $eatery->latitude : '')); ?>">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Kinh độ (Longitude) <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="number" step="any" name="longitude" id="lngInput" class="admin-form-input" required placeholder="Ví dụ: 105.8394" value="<?php echo e(old('longitude', $eatery ? $eatery->longitude : '')); ?>">
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">🎯 Click chọn trực tiếp trên Bản đồ</label>
+                        <div class="admin-map-picker" id="pickerMap"></div>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Mô tả giới thiệu ngắn</label>
+                        <textarea name="description" class="admin-form-input" rows="3" placeholder="Nhập các nét độc đáo, món đặc sản, cách tìm quán..." style="resize: vertical;"><?php echo e(old('description', $eatery ? $eatery->description : '')); ?></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Submit details button -->
+            <div style="border-top: 1px solid var(--admin-border); padding-top: 20px; margin-top: 10px; display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="/admin/dashboard" class="btn-admin btn-admin-secondary">Hủy bỏ</a>
+                <button type="submit" class="btn-admin btn-admin-primary" style="padding: 10px 28px;">
+                    <?php echo e($eatery ? '💾 Lưu thay đổi hồ sơ' : '🚀 Lưu lại & Đăng ký cơ sở'); ?>
+
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php if($eatery): ?>
+<!-- ==========================================================================
+     TAB 2: DIGNATURE DISHES MANAGER (THỰC ĐƠN)
+     ========================================================================== -->
+<div id="tab-dishes" class="admin-tab-section" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <span>🍔</span> Biên Tập Thực Đơn Cơ Sở
+            </h2>
+        </div>
+
+        <div class="admin-split-layout">
             
+            <!-- Left: Current Dishes -->
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-text-main);">
+                    📋 Danh sách món hiện tại (<?php echo e($eatery->dishes->count()); ?>)
+                </h3>
+
+                <?php if($eatery->dishes->count() > 0): ?>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <?php $__currentLoopData = $eatery->dishes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dish): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div class="admin-dish-item" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
+                                <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
+                                    <img src="<?php echo e($dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=80&q=80'); ?>" class="admin-dish-img" style="width: 56px; height: 56px; border-radius: 10px; object-fit: cover;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <h4 class="admin-dish-title" style="margin: 0; font-weight: 700; font-size: 0.92rem; color: var(--admin-text-main);"><?php echo e($dish->name); ?></h4>
+                                            <?php if($dish->is_signature): ?>
+                                                <span class="admin-badge admin-badge-success" style="font-size: 0.65rem; padding: 2px 6px;">★ Đặc trưng</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <span style="font-size: 0.76rem; color: var(--admin-text-muted); display: block; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($dish->description ?: 'Chưa có mô tả ngắn'); ?></span>
+                                        <span class="admin-dish-price" style="font-size: 0.85rem; font-weight: 800; color: var(--admin-success); display: block; margin-top: 1px;"><?php echo e(number_format($dish->price, 0, ',', '.')); ?>đ</span>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <!-- Toggle Signature Star Button -->
+                                    <form action="/admin/dishes/<?php echo e($dish->id); ?>/toggle-signature" method="POST" style="display: inline; margin: 0;">
+                                        <?php echo csrf_field(); ?>
+                                        <button type="submit" style="background: transparent; border: none; padding: 4px; font-size: 1.25rem; cursor: pointer; color: <?php echo e($dish->is_signature ? '#eab308' : '#cbd5e1'); ?>; transition: transform 0.2s;" title="<?php echo e($dish->is_signature ? 'Gỡ sao nổi bật' : 'Đặt làm món nổi bật'); ?>" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+                                            ★
+                                        </button>
+                                    </form>
+
+                                    <!-- View Details Button -->
+                                    <button type="button" class="btn-admin btn-admin-secondary" style="padding: 6px 10px; font-size: 0.72rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" onclick="openViewDishModal('<?php echo e(addslashes($dish->name)); ?>', '<?php echo e(number_format($dish->price, 0, ',', '.')); ?>đ', '<?php echo e(addslashes($dish->description)); ?>', '<?php echo e($dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80'); ?>', '<?php echo e($dish->is_signature ? 1 : 0); ?>')">
+                                        👁️ Xem
+                                    </button>
+
+                                    <!-- Edit Button -->
+                                    <button type="button" class="btn-admin btn-admin-accent" style="padding: 6px 10px; font-size: 0.72rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;" onclick="openEditDishModal('<?php echo e($dish->id); ?>', '<?php echo e(addslashes($dish->name)); ?>', '<?php echo e((int)$dish->price); ?>', '<?php echo e(addslashes($dish->description)); ?>', '<?php echo e($dish->image_path); ?>', '<?php echo e($dish->is_signature ? 1 : 0); ?>')">
+                                        ✏️ Sửa
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <form action="/admin/dishes/<?php echo e($dish->id); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa món này khỏi thực đơn?')" style="display: inline; margin: 0;">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
+                                        <button type="submit" class="btn-admin btn-admin-danger" style="padding: 6px 10px; font-size: 0.72rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                                            🗑️ Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                <?php else: ?>
+                    <div style="text-align: center; padding: 40px 0; border: 1.5px dashed var(--admin-border); border-radius: 12px; color: var(--admin-text-muted);">
+                        <p style="font-size: 0.88rem; margin-bottom: 4px;">Thực đơn hiện tại đang trống.</p>
+                        <p style="font-size: 0.78rem;">Sử dụng form bên phải để khai báo món ngon đầu tiên!</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Right: Add Dish Form -->
+            <div>
+                <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #f8fafc;">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-primary); display: flex; align-items: center; gap: 6px;">
+                        <span>✨</span> Thêm món ngon mới
+                    </h3>
+
+                    <form action="/admin/dishes" method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Tên món ăn <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="text" name="dish_name" class="admin-form-input" required placeholder="Ví dụ: Bún chả chày Mạch Tràng">
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Giá bán thực tế (VNĐ) <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="number" name="dish_price" class="admin-form-input" required placeholder="Ví dụ: 35000">
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Mô tả tóm tắt</label>
+                            <textarea name="dish_description" class="admin-form-input" rows="2" placeholder="Ví dụ: Bún sợi to chuẩn truyền thống kèm chả băm nướng..." style="resize: vertical;"></textarea>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Ảnh món ăn (Upload)</label>
+                            <input type="file" name="dish_image" class="admin-form-input" accept="image/*" style="padding: 5px 12px; font-size: 0.8rem;">
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Hoặc URL ảnh món ăn</label>
+                            <input type="url" name="dish_image_url" class="admin-form-input" placeholder="https://example.com/dish.jpg">
+                        </div>
+
+                        <div class="admin-form-group" style="display: flex; align-items: center; margin-top: 10px; margin-bottom: 15px;">
+                            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; font-weight: bold; color: var(--admin-text-main);">
+                                <input type="checkbox" name="is_signature" value="1" style="width: 15px; height: 15px; accent-color: var(--admin-primary); cursor: pointer;">
+                                ★ Đặt làm món đặc trưng nổi bật
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; padding: 10px 0;">
+                            🚀 Thêm món vào thực đơn
+                        </button>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+<!-- ==========================================================================
+     TAB 3: SPECIFIC EATERY VIDEO REVIEW MANAGEMENT
+     ========================================================================== -->
+<div id="tab-videos" class="admin-tab-section" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <span>🎥</span> Quản Lý Video Review Của Cơ Sở
+            </h2>
+        </div>
+
+        <div class="admin-split-layout">
+            
+            <!-- Left Column: Add Video Review Form -->
+            <div>
+                <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #f8fafc;">
+                    <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-accent); display: flex; align-items: center; gap: 6px;">
+                        <span>🎬</span> Nhúng Video Review Mới
+                    </h3>
+                    
+                    <form action="<?php echo e(route('admin.video.store')); ?>" method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Tiêu đề video ngắn *</label>
+                            <input type="text" name="title" required placeholder="Ví dụ: Review ăn sập bún mạch tràng..." class="admin-form-input">
+                        </div>
+
+                        <!-- Upload Type tabs inside Form -->
+                        <div style="background-color: #e2e8f0; padding: 4px; border-radius: 8px; display: flex; gap: 4px; margin-bottom: 16px;">
+                            <button type="button" id="uploadTabBtn-embed" onclick="toggleUploadMode('embed')" class="btn-admin btn-admin-primary" style="flex: 1; font-size: 0.75rem; padding: 6px 0; border-radius: 6px;">
+                                🔗 Nhúng Link (0MB)
+                            </button>
+                            <button type="button" id="uploadTabBtn-file" onclick="toggleUploadMode('file')" class="btn-admin btn-admin-secondary" style="flex: 1; font-size: 0.75rem; padding: 6px 0; border-radius: 6px; background: transparent; border-color: transparent;">
+                                📤 Tải Tệp từ máy
+                            </button>
+                        </div>
+
+                        <!-- Embed URL (Default) -->
+                        <div id="uploadContainer-embed" class="admin-form-group" style="display: block;">
+                            <label class="admin-form-label">Đường dẫn video (TikTok / YouTube Shorts) *</label>
+                            <input type="url" id="videoUrlInput" name="video_url" required placeholder="https://www.tiktok.com/@.../video/..." class="admin-form-input">
+                            <span style="font-size: 0.75rem; color: var(--admin-text-muted); display: block; margin-top: 5px; line-height: 1.4;">
+                                💡 Khuyên dùng: Dán liên kết TikTok hoặc Shorts để tự động hiển thị mượt mà trên bản đồ và không tốn bộ nhớ lưu trữ!
+                            </span>
+                        </div>
+
+                        <!-- Local File Upload -->
+                        <div id="uploadContainer-file" class="admin-form-group" style="display: none;">
+                            <label class="admin-form-label">Chọn File Video ngắn từ thiết bị *</label>
+                            <input type="file" id="videoFileInput" name="video_file" accept="video/mp4,video/quicktime" class="admin-form-input" style="padding: 6px 12px;">
+                            <span style="font-size: 0.75rem; color: var(--admin-text-muted); display: block; margin-top: 5px; line-height: 1.4;">
+                                ⚠️ Yêu cầu: Video định dạng MP4 dung lượng nhỏ hơn 20MB.
+                            </span>
+                        </div>
+
+                        <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; padding: 10px 0; margin-top: 6px;">
+                            🚀 Lưu video review
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Current Eatery Videos -->
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-text-main);">
+                    📋 Danh sách video hiện tại (<?php echo e($eatery->reviewVideos->count()); ?>)
+                </h3>
+
+                <?php if($eatery->reviewVideos->count() > 0): ?>
+                    <div class="admin-table-container">
+                        <table class="admin-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Video & Tiêu đề</th>
+                                    <th>Nguồn</th>
+                                    <th>Trạng thái</th>
+                                    <th style="text-align: center;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $__currentLoopData = $eatery->reviewVideos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $vid): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <tr>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <div style="position: relative; width: 38px; height: 50px; border-radius: 6px; overflow: hidden; background: #000; flex-shrink: 0; border: 1px solid var(--admin-border); cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'" onclick="openWatchVideoModal('<?php echo e(addslashes($vid->title)); ?>', '<?php echo e($vid->video_url); ?>', '<?php echo e($vid->video_type); ?>')" title="Bấm để xem video">
+                                                    <img src="<?php echo e($vid->thumbnail_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=100&q=80'); ?>" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;">
+                                                    <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px;">▶️</span>
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; min-width: 0;">
+                                                    <span style="font-weight: 700; font-size: 0.82rem; color: var(--admin-text-main); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer;" onclick="openWatchVideoModal('<?php echo e(addslashes($vid->title)); ?>', '<?php echo e($vid->video_url); ?>', '<?php echo e($vid->video_type); ?>')" title="Bấm để xem video">
+                                                        <?php echo e($vid->title); ?>
+
+                                                    </span>
+                                                    <span style="font-size: 0.7rem; color: var(--admin-text-muted); margin-top: 1px;">
+                                                        Bởi: <?php echo e($vid->user->name); ?>
+
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php if($vid->video_type === 'tiktok'): ?>
+                                                <span class="admin-badge" style="background-color: #0f172a; color: #38bdf8;">TikTok</span>
+                                            <?php elseif($vid->video_type === 'youtube_shorts'): ?>
+                                                <span class="admin-badge admin-badge-danger">Shorts</span>
+                                            <?php else: ?>
+                                                <span class="admin-badge admin-badge-primary">File</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if($vid->status === 'approved'): ?>
+                                                <span class="admin-badge admin-badge-success">Đã Duyệt</span>
+                                            <?php elseif($vid->status === 'pending'): ?>
+                                                <span class="admin-badge admin-badge-warning">Chờ Duyệt</span>
+                                            <?php else: ?>
+                                                <span class="admin-badge admin-badge-danger">Bác bỏ</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                                <?php if(session('user_role') === 'admin' && $vid->status === 'pending'): ?>
+                                                    <form action="<?php echo e(route('admin.video.approve', $vid->id)); ?>" method="POST" style="display: inline;">
+                                                        <?php echo csrf_field(); ?>
+                                                        <button type="submit" class="btn-admin btn-admin-primary" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 4px;">
+                                                            Duyệt
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                
+                                                <!-- Watch video action -->
+                                                <button type="button" class="btn-admin btn-admin-secondary" onclick="openWatchVideoModal('<?php echo e(addslashes($vid->title)); ?>', '<?php echo e($vid->video_url); ?>', '<?php echo e($vid->video_type); ?>')" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;">
+                                                    👁️ Xem
+                                                </button>
+
+                                                <button type="button" class="btn-admin btn-admin-accent" onclick="openEditVideoModal('<?php echo e($vid->id); ?>', '<?php echo e(addslashes($vid->title)); ?>', '<?php echo e($vid->eatery_id); ?>', '<?php echo e($vid->video_url); ?>', '<?php echo e($vid->video_type); ?>')" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 4px;">
+                                                    Sửa
+                                                </button>
+                                                
+                                                <form action="<?php echo e(route('admin.video.destroy', $vid->id)); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa video review này không?')" style="display: inline;">
+                                                    <?php echo csrf_field(); ?>
+                                                    <?php echo method_field('DELETE'); ?>
+                                                    <button type="submit" class="btn-admin btn-admin-danger" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 4px;">
+                                                        🗑️
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div style="text-align: center; padding: 40px 0; border: 1.5px dashed var(--admin-border); border-radius: 12px; color: var(--admin-text-muted);">
+                        <p style="font-size: 0.88rem; margin-bottom: 4px;">Quán ăn này chưa liên kết video review nào.</p>
+                        <p style="font-size: 0.78rem;">Nhúng link TikTok hoặc đăng tải video mới để hiển thị mượt mà lên bản đồ!</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     TAB 4: TRUST HUB - VSATTP CERTIFICATE & DAILY INSPECTION LOGS
+     ========================================================================== -->
+<div id="tab-attp" class="admin-tab-section" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <span>🛡️</span> Hồ Sơ Vệ Sinh An Toàn Thực Phẩm
+            </h2>
+        </div>
+
+        <div class="admin-split-layout">
+            
+            <!-- VSATTP Certificate Form -->
+            <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-primary); display: flex; align-items: center; gap: 6px;">
+                    <span>📜</span> Giấy Chứng Nhận An Toàn VSATTP
+                </h3>
+                
+                <form action="/admin/trust/certificate" method="POST" enctype="multipart/form-data">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Số chứng nhận <span style="color: var(--admin-danger);">*</span></label>
+                        <input type="text" name="certificate_number" class="admin-form-input" required placeholder="Ví dụ: 124/2024/ATTP-HN" value="<?php echo e($eatery->foodSafetyCertificate ? $eatery->foodSafetyCertificate->certificate_number : ''); ?>">
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Cơ quan cấp chứng nhận <span style="color: var(--admin-danger);">*</span></label>
+                        <input type="text" name="issued_by" class="admin-form-input" required placeholder="Chi Cục An Toàn Thực Phẩm Sở Y Tế HN..." value="<?php echo e($eatery->foodSafetyCertificate ? $eatery->foodSafetyCertificate->issued_by : ''); ?>">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Ngày cấp <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="date" name="issued_at" class="admin-form-input" required value="<?php echo e($eatery->foodSafetyCertificate ? $eatery->foodSafetyCertificate->issued_at->format('Y-m-d') : ''); ?>">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Ngày hết hạn <span style="color: var(--admin-danger);">*</span></label>
+                            <input type="date" name="expired_at" class="admin-form-input" required value="<?php echo e($eatery->foodSafetyCertificate ? $eatery->foodSafetyCertificate->expired_at->format('Y-m-d') : ''); ?>">
+                        </div>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Ảnh chụp chứng nhận (Upload)</label>
+                        <input type="file" name="image" class="admin-form-input" accept="image/*" style="padding: 5px 12px; font-size: 0.8rem;">
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Hoặc Đường dẫn ảnh (URL)</label>
+                        <input type="url" name="image_url" class="admin-form-input" placeholder="https://example.com/cert.jpg" value="<?php echo e($eatery->foodSafetyCertificate ? $eatery->foodSafetyCertificate->image_path : ''); ?>">
+                    </div>
+
+                    <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; padding: 10px 0;">
+                        💾 Lưu thông tin chứng nhận VSATTP
+                    </button>
+                </form>
+            </div>
+
+            <!-- Daily Inspection Logs -->
+            <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-accent); display: flex; align-items: center; gap: 6px;">
+                    <span>📅</span> Đóng Dấu Nhật Ký Hàng Ngày
+                </h3>
+
+                <form action="/admin/trust/logs" method="POST">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+                    <input type="hidden" name="log_date" value="<?php echo e(date('Y-m-d')); ?>">
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Ngày kiểm tra</label>
+                        <input type="text" class="admin-form-input" disabled value="<?php echo e(date('d/m/Y')); ?> (Hôm nay)" style="opacity: 0.85;">
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Nguồn gốc nguyên liệu nhập vào sạch *</label>
+                        <input type="text" name="ingredients_origin" required class="admin-form-input" placeholder="Ví dụ: Thịt lợn sạch Liêm Hiệp, Rau HTX Vân Nội...">
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Nhiệt độ bảo quản & Tình trạng đạt *</label>
+                        <input type="text" name="storage_condition" required class="admin-form-input" placeholder="Ví dụ: Tủ đông -18°C và Tủ mát 4°C bảo quản đạt chuẩn...">
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Người kiểm tra thực hiện *</label>
+                        <input type="text" name="checker_name" required class="admin-form-input" placeholder="Họ và tên..." value="<?php echo e(session('user_name') ?: ''); ?>">
+                    </div>
+
+                    <button type="submit" class="btn-admin btn-admin-accent" style="width: 100%; padding: 10px 0;">
+                        ✔ Xác Nhận & Đóng Dấu Nhật Ký
+                    </button>
+                </form>
+
+                <!-- 3 days inspection logs history -->
+                <div style="margin-top: 20px;">
+                    <h4 style="font-size: 0.84rem; font-weight: 700; margin-bottom: 10px; color: var(--admin-text-main);">
+                        Nhật ký đóng dấu 3 ngày gần đây:
+                    </h4>
+                    <?php if($eatery->dailyFoodLogs->count() > 0): ?>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <?php $__currentLoopData = $eatery->dailyFoodLogs->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; font-size: 0.8rem;">
+                                    <div>
+                                        <span style="font-weight: 800; color: var(--admin-accent);">📅 <?php echo e($log->log_date->format('d/m/Y')); ?></span> - 
+                                        <span style="color: var(--admin-text-main);"><?php echo e(Str::limit($log->ingredients_origin, 28)); ?></span>
+                                    </div>
+                                    <form action="/admin/trust/logs/<?php echo e($log->id); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký ngày này?')" style="display: inline;">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
+                                        <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa nhật ký">🗑️</button>
+                                    </form>
+                                </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </div>
+                    <?php else: ?>
+                        <p style="font-size: 0.78rem; color: var(--admin-text-muted); font-style: italic;">Chưa ghi nhận nhật ký nào gần đây.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     TAB 5: TRUST HUB - SUPPLY CONTRACTS & INVOICES
+     ========================================================================== -->
+<div id="tab-contracts" class="admin-tab-section" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h2 class="admin-card-title">
+                <span>🧾</span> Hồ Sơ Hợp Đồng & Hóa Đơn Sạch
+            </h2>
+        </div>
+
+        <div class="admin-split-layout">
+            
+            <!-- Supply Clean Contracts -->
+            <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-accent); display: flex; align-items: center; gap: 6px;">
+                    <span>📜</span> Hợp Đồng Cung Cấp Nguyên Liệu Sạch
+                </h3>
+
+                <!-- Upload New Contract -->
+                <div style="padding: 14px; border: 1.5px solid var(--admin-border); border-radius: 8px; background-color: #f8fafc; margin-bottom: 16px;">
+                    <h4 style="font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; color: var(--admin-text-main);">Khai báo hợp đồng mới:</h4>
+                    <form action="/admin/trust/contracts" method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+                        
+                        <div class="admin-form-group" style="margin-bottom: 10px;">
+                            <input type="text" name="supplier_name" required class="admin-form-input" placeholder="Tên đối tác cung cấp (HTX Vân Nội...)" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div class="admin-form-group" style="margin-bottom: 10px;">
+                            <input type="text" name="items_supplied" required class="admin-form-input" placeholder="Nguyên liệu (Rau quả hữu cơ...)" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <input type="date" name="signed_at" required class="admin-form-input" placeholder="Ngày ký" style="padding: 6px 12px; font-size: 0.82rem;">
+                            <input type="date" name="expired_at" required class="admin-form-input" placeholder="Hết hạn" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <input type="file" name="image" class="admin-form-input" accept="image/*" style="padding: 3px; font-size: 0.72rem;">
+                            <input type="url" name="image_url" class="admin-form-input" placeholder="Hoặc dán URL ảnh" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <button type="submit" class="btn-admin btn-admin-accent" style="width: 100%; padding: 6px 0; font-size: 0.8rem;">
+                            ➕ Thêm Hợp Đồng Sạch
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contracts List -->
+                <?php if($eatery->foodSupplyContracts->count() > 0): ?>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <?php $__currentLoopData = $eatery->foodSupplyContracts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $contract): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; gap: 12px; align-items: center; background-color: #ffffff;">
+                                <img src="<?php echo e($contract->image_path); ?>" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border);">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h5 style="margin: 0; font-weight: 700; font-size: 0.82rem; color: var(--admin-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($contract->supplier_name); ?></h5>
+                                    <span style="font-size: 0.7rem; color: var(--admin-accent); display: block; margin-top: 1px;">🌾 <?php echo e($contract->items_supplied); ?></span>
+                                </div>
+                                <form action="/admin/trust/contracts/<?php echo e($contract->id); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này?')" style="display: inline;">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa hợp đồng">🗑️</button>
+                                </form>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                <?php else: ?>
+                    <p style="font-size: 0.78rem; color: var(--admin-text-muted); font-style: italic;">Chưa ghim hợp đồng sạch nào.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Purchase Clean Invoices -->
+            <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-primary); display: flex; align-items: center; gap: 6px;">
+                    <span>🧾</span> Hóa Đơn Mua Hàng Hàng Ngày
+                </h3>
+
+                <!-- Upload New Invoice -->
+                <div style="padding: 14px; border: 1.5px solid var(--admin-border); border-radius: 8px; background-color: #f8fafc; margin-bottom: 16px;">
+                    <h4 style="font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; color: var(--admin-text-main);">Khai báo hóa đơn mới:</h4>
+                    <form action="/admin/trust/invoices" method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+                        
+                        <div class="admin-form-group" style="margin-bottom: 10px;">
+                            <input type="text" name="supplier_name" required class="admin-form-input" placeholder="Tên đơn vị bán (Chợ rau Đông Anh...)" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div class="admin-form-group" style="margin-bottom: 10px;">
+                            <input type="text" name="items_summary" required class="admin-form-input" placeholder="Mặt hàng mua (40kg sườn lợn...)" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div class="admin-form-group" style="margin-bottom: 10px;">
+                            <input type="date" name="invoice_date" required class="admin-form-input" placeholder="Ngày mua hàng" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <input type="file" name="image" class="admin-form-input" accept="image/*" style="padding: 3px; font-size: 0.72rem;">
+                            <input type="url" name="image_url" class="admin-form-input" placeholder="Hoặc dán URL ảnh" style="padding: 6px 12px; font-size: 0.82rem;">
+                        </div>
+
+                        <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; padding: 6px 0; font-size: 0.8rem;">
+                            ➕ Thêm Hóa Đơn
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Invoices List -->
+                <?php if($eatery->purchaseInvoices->count() > 0): ?>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <?php $__currentLoopData = $eatery->purchaseInvoices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; gap: 12px; align-items: center; background-color: #ffffff;">
+                                <img src="<?php echo e($invoice->image_path); ?>" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border); filter: blur(0.5px);">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h5 style="margin: 0; font-weight: 700; font-size: 0.82rem; color: var(--admin-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($invoice->supplier_name); ?></h5>
+                                    <span style="font-size: 0.7rem; color: var(--admin-text-muted); display: block; margin-top: 1px;">🧾 <?php echo e($invoice->items_summary); ?></span>
+                                </div>
+                                <form action="/admin/trust/invoices/<?php echo e($invoice->id); ?>" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')" style="display: inline;">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
+                                    <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa hóa đơn">🗑️</button>
+                                </form>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </div>
+                <?php else: ?>
+                    <p style="font-size: 0.78rem; color: var(--admin-text-muted); font-style: italic;">Chưa có hóa đơn nào được cập nhật.</p>
+                <?php endif; ?>
+            </div>
+
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ==========================================================================
+     MODAL XEM CHI TIẾT MÓN ĂN
+     ========================================================================== -->
+<div id="viewDishModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 480px; padding: 24px; position: relative; border-radius: 16px; background-color: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden;">
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--admin-text-muted); font-size: 1.25rem; cursor: pointer; z-index: 10;" onclick="closeViewDishModal()">✕</button>
+        
+        <div style="margin: -24px -24px 20px -24px; position: relative; height: 220px; overflow: hidden; background-color: #f1f5f9;">
+            <img id="viewDishImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
+            <span id="viewDishBadge" class="admin-badge admin-badge-success" style="position: absolute; bottom: 12px; left: 12px; font-size: 0.7rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); display: none;">★ Món đặc trưng</span>
+        </div>
+
+        <div style="padding: 0 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
+                <h3 id="viewDishName" style="font-size: 1.2rem; font-weight: 800; color: var(--admin-text-main); margin: 0; line-height: 1.3;"></h3>
+                <span id="viewDishPrice" style="font-size: 1.15rem; font-weight: 800; color: var(--admin-success); white-space: nowrap;"></span>
+            </div>
+            
+            <p id="viewDishDesc" style="font-size: 0.88rem; color: var(--admin-text-muted); line-height: 1.6; margin-top: 12px; border-top: 1px solid var(--admin-border); padding-top: 12px; max-height: 120px; overflow-y: auto;"></p>
+        </div>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" class="btn-admin btn-admin-secondary" style="padding: 8px 20px; font-size: 0.8rem; border-radius: 8px;" onclick="closeViewDishModal()">Đóng cửa sổ</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL CHỈNH SỬA MÓN ĂN
+     ========================================================================== -->
+<div id="editDishModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 480px; padding: 24px; position: relative; border-radius: 16px; background-color: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--admin-text-muted); font-size: 1.25rem; cursor: pointer; z-index: 10;" onclick="closeEditDishModal()">✕</button>
+        
+        <h3 class="admin-card-title" style="margin-bottom: 18px; font-size: 1.1rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 10px;">
+            <span>✏️</span> Cập Nhật Thông Tin Món Ăn
+        </h3>
+        
+        <form id="editDishForm" method="POST" enctype="multipart/form-data">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Tên món ăn <span style="color: var(--admin-danger);">*</span></label>
+                <input type="text" id="editDishNameInput" name="dish_name" required placeholder="Ví dụ: Bún chả chày..." class="admin-form-input">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Giá bán thực tế (VNĐ) <span style="color: var(--admin-danger);">*</span></label>
+                <input type="number" id="editDishPriceInput" name="dish_price" required placeholder="Ví dụ: 35000" class="admin-form-input">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Mô tả tóm tắt</label>
+                <textarea id="editDishDescInput" name="dish_description" rows="2" class="admin-form-input" placeholder="Ví dụ: Mô tả hương vị món ăn..."></textarea>
+            </div>
+
+            <div class="admin-form-group" style="margin-bottom: 12px;">
+                <label class="admin-form-label">Chọn File Ảnh mới</label>
+                <input type="file" name="dish_image" accept="image/*" class="admin-form-input" style="padding: 6px 12px;">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Hoặc dán URL ảnh mới</label>
+                <input type="url" id="editDishImageUrlInput" name="dish_image_url" placeholder="https://example.com/image.jpg" class="admin-form-input">
+            </div>
+
+            <div class="admin-form-group" style="display: flex; align-items: center; margin-top: 10px; margin-bottom: 18px;">
+                <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; font-weight: bold; color: var(--admin-text-main);">
+                    <input type="checkbox" id="editDishSignatureInput" name="is_signature" value="1" style="width: 15px; height: 15px; accent-color: var(--admin-primary); cursor: pointer;">
+                    ★ Đặt làm món đặc trưng nổi bật
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" class="btn-admin btn-admin-secondary" style="padding: 10px 20px; font-size: 0.82rem; border-radius: 8px;" onclick="closeEditDishModal()">Hủy bỏ</button>
+                <button type="submit" class="btn-admin btn-admin-primary" style="padding: 10px 24px; font-size: 0.82rem; border-radius: 8px;">💾 Lưu Thay Đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL SỬA VIDEO REVIEW TIỆN ÍCH DÀNH CHO CƠ SỞ
+     ========================================================================== -->
+<div id="editVideoModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 460px; padding: 24px; position: relative; border-radius: 12px; background-color: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--admin-text-muted); font-size: 1.15rem; cursor: pointer;" onclick="closeEditVideoModal()">✕</button>
+        
+        <h3 class="admin-card-title" style="margin-bottom: 18px; font-size: 1.1rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 10px;">
+            <span>✏️</span> Cập Nhật Video Review
+        </h3>
+        
+        <form id="editVideoForm" method="POST" enctype="multipart/form-data">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Tiêu đề video *</label>
+                <input type="text" id="editVideoTitle" name="title" required placeholder="Ví dụ: Ăn sập chợ Đông Anh..." class="admin-form-input">
+            </div>
+
+            <!-- Pre-filled eatery input hidden -->
+            <?php if($eatery): ?>
+                <input type="hidden" id="editVideoEateryId" name="eatery_id" value="<?php echo e($eatery->id); ?>">
+            <?php endif; ?>
+
+            <!-- Edit Upload Type Tabs -->
+            <div style="background-color: #e2e8f0; padding: 4px; border-radius: 8px; display: flex; gap: 4px; border: 1px solid var(--admin-border); margin-bottom: 16px;">
+                <button type="button" id="editTabBtn-embed" onclick="toggleEditUploadMode('embed')" class="btn-admin btn-admin-accent" style="flex: 1; font-size: 0.78rem; padding: 6px 0; border-radius: 6px;">
+                    🔗 Nhúng Link
+                </button>
+                <button type="button" id="editTabBtn-file" onclick="toggleEditUploadMode('file')" class="btn-admin btn-admin-secondary" style="flex: 1; font-size: 0.78rem; padding: 6px 0; border-radius: 6px; background: transparent; border-color: transparent;">
+                    📤 Tải Video mới
+                </button>
+            </div>
+
+            <!-- Edit Embed Section -->
+            <div id="editContainer-embed" class="admin-form-group" style="display: block;">
+                <label class="admin-form-label">Đường dẫn Video (TikTok / Shorts) *</label>
+                <input type="url" id="editVideoUrlInput" name="video_url" placeholder="https://www.tiktok.com/..." class="admin-form-input">
+            </div>
+
+            <!-- Edit File Upload Section -->
+            <div id="editContainer-file" class="admin-form-group" style="display: none;">
+                <label class="admin-form-label">Chọn File Video mới</label>
+                <input type="file" id="editVideoFileInput" name="video_file" accept="video/mp4" class="admin-form-input" style="padding: 6px 12px;">
+                <span style="font-size: 0.72rem; color: var(--admin-text-muted); display: block; margin-top: 5px; line-height: 1.4;">
+                    ⚠️ Để trống nếu bạn muốn giữ nguyên video cũ.
+                </span>
+            </div>
+
+            <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; padding: 10px 0; margin-top: 8px;">
+                💾 Lưu Thay Đổi
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL XEM TRỰC TIẾP VIDEO REVIEW
+     ========================================================================== -->
+<div id="watchVideoModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 440px; padding: 20px; position: relative; border-radius: 16px; background-color: #0f0a20; box-shadow: 0 10px 25px rgba(0,0,0,0.35); overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+        <button type="button" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #ffffff; font-size: 1.15rem; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;" onclick="closeWatchVideoModal()">✕</button>
+        
+        <h4 id="watchVideoTitle" style="color: #ffffff; font-size: 0.95rem; font-weight: 700; margin: 0 0 14px 0; padding-right: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎥 Xem Video Review</h4>
+        
+        <!-- Local HTML5 Video Player Container -->
+        <div id="watchLocalContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
+            <video id="watchVideoPlayer" controls style="width: 100%; height: 100%; object-fit: contain;"></video>
+        </div>
+
+        <!-- YouTube Shorts Iframe Container -->
+        <div id="watchYoutubeContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
+            <iframe id="watchYoutubePlayer" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
+        </div>
+
+        <!-- TikTok Embed Container -->
+        <div id="watchTiktokContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden; align-items: center; justify-content: center; padding: 20px;">
+            <div style="text-align: center; color: rgba(255,255,255,0.85); padding: 20px;">
+                <p style="font-size: 1.5rem; margin-bottom: 12px;">📱</p>
+                <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;">Video Tiktok ngắn</p>
+                <p style="font-size: 0.78rem; color: rgba(255,255,255,0.6); line-height: 1.4; margin-bottom: 20px;">Trình quản trị đề xuất mở link TikTok trực tiếp hoặc nhúng để trải nghiệm mượt mà nhất!</p>
+                <a id="watchTiktokLink" href="" target="_blank" class="btn-admin btn-admin-accent" style="padding: 10px 24px; font-size: 0.82rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    🔗 Mở Trên TikTok
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
@@ -349,23 +952,244 @@
     let pickerMap;
     let marker;
 
+    // 1. Chuyển đổi Tab làm việc chính
+    window.switchSubTab = function(event, tabId) {
+        // Toggle tab button active classes
+        document.querySelectorAll('.admin-sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        // Toggle tab content visibility
+        document.querySelectorAll('.admin-tab-section').forEach(section => section.style.display = 'none');
+        const activeSection = document.getElementById(tabId);
+        if (activeSection) {
+            activeSection.style.display = 'block';
+            
+            // Critical Leaflet refresh:
+            if (tabId === 'tab-info' && pickerMap) {
+                setTimeout(() => {
+                    pickerMap.invalidateSize();
+                }, 100);
+            }
+        }
+    };
+
+    // 2. Chuyển đổi chế độ đăng video (Nhúng link vs Tải file)
+    window.toggleUploadMode = function(mode) {
+        const embedBtn = document.getElementById('uploadTabBtn-embed');
+        const fileBtn = document.getElementById('uploadTabBtn-file');
+        const embedContainer = document.getElementById('uploadContainer-embed');
+        const fileContainer = document.getElementById('uploadContainer-file');
+        
+        const urlInput = document.getElementById('videoUrlInput');
+        const fileInput = document.getElementById('videoFileInput');
+
+        if (mode === 'embed') {
+            embedBtn.classList.remove('btn-admin-secondary');
+            embedBtn.classList.add('btn-admin-primary');
+            embedBtn.style.backgroundColor = '';
+            embedBtn.style.borderColor = '';
+            
+            fileBtn.classList.remove('btn-admin-primary');
+            fileBtn.classList.add('btn-admin-secondary');
+            fileBtn.style.backgroundColor = 'transparent';
+            fileBtn.style.borderColor = 'transparent';
+            
+            embedContainer.style.display = 'block';
+            fileContainer.style.display = 'none';
+            
+            urlInput.setAttribute('required', 'required');
+            fileInput.removeAttribute('required');
+        } else {
+            fileBtn.classList.remove('btn-admin-secondary');
+            fileBtn.classList.add('btn-admin-primary');
+            fileBtn.style.backgroundColor = '';
+            fileBtn.style.borderColor = '';
+            
+            embedBtn.classList.remove('btn-admin-primary');
+            embedBtn.classList.add('btn-admin-secondary');
+            embedBtn.style.backgroundColor = 'transparent';
+            embedBtn.style.borderColor = 'transparent';
+            
+            fileContainer.style.display = 'block';
+            embedContainer.style.display = 'none';
+            
+            fileInput.setAttribute('required', 'required');
+            urlInput.removeAttribute('required');
+        }
+    };
+
+    // 3. Edit Video Modal Logic
+    window.openEditVideoModal = function(id, title, eateryId, videoUrl, videoType) {
+        const form = document.getElementById('editVideoForm');
+        form.setAttribute('action', '/admin/videos/' + id);
+        
+        document.getElementById('editVideoTitle').value = title;
+        
+        if (videoType === 'local') {
+            toggleEditUploadMode('file');
+            document.getElementById('editVideoUrlInput').value = '';
+        } else {
+            toggleEditUploadMode('embed');
+            document.getElementById('editVideoUrlInput').value = videoUrl;
+        }
+        
+        document.getElementById('editVideoModal').style.display = 'flex';
+    };
+
+    window.closeEditVideoModal = function() {
+        document.getElementById('editVideoModal').style.display = 'none';
+    };
+
+    // 3.5. Xem trực tiếp Video Review Modal Logic
+    window.openWatchVideoModal = function(title, url, type) {
+        document.getElementById('watchVideoTitle').innerText = title;
+        
+        // Hide all containers by default
+        document.getElementById('watchLocalContainer').style.display = 'none';
+        document.getElementById('watchYoutubeContainer').style.display = 'none';
+        document.getElementById('watchTiktokContainer').style.display = 'none';
+        
+        // Reset player sources
+        document.getElementById('watchVideoPlayer').pause();
+        document.getElementById('watchVideoPlayer').src = '';
+        document.getElementById('watchYoutubePlayer').src = '';
+        
+        if (type === 'youtube_shorts') {
+            const ytMatch = url.match(/(?:shorts\/|watch\?v=)([a-zA-Z0-9_-]+)/);
+            if (ytMatch) {
+                document.getElementById('watchYoutubeContainer').style.display = 'block';
+                document.getElementById('watchYoutubePlayer').src = 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1';
+            } else {
+                document.getElementById('watchLocalContainer').style.display = 'block';
+                document.getElementById('watchVideoPlayer').src = url;
+            }
+        } else if (type === 'tiktok') {
+            const ttMatch = url.match(/video\/(\d+)/);
+            if (ttMatch) {
+                document.getElementById('watchYoutubeContainer').style.display = 'block';
+                document.getElementById('watchYoutubePlayer').src = 'https://www.tiktok.com/embed/v2/' + ttMatch[1];
+            } else {
+                document.getElementById('watchTiktokContainer').style.display = 'flex';
+                document.getElementById('watchTiktokLink').href = url;
+            }
+        } else {
+            // Local file or standard direct mp4 url
+            document.getElementById('watchLocalContainer').style.display = 'block';
+            document.getElementById('watchVideoPlayer').src = url;
+            document.getElementById('watchVideoPlayer').load();
+            document.getElementById('watchVideoPlayer').play().catch(e => console.log('Autoplay blocked'));
+        }
+        
+        document.getElementById('watchVideoModal').style.display = 'flex';
+    };
+
+    window.closeWatchVideoModal = function() {
+        document.getElementById('watchVideoPlayer').pause();
+        document.getElementById('watchVideoPlayer').src = '';
+        document.getElementById('watchYoutubePlayer').src = '';
+        document.getElementById('watchVideoModal').style.display = 'none';
+    };
+
+    // 4. Xem chi tiết Món ăn Modal Logic
+    window.openViewDishModal = function(name, price, description, imagePath, isSignature) {
+        document.getElementById('viewDishName').innerText = name;
+        document.getElementById('viewDishPrice').innerText = price;
+        document.getElementById('viewDishDesc').innerText = description || "Không có mô tả chi tiết.";
+        document.getElementById('viewDishImg').src = imagePath;
+        
+        document.getElementById('viewDishBadge').style.display = parseInt(isSignature) === 1 ? 'inline-flex' : 'none';
+        document.getElementById('viewDishModal').style.display = 'flex';
+    };
+
+    window.closeViewDishModal = function() {
+        document.getElementById('viewDishModal').style.display = 'none';
+    };
+
+    // 5. Sửa Món ăn Modal Logic
+    window.openEditDishModal = function(id, name, price, description, imagePath, isSignature) {
+        const form = document.getElementById('editDishForm');
+        form.setAttribute('action', '/admin/dishes/' + id);
+        
+        document.getElementById('editDishNameInput').value = name;
+        document.getElementById('editDishPriceInput').value = price;
+        document.getElementById('editDishDescInput').value = description;
+        document.getElementById('editDishImageUrlInput').value = imagePath.startsWith('http') ? imagePath : '';
+        
+        const signatureCheckbox = document.getElementById('editDishSignatureInput');
+        if (parseInt(isSignature) === 1) {
+            signatureCheckbox.checked = true;
+        } else {
+            signatureCheckbox.checked = false;
+        }
+        
+        document.getElementById('editDishModal').style.display = 'flex';
+    };
+
+    window.closeEditDishModal = function() {
+        document.getElementById('editDishModal').style.display = 'none';
+    };
+
+    window.toggleEditUploadMode = function(mode) {
+        const embedBtn = document.getElementById('editTabBtn-embed');
+        const fileBtn = document.getElementById('editTabBtn-file');
+        const embedContainer = document.getElementById('editContainer-embed');
+        const fileContainer = document.getElementById('editContainer-file');
+        
+        const urlInput = document.getElementById('editVideoUrlInput');
+        const fileInput = document.getElementById('editVideoFileInput');
+
+        if (mode === 'embed') {
+            embedBtn.classList.remove('btn-admin-secondary');
+            embedBtn.classList.add('btn-admin-accent');
+            embedBtn.style.backgroundColor = '';
+            embedBtn.style.borderColor = '';
+            
+            fileBtn.classList.remove('btn-admin-accent');
+            fileBtn.classList.add('btn-admin-secondary');
+            fileBtn.style.backgroundColor = 'transparent';
+            fileBtn.style.borderColor = 'transparent';
+            
+            embedContainer.style.display = 'block';
+            fileContainer.style.display = 'none';
+            
+            urlInput.setAttribute('required', 'required');
+            fileInput.removeAttribute('required');
+        } else {
+            fileBtn.classList.remove('btn-admin-secondary');
+            fileBtn.classList.add('btn-admin-accent');
+            fileBtn.style.backgroundColor = '';
+            fileBtn.style.borderColor = '';
+            
+            embedBtn.classList.remove('btn-admin-accent');
+            embedBtn.classList.add('btn-admin-secondary');
+            embedBtn.style.backgroundColor = 'transparent';
+            embedBtn.style.borderColor = 'transparent';
+            
+            fileContainer.style.display = 'block';
+            embedContainer.style.display = 'none';
+            
+            fileInput.removeAttribute('required');
+            urlInput.removeAttribute('required');
+        }
+    };
+
     document.addEventListener("DOMContentLoaded", function() {
         // Khởi tạo bản đồ chọn tọa độ
         pickerMap = L.map('pickerMap', {
             zoomControl: true
         }).setView([initLat, initLng], hasEatery ? 15 : 13);
 
-        // Lớp dark mode sang trọng
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Lớp OpenStreetMap light mode sạch sẽ, tối giản cực đẹp
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(pickerMap);
 
         // Biểu tượng Marker
         const customIcon = L.divIcon({
-            html: `<div style="background-color: var(--primary); width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 1rem;">📍</div>`,
+            html: `<div style="background-color: var(--admin-primary); width: 22px; height: 22px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">📍</div>`,
             className: 'custom-leaflet-marker',
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
         });
 
         // Vẽ marker ban đầu nếu có dữ liệu
@@ -425,12 +1249,12 @@
             const url = gmapsInput.value.trim();
             if (!url) {
                 helperText.innerText = "❌ Vui lòng dán đường dẫn Google Maps trước!";
-                helperText.style.color = "var(--primary)";
+                helperText.style.color = "var(--admin-danger)";
                 return;
             }
 
             helperText.innerText = "⏳ Đang giải mã đường dẫn và trích xuất tọa độ...";
-            helperText.style.color = "var(--accent)";
+            helperText.style.color = "var(--admin-primary)";
             btnExtract.disabled = true;
 
             // Gửi request lên backend endpoint để giải mã link rút gọn và trích xuất tọa độ
@@ -463,17 +1287,17 @@
                     pickerMap.setView(newLatLng, 15);
 
                     helperText.innerText = "✅ Trích xuất tọa độ thành công!";
-                    helperText.style.color = "#10B981";
+                    helperText.style.color = "var(--admin-success)";
                 } else {
                     helperText.innerText = "❌ " + data.message;
-                    helperText.style.color = "var(--primary)";
+                    helperText.style.color = "var(--admin-danger)";
                 }
             })
             .catch(error => {
                 btnExtract.disabled = false;
                 console.error("Error:", error);
                 helperText.innerText = "❌ Lỗi kết nối hệ thống. Vui lòng kiểm tra lại.";
-                helperText.style.color = "var(--primary)";
+                helperText.style.color = "var(--admin-danger)";
             });
         });
     });

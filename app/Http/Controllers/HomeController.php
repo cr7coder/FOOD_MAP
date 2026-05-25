@@ -48,6 +48,13 @@ class HomeController extends Controller
             })
             ->get();
 
+        if ($request->has('ajax')) {
+            return response()->json([
+                'eateries' => $eateries,
+                'selectedCatSlug' => $selectedCatSlug
+            ]);
+        }
+
         return view('home', compact(
             'categories', 
             'communes', 

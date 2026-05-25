@@ -150,6 +150,7 @@ body {
 
 /* 5. Category Horizontal Pill Slider (Like Google Maps) */
 .categories-slider {
+    padding-top: 14px !important;
     padding-bottom: 16px !important;
     gap: 10px !important;
     justify-content: flex-start !important;
@@ -178,6 +179,14 @@ body {
 }
 
 /* OCOP Badge Fix for Pill Shape */
+.category-card.specialty-highlight-card {
+    overflow: visible !important;
+}
+
+.category-card.specialty-highlight-card::before {
+    display: none !important; /* Tắt shimmer animation trên di động để tăng hiệu năng và tránh lỗi tràn */
+}
+
 .category-card.specialty-highlight-card::after {
     top: -6px !important;
     right: 6px !important;
@@ -185,3 +194,5 @@ body {
     padding: 2px 4px !important;
     border-radius: 8px !important;
 }
+
+
