@@ -492,7 +492,7 @@
                 : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         };
 
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         let tileLayer = L.tileLayer(getTileUrl(currentTheme), {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);

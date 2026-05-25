@@ -33,8 +33,14 @@
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
     <?php echo $__env->yieldContent('seo_schema'); ?>
-</head>
 <body>
+
+    <!-- Liquid Background Gradient Blobs -->
+    <div class="liquid-bg-container">
+        <div class="liquid-blob blob-1"></div>
+        <div class="liquid-blob blob-2"></div>
+        <div class="liquid-blob blob-3"></div>
+    </div>
 
     <!-- Sticky Glass Navigation Header -->
     <header class="glass-nav">

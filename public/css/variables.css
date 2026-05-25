@@ -2,11 +2,12 @@
 
 :root {
     /* Color Palette */
-    --bg-base: #09090b;
-    --bg-surface: #121215;
-    --bg-card: rgba(22, 22, 27, 0.65);
-    --border-glow: rgba(255, 255, 255, 0.1);
-    --border-glow-hover: rgba(255, 126, 41, 0.35);
+    --bg-base: #080710;
+    --bg-surface: #0e0d16;
+    --bg-card: rgba(13, 13, 18, 0.45);
+    --bg-nav: rgba(8, 7, 16, 0.65);
+    --border-glow: rgba(255, 255, 255, 0.08);
+    --border-glow-hover: rgba(255, 126, 41, 0.4);
     
     --primary: #ff7e29;
     --primary-hover: #f04e23;
@@ -17,7 +18,7 @@
     
     --text-main: #f4f4f5;
     --text-muted: #a1a1aa;
-    --text-dark: #09090b;
+    --text-dark: #080710;
     
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
@@ -27,29 +28,34 @@
     --header-height: 72px;
 
     /* Shadow and Glow system */
-    --shadow-main: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    --shadow-main: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
     --shadow-hover: 0 20px 40px -10px rgba(255, 126, 41, 0.25);
-    --shadow-overlay: 0 20px 50px rgba(0, 0, 0, 0.9);
-    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.3);
-    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.5);
-    --bg-transparent: rgba(9, 9, 11, 0);
+    --shadow-overlay: 0 20px 50px rgba(0, 0, 0, 0.85);
+    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.35);
+    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.55);
+    --bg-transparent: rgba(8, 7, 16, 0);
+
+    /* Liquid Blobs Color System */
+    --blob-color-1: #ff7e29;
+    --blob-color-2: #20b2aa;
+    --blob-color-3: #d946ef;
 }
 
 [data-theme="light"] {
     /* Sleek Light Mode Color Palette */
-    --bg-base: #f8fafc; /* Sleeker soft light-blue gray background */
+    --bg-base: #f5f7fb;
     --bg-surface: #ffffff;
-    --bg-card: rgba(255, 255, 255, 0.7);
-    --bg-card-popup: rgba(255, 255, 255, 0.95);
-    --border-glow: rgba(15, 23, 42, 0.08);
-    --border-glow-hover: rgba(255, 126, 41, 0.35);
+    --bg-card: rgba(255, 255, 255, 0.45);
+    --bg-card-popup: rgba(255, 255, 255, 0.85);
+    --border-glow: rgba(255, 255, 255, 0.6);
+    --border-glow-hover: rgba(255, 126, 41, 0.55);
     
-    --text-main: #0f172a; /* Sleek Slate 900 for modern premium text readability */
-    --text-muted: #64748b; /* Slate 500 */
-    --text-dark: #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-dark: #f5f7fb;
     
-    --bg-nav: rgba(255, 255, 255, 0.8);
-    --bg-input: #ffffff;
+    --bg-nav: rgba(255, 255, 255, 0.5);
+    --bg-input: rgba(255, 255, 255, 0.6);
     --bg-btn-secondary: rgba(15, 23, 42, 0.05);
     --bg-btn-secondary-hover: rgba(15, 23, 42, 0.08);
     --bg-table-hover: rgba(15, 23, 42, 0.02);
@@ -57,10 +63,15 @@
     --scrollbar-thumb: rgba(15, 23, 42, 0.15);
 
     /* Shadow and Glow system in light mode */
-    --shadow-main: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 20px 40px -10px rgba(255, 126, 41, 0.15);
-    --shadow-overlay: 0 25px 50px rgba(0, 0, 0, 0.1);
-    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.2);
-    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.35);
-    --bg-transparent: rgba(248, 250, 252, 0);
+    --shadow-main: 0 10px 40px -10px rgba(15, 23, 42, 0.08);
+    --shadow-hover: 0 20px 40px -10px rgba(255, 126, 41, 0.18);
+    --shadow-overlay: 0 25px 50px rgba(15, 23, 42, 0.1);
+    --shadow-btn: 0 4px 14px rgba(240, 78, 35, 0.25);
+    --shadow-btn-hover: 0 6px 20px rgba(240, 78, 35, 0.4);
+    --bg-transparent: rgba(245, 257, 251, 0);
+
+    /* Liquid Blobs Color System */
+    --blob-color-1: #ff7e29;
+    --blob-color-2: #38b000;
+    --blob-color-3: #ec4899;
 }

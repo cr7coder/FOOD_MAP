@@ -383,7 +383,7 @@
         L.control.zoom({ position: 'bottomright' }).addTo(searchMap);
 
         // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối
-        let currentTheme = localStorage.getItem('theme') || 'dark';
+        let currentTheme = localStorage.getItem('theme') || 'light';
         let tileUrl = currentTheme === 'light' 
             ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
             : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
