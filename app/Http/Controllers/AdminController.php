@@ -7,11 +7,30 @@ use App\Models\Commune;
 use App\Models\Eatery;
 use App\Models\Review;
 use App\Models\User;
+use App\DTOs\StoreEateryDTO;
+use App\DTOs\StoreDishDTO;
+use App\DTOs\StoreVideoDTO;
+use App\DTOs\StoreUserDTO;
+use App\DTOs\StoreCertificateDTO;
+use App\DTOs\StoreDailyFoodLogDTO;
+use App\DTOs\StoreSupplyContractDTO;
+use App\DTOs\StorePurchaseInvoiceDTO;
+use App\Services\AdminEateryService;
+use App\Services\VideoService;
+use App\Services\UserService;
+use App\Services\GoogleMapsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
+    public function __construct(
+        protected AdminEateryService $adminEateryService,
+        protected VideoService $videoService,
+        protected UserService $userService,
+        protected GoogleMapsService $googleMapsService
+    ) {}
+
     /**
      * Xác minh quyền truy cập Admin / Seller trước khi thực hiện bất cứ action nào
      */
@@ -42,36 +61,14 @@ class AdminController extends Controller
                 : Review::count(),
         ];
 
-        // Lấy danh sách quán ăn (nếu là Seller thì chỉ lấy quán thuộc quyền sở hữu của họ)
+        // Lấy danh sách quán ăn
         $eateriesQuery = Eatery::with(['category', 'commune']);
         if ($isSeller) {
             $eateriesQuery->where('user_id', $sellerId);
         }
+        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->get();
 
-        // Áp dụng bộ lọc tìm kiếm phía máy chủ để tối ưu bộ nhớ & truy vấn
-        if ($q = request('q')) {
-            $eateriesQuery->where(function($query) use ($q) {
-                $query->where('name', 'like', '%' . $q . '%')
-                      ->orWhere('address', 'like', '%' . $q . '%')
-                      ->orWhere('phone', 'like', '%' . $q . '%');
-            });
-        }
-
-        if ($categoryName = request('category')) {
-            $eateriesQuery->whereHas('category', function($query) use ($categoryName) {
-                $query->where('name', $categoryName);
-            });
-        }
-
-        if ($communeName = request('commune')) {
-            $eateriesQuery->whereHas('commune', function($query) use ($communeName) {
-                $query->where('name', $communeName);
-            });
-        }
-
-        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-
-        // Lấy danh sách Video Reviews (Admin xem hết, Seller xem các cơ sở của họ)
+        // Lấy danh sách Video Reviews
         $videosQuery = \App\Models\ReviewVideo::with(['eatery.category', 'user']);
         if ($isSeller) {
             $videosQuery->whereIn('eatery_id', Eatery::where('user_id', $sellerId)->pluck('id'));
@@ -98,7 +95,7 @@ class AdminController extends Controller
 
         $categories = Category::all();
         $communes = Commune::all();
-        $eatery = null; // Phân biệt Form Thêm và Form Sửa
+        $eatery = null;
 
         return view('admin.eatery-form', compact('categories', 'communes', 'eatery'));
     }
@@ -109,29 +106,6 @@ class AdminController extends Controller
     public function storeEatery(Request $request)
     {
         $this->verifyAdmin();
-
-        $role = session('user_role');
-        if ($role === 'seller') {
-            $hasEatery = Eatery::where('user_id', session('user_id'))->exists();
-            if ($hasEatery) {
-                return redirect('/admin/dashboard')->with('error', 'Mỗi Chủ quán chỉ được đăng ký duy nhất 1 địa điểm kinh doanh!');
-            }
-        }
-
-        // Diagnostic log for file uploads
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            \Log::info('Image upload diagnostics:', [
-                'original_name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime' => $file->getClientMimeType(),
-                'error_code' => $file->getError(),
-                'error_msg' => $file->getErrorMessage(),
-                'is_valid' => $file->isValid(),
-            ]);
-        } else {
-            \Log::info('No file uploaded with key "image". Keys present: ' . implode(', ', array_keys($request->allFiles())));
-        }
 
         $request->validate([
             'name' => 'required|string|max:100|unique:eateries,name',
@@ -149,39 +123,8 @@ class AdminController extends Controller
             'is_featured' => 'nullable|boolean',
         ]);
 
-        $slug = Str::slug($request->name);
-        $imagePath = null;
-
-        // Xử lý upload ảnh trực tiếp qua Google Drive (có fallback cục bộ)
-        if ($request->hasFile('image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'eateries');
-        } elseif ($request->image_url) {
-            $url = $request->image_url;
-            if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-            } else {
-                $imagePath = $url;
-            }
-        }
-
-        Eatery::create([
-            'user_id' => session('user_role') === 'seller' ? session('user_id') : null,
-            'name' => $request->name,
-            'slug' => $slug,
-            'category_id' => $request->category_id,
-            'commune_id' => $request->commune_id,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'opening_hours' => $request->opening_hours,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'price_range' => $request->price_range ?: '30.000đ - 100.000đ',
-            'image_path' => $imagePath,
-            'is_featured' => session('user_role') === 'admin' ? $request->has('is_featured') : false,
-            'description' => $request->description,
-            'rating' => 5.0, // Điểm mặc định ban đầu
-            'status' => 'active',
-        ]);
+        $dto = StoreEateryDTO::fromRequest($request);
+        $this->adminEateryService->storeEatery($dto, session('user_id'), session('user_role'));
 
         return redirect('/admin/dashboard')->with('success', 'Thêm mới địa điểm ẩm thực thành công!');
     }
@@ -193,17 +136,8 @@ class AdminController extends Controller
     {
         $this->verifyAdmin();
 
-        $eatery = Eatery::with([
-            'dishes',
-            'reviewVideos',
-            'foodSafetyCertificate',
-            'foodSupplyContracts',
-            'purchaseInvoices',
-            'dailyFoodLogs',
-            'reviews'
-        ])->findOrFail($id);
+        $eatery = Eatery::with('dishes')->findOrFail($id);
         
-        // Ngăn chặn Seller chỉnh sửa quán ăn của người khác
         if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
             abort(403, 'Bạn không có quyền sửa đổi cơ sở này!');
         }
@@ -220,27 +154,6 @@ class AdminController extends Controller
     public function updateEatery(Request $request, $id)
     {
         $this->verifyAdmin();
-        $eatery = Eatery::findOrFail($id);
-
-        // Ngăn chặn Seller cập nhật quán ăn của người khác
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền sửa đổi cơ sở này!');
-        }
-
-        // Diagnostic log for file uploads
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            \Log::info('Image upload diagnostics (Update):', [
-                'original_name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'mime' => $file->getClientMimeType(),
-                'error_code' => $file->getError(),
-                'error_msg' => $file->getErrorMessage(),
-                'is_valid' => $file->isValid(),
-            ]);
-        } else {
-            \Log::info('No file uploaded with key "image" (Update). Keys present: ' . implode(', ', array_keys($request->allFiles())));
-        }
 
         $request->validate([
             'name' => 'required|string|max:100|unique:eateries,name,' . $id,
@@ -258,64 +171,25 @@ class AdminController extends Controller
             'is_featured' => 'nullable|boolean',
         ]);
 
-        $slug = Str::slug($request->name);
-        $imagePath = $eatery->image_path;
+        $dto = StoreEateryDTO::fromRequest($request);
+        $this->adminEateryService->updateEatery((int)$id, $dto, session('user_id'), session('user_role'));
 
-        if ($request->hasFile('image')) {
-            // Xóa ảnh cũ nếu là file cục bộ
-            if ($eatery->image_path && \Str::startsWith($eatery->image_path, '/uploads/eateries/')) {
-                $oldPath = public_path($eatery->image_path);
-                if (file_exists($oldPath)) {
-                    @unlink($oldPath);
-                }
-            }
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'eateries');
-        } elseif ($request->image_url) {
-            $url = $request->image_url;
-            if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-            } else {
-                $imagePath = $url;
-            }
-        }
-
-        $eatery->update([
-            'name' => $request->name,
-            'slug' => $slug,
-            'category_id' => $request->category_id,
-            'commune_id' => $request->commune_id,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'opening_hours' => $request->opening_hours,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'price_range' => $request->price_range,
-            'image_path' => $imagePath,
-            'is_featured' => session('user_role') === 'admin' ? $request->has('is_featured') : $eatery->is_featured,
-            'description' => $request->description,
-        ]);
-
-        return redirect()->back()->with('success', 'Cập nhật thông tin quán thành công!');
+        return redirect('/admin/dashboard')->with('success', 'Cập nhật thông tin quán thành công!');
     }
 
+    /**
+     * Xóa địa điểm
+     */
     public function destroyEatery($id)
     {
         $this->verifyAdmin();
-        
-        $eatery = Eatery::findOrFail($id);
-        
-        // Ngăn chặn Seller tự ý xóa địa điểm kinh doanh của mình
-        if (session('user_role') === 'seller') {
-            abort(403, 'Chủ quán không được phép tự xóa địa điểm kinh doanh của mình! Vui lòng liên hệ Quản trị viên nếu bạn có nhu cầu thay đổi cơ sở.');
-        }
-
-        $eatery->delete();
+        $this->adminEateryService->destroyEatery((int)$id, session('user_role'));
 
         return redirect('/admin/dashboard')->with('success', 'Đã xóa địa điểm khỏi hệ thống bản đồ số!');
     }
 
     /**
-     * Tự động giải mã đường dẫn Google Maps (kể cả link rút gọn) và rút trích Tọa độ Kinh/Vĩ
+     * Tự động giải mã đường dẫn Google Maps và rút trích tọa độ
      */
     public function parseGoogleMapsUrl(Request $request)
     {
@@ -325,53 +199,13 @@ class AdminController extends Controller
             'url' => 'required|url',
         ]);
 
-        $url = $request->url;
+        $coords = $this->googleMapsService->parseUrl($request->url);
 
-        // Nếu là link rút gọn maps.app.goo.gl hoặc goo.gl, cần phân giải redirect
-        if (Str::contains($url, ['maps.app.goo.gl', 'goo.gl'])) {
-            try {
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url);
-                curl_setopt($ch, CURLOPT_HEADER, true);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_NOBODY, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_exec($ch);
-                $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-                curl_close($ch);
-                if ($finalUrl) {
-                    $url = $finalUrl;
-                }
-            } catch (\Exception $e) {
-                // Tiếp tục xử lý URL gốc nếu xảy ra lỗi cURL
-            }
-        }
-
-        $lat = null;
-        $lng = null;
-
-        // Định dạng 1: Chứa @vĩđộ,kinhđộ (ví dụ: @21.1118671,105.8698539)
-        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $url, $matches)) {
-            $lat = $matches[1];
-            $lng = $matches[2];
-        }
-        // Định dạng 2: Chứa q=vĩđộ,kinhđộ (ví dụ: q=21.1118671,105.8698539)
-        elseif (preg_match('/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/', $url, $matches)) {
-            $lat = $matches[1];
-            $lng = $matches[2];
-        }
-        // Định dạng 3: Chứa mã nhúng 3d/4d nội bộ (!3d21.1118671!4d105.8698539)
-        elseif (preg_match('/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/', $url, $matches)) {
-            $lat = $matches[1];
-            $lng = $matches[2];
-        }
-
-        if ($lat && $lng) {
+        if ($coords) {
             return response()->json([
                 'success' => true,
-                'latitude' => (double)$lat,
-                'longitude' => (double)$lng,
+                'latitude' => $coords['latitude'],
+                'longitude' => $coords['longitude'],
             ]);
         }
 
@@ -398,33 +232,8 @@ class AdminController extends Controller
             'is_signature' => 'nullable|boolean',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
-        }
-
-        $imagePath = null;
-
-        // Xử lý upload ảnh món ăn qua Google Drive (có fallback cục bộ)
-        if ($request->hasFile('dish_image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('dish_image'), 'dishes');
-        } elseif ($request->dish_image_url) {
-            $url = $request->dish_image_url;
-            if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-            } else {
-                $imagePath = $url;
-            }
-        }
-
-        \App\Models\Dish::create([
-            'eatery_id' => $request->eatery_id,
-            'name' => $request->dish_name,
-            'price' => $request->dish_price,
-            'description' => $request->dish_description,
-            'image_path' => $imagePath,
-            'is_signature' => $request->has('is_signature'),
-        ]);
+        $dto = StoreDishDTO::fromRequest($request);
+        $this->adminEateryService->storeDish($dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Thêm món ăn vào thực đơn thành công!');
     }
@@ -445,37 +254,8 @@ class AdminController extends Controller
             'is_signature' => 'nullable|boolean',
         ]);
 
-        $dish = \App\Models\Dish::findOrFail($id);
-        $eatery = Eatery::findOrFail($dish->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
-        }
-
-        $imagePath = $dish->image_path;
-
-        // Xử lý upload ảnh món ăn mới qua Google Drive (có fallback cục bộ)
-        if ($request->hasFile('dish_image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('dish_image'), 'dishes');
-        } elseif ($request->has('dish_image_url')) {
-            if ($request->dish_image_url) {
-                $url = $request->dish_image_url;
-                if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                    $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-                } else {
-                    $imagePath = $url;
-                }
-            } else {
-                $imagePath = null;
-            }
-        }
-
-        $dish->update([
-            'name' => $request->dish_name,
-            'price' => $request->dish_price,
-            'description' => $request->dish_description,
-            'image_path' => $imagePath,
-            'is_signature' => $request->has('is_signature'),
-        ]);
+        $dto = StoreDishDTO::fromRequest($request);
+        $this->adminEateryService->updateDish((int)$id, $dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Cập nhật món ăn thành công!');
     }
@@ -486,16 +266,7 @@ class AdminController extends Controller
     public function toggleSignatureDish($id)
     {
         $this->verifyAdmin();
-
-        $dish = \App\Models\Dish::findOrFail($id);
-        $eatery = Eatery::findOrFail($dish->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
-        }
-
-        $dish->update([
-            'is_signature' => !$dish->is_signature
-        ]);
+        $this->adminEateryService->toggleSignatureDish((int)$id, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Cập nhật trạng thái món ăn thành công!');
     }
@@ -506,20 +277,13 @@ class AdminController extends Controller
     public function destroyDish($id)
     {
         $this->verifyAdmin();
-
-        $dish = \App\Models\Dish::findOrFail($id);
-        $eatery = Eatery::findOrFail($dish->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
-        }
-
-        $dish->delete();
+        $this->adminEateryService->destroyDish((int)$id, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Xóa món ăn khỏi thực đơn thành công!');
     }
 
     /**
-     * Đăng Video Review (Hỗ trợ nhúng TikTok/Shorts tối ưu dung lượng)
+     * Đăng Video Review
      */
     public function storeVideo(Request $request)
     {
@@ -528,69 +292,16 @@ class AdminController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'eatery_id' => 'required|exists:eateries,id',
-            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:20480', // tối đa 20MB
+            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:20480',
             'video_url' => 'nullable|url',
         ], [
             'video_file.max' => 'Dung lượng video đăng tải trực tiếp không được vượt quá 20MB để tối ưu dung lượng máy chủ!',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        $role = session('user_role');
-        $userId = session('user_id');
+        $dto = StoreVideoDTO::fromRequest($request);
+        $video = $this->videoService->storeVideo($dto, session('user_id'), session('user_role'));
 
-        // Phân quyền cho Seller
-        if ($role === 'seller' && $eatery->user_id !== $userId) {
-            abort(403, 'Bạn không thể đăng video review cho cơ sở không thuộc sở hữu của bạn!');
-        }
-
-        $videoUrl = '';
-        $videoType = 'local';
-        $thumbnailPath = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80'; // mặc định
-
-        if ($request->hasFile('video_file')) {
-            // Đăng tải trực tiếp qua Google Drive (có fallback cục bộ)
-            $videoUrl = \App\Helpers\GoogleDriveHelper::upload($request->file('video_file'), 'videos');
-            $videoType = 'local';
-        } elseif ($request->video_url) {
-            // Hỗ trợ Nhúng thông minh từ link bên ngoài
-            $url = $request->video_url;
-            
-            // Regex bóc tách Google Drive link thủ công
-            if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                $videoType = 'local';
-                $videoUrl = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-            }
-            // Regex bóc tách TikTok ID
-            elseif (preg_match('/tiktok\.com\/(@[^\/]+\/video\/(\d+)|v\/(\d+))/i', $url, $matches) || preg_match('/vt\.tiktok\.com\/(\w+)/i', $url)) {
-                $videoType = 'tiktok';
-                $videoUrl = $url;
-            } 
-            // Regex bóc tách YouTube ID (bao gồm cả Shorts, watch?v=, share link youtu.be/...)
-            elseif (preg_match('/(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]+)/i', $url, $matches)) {
-                $videoType = 'youtube_shorts';
-                $videoUrl = $url;
-            } else {
-                $videoType = 'local';
-                $videoUrl = $url;
-            }
-        } else {
-            return redirect()->back()->withErrors(['video_url' => 'Vui lòng tải lên file video hoặc dán link TikTok/YouTube Shorts để nhúng!']);
-        }
-
-        $status = ($role === 'admin') ? 'approved' : 'pending';
-
-        \App\Models\ReviewVideo::create([
-            'eatery_id' => $eatery->id,
-            'user_id' => $userId,
-            'title' => $request->title,
-            'video_url' => $videoUrl,
-            'video_type' => $videoType,
-            'thumbnail_path' => $thumbnailPath,
-            'likes_count' => 0,
-            'status' => $status
-        ]);
-
-        $message = ($status === 'approved') 
+        $message = ($video->status === 'approved') 
             ? '🎉 Đăng video review thành công và đã được công khai trên bản đồ!' 
             : '🎉 Đăng video thành công! Video đang chờ Ban quản trị phê duyệt trước khi công khai.';
         
@@ -598,94 +309,25 @@ class AdminController extends Controller
     }
 
     /**
-     * Cập nhật Video Review (Hỗ trợ cả Nhúng link và Tải file mới)
+     * Cập nhật Video Review
      */
     public function updateVideo(Request $request, $id)
     {
         $this->verifyAdmin();
-        $video = \App\Models\ReviewVideo::findOrFail($id);
-        $eatery = Eatery::findOrFail($video->eatery_id);
-        $role = session('user_role');
-        $userId = session('user_id');
-
-        // Phân quyền cho Seller
-        if ($role === 'seller' && $video->user_id !== $userId && $eatery->user_id !== $userId) {
-            abort(403, 'Bạn không thể sửa video review không thuộc sở hữu của bạn!');
-        }
 
         $request->validate([
             'title' => 'required|string|max:255',
             'eatery_id' => 'required|exists:eateries,id',
-            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:20480', // tối đa 20MB
+            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,qt|max:20480',
             'video_url' => 'nullable|url',
         ], [
             'video_file.max' => 'Dung lượng video đăng tải trực tiếp không được vượt quá 20MB để tối ưu dung lượng máy chủ!',
         ]);
 
-        $newEatery = Eatery::findOrFail($request->eatery_id);
-        if ($role === 'seller' && $newEatery->user_id !== $userId) {
-            abort(403, 'Bạn không thể liên kết video với cơ sở không thuộc sở hữu của bạn!');
-        }
+        $dto = StoreVideoDTO::fromRequest($request);
+        $video = $this->videoService->updateVideo((int)$id, $dto, session('user_id'), session('user_role'));
 
-        $videoUrl = $video->video_url;
-        $videoType = $video->video_type;
-
-        // Có tải video file mới lên
-        if ($request->hasFile('video_file')) {
-            // Xóa video cũ nếu là file cục bộ
-            if ($video->video_type === 'local' && \Str::startsWith($video->video_url, '/uploads/videos/')) {
-                $oldFilePath = public_path($video->video_url);
-                if (file_exists($oldFilePath)) {
-                    @unlink($oldFilePath);
-                }
-            }
-
-            $videoUrl = \App\Helpers\GoogleDriveHelper::upload($request->file('video_file'), 'videos');
-            $videoType = 'local';
-        } 
-        // Có đổi link nhúng mới
-        elseif ($request->video_url && $request->video_url !== $video->video_url) {
-            // Xóa video cũ nếu là file cục bộ
-            if ($video->video_type === 'local' && \Str::startsWith($video->video_url, '/uploads/videos/')) {
-                $oldFilePath = public_path($video->video_url);
-                if (file_exists($oldFilePath)) {
-                    @unlink($oldFilePath);
-                }
-            }
-
-            $url = $request->video_url;
-            
-            // Regex bóc tách Google Drive link thủ công
-            if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
-                $videoType = 'local';
-                $videoUrl = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
-            }
-            // Regex bóc tách TikTok ID
-            elseif (preg_match('/tiktok\.com\/(@[^\/]+\/video\/(\d+)|v\/(\d+))/i', $url, $matches) || preg_match('/vt\.tiktok\.com\/(\w+)/i', $url)) {
-                $videoType = 'tiktok';
-                $videoUrl = $url;
-            } 
-            // Regex bóc tách YouTube ID (bao gồm cả Shorts, watch?v=, share link youtu.be/...)
-            elseif (preg_match('/(?:youtube\.com\/(?:shorts\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]+)/i', $url, $matches)) {
-                $videoType = 'youtube_shorts';
-                $videoUrl = $url;
-            } else {
-                $videoType = 'local';
-                $videoUrl = $url;
-            }
-        }
-
-        $status = ($role === 'admin') ? $video->status : 'pending';
-
-        $video->update([
-            'eatery_id' => $newEatery->id,
-            'title' => $request->title,
-            'video_url' => $videoUrl,
-            'video_type' => $videoType,
-            'status' => $status
-        ]);
-
-        $message = ($status === 'approved') 
+        $message = ($video->status === 'approved') 
             ? '🎉 Cập nhật video review thành công!' 
             : '🎉 Cập nhật video thành công! Video đã chuyển sang trạng thái chờ kiểm duyệt lại.';
 
@@ -693,7 +335,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Phê duyệt Video Review (Admin only)
+     * Phê duyệt Video Review
      */
     public function approveVideo($id)
     {
@@ -702,14 +344,13 @@ class AdminController extends Controller
             abort(403, 'Chỉ Quản trị viên hệ thống mới có quyền phê duyệt video!');
         }
 
-        $video = \App\Models\ReviewVideo::findOrFail($id);
-        $video->update(['status' => 'approved']);
+        $this->videoService->approveVideo((int)$id);
 
         return redirect()->back()->with('success', '🎉 Phê duyệt video thành công! Video đã được công khai.');
     }
 
     /**
-     * Từ chối Video Review (Admin only)
+     * Từ chối Video Review
      */
     public function rejectVideo($id)
     {
@@ -718,8 +359,7 @@ class AdminController extends Controller
             abort(403, 'Chỉ Quản trị viên hệ thống mới có quyền từ chối video!');
         }
 
-        $video = \App\Models\ReviewVideo::findOrFail($id);
-        $video->update(['status' => 'rejected']);
+        $this->videoService->rejectVideo((int)$id);
 
         return redirect()->back()->with('success', '❌ Đã từ chối video review. Video này sẽ không hiển thị trên bản đồ.');
     }
@@ -730,23 +370,7 @@ class AdminController extends Controller
     public function destroyVideo($id)
     {
         $this->verifyAdmin();
-        $video = \App\Models\ReviewVideo::findOrFail($id);
-        $eatery = Eatery::findOrFail($video->eatery_id);
-
-        // Bảo vệ quyền của Seller: chỉ được xóa video do mình đăng hoặc thuộc eatery của mình
-        if (session('user_role') === 'seller' && $video->user_id !== session('user_id') && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền xóa video review này!');
-        }
-
-        // Xóa file cục bộ nếu có
-        if ($video->video_type === 'local' && Str::startsWith($video->video_url, '/uploads/videos/')) {
-            $filePath = public_path($video->video_url);
-            if (file_exists($filePath)) {
-                @unlink($filePath);
-            }
-        }
-
-        $video->delete();
+        $this->videoService->destroyVideo((int)$id, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', '🗑️ Xóa video review thành công!');
     }
@@ -767,28 +391,8 @@ class AdminController extends Controller
             'image_url' => 'nullable|url',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền cập nhật hồ sơ của cơ sở này!');
-        }
-
-        $imagePath = '/uploads/certificates/default-cert.jpg';
-        if ($request->hasFile('image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'certificates');
-        } elseif ($request->image_url) {
-            $imagePath = $request->image_url;
-        }
-
-        \App\Models\FoodSafetyCertificate::updateOrCreate(
-            ['eatery_id' => $request->eatery_id],
-            [
-                'certificate_number' => $request->certificate_number,
-                'issued_by' => $request->issued_by,
-                'issued_at' => $request->issued_at,
-                'expired_at' => $request->expired_at,
-                'image_path' => $imagePath,
-            ]
-        );
+        $dto = StoreCertificateDTO::fromRequest($request);
+        $this->adminEateryService->storeFoodSafetyCertificate($dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Cập nhật Giấy chứng nhận ATTP thành công!');
     }
@@ -807,20 +411,21 @@ class AdminController extends Controller
             'checker_name' => 'required|string|max:100',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
-        }
-
-        \App\Models\DailyFoodLog::create([
-            'eatery_id' => $request->eatery_id,
-            'log_date' => $request->log_date,
-            'ingredients_origin' => $request->ingredients_origin,
-            'storage_condition' => $request->storage_condition,
-            'checker_name' => $request->checker_name,
-        ]);
+        $dto = StoreDailyFoodLogDTO::fromRequest($request);
+        $this->adminEateryService->storeDailyFoodLog($dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Ghi nhật ký kiểm tra vệ sinh hàng ngày thành công!');
+    }
+
+    /**
+     * Xóa nhật ký kiểm tra
+     */
+    public function destroyDailyFoodLog($id)
+    {
+        $this->verifyAdmin();
+        $this->adminEateryService->destroyDailyFoodLog((int)$id, session('user_id'), session('user_role'));
+
+        return redirect()->back()->with('success', 'Xóa nhật ký kiểm tra thành công!');
     }
 
     /**
@@ -839,28 +444,21 @@ class AdminController extends Controller
             'image_url' => 'nullable|url',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
-        }
-
-        $imagePath = '/uploads/contracts/default-contract.jpg';
-        if ($request->hasFile('image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'contracts');
-        } elseif ($request->image_url) {
-            $imagePath = $request->image_url;
-        }
-
-        \App\Models\FoodSupplyContract::create([
-            'eatery_id' => $request->eatery_id,
-            'supplier_name' => $request->supplier_name,
-            'items_supplied' => $request->items_supplied,
-            'signed_at' => $request->signed_at,
-            'expired_at' => $request->expired_at,
-            'image_path' => $imagePath,
-        ]);
+        $dto = StoreSupplyContractDTO::fromRequest($request);
+        $this->adminEateryService->storeFoodSupplyContract($dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Thêm mới hợp đồng cung cấp thành công!');
+    }
+
+    /**
+     * Xóa hợp đồng cung cấp
+     */
+    public function destroyFoodSupplyContract($id)
+    {
+        $this->verifyAdmin();
+        $this->adminEateryService->destroyFoodSupplyContract((int)$id, session('user_id'), session('user_role'));
+
+        return redirect()->back()->with('success', 'Xóa hợp đồng thành công!');
     }
 
     /**
@@ -878,66 +476,21 @@ class AdminController extends Controller
             'image_url' => 'nullable|url',
         ]);
 
-        $eatery = Eatery::findOrFail($request->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
-        }
-
-        $imagePath = '/uploads/invoices/default-invoice.jpg';
-        if ($request->hasFile('image')) {
-            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'invoices');
-        } elseif ($request->image_url) {
-            $imagePath = $request->image_url;
-        }
-
-        \App\Models\PurchaseInvoice::create([
-            'eatery_id' => $request->eatery_id,
-            'supplier_name' => $request->supplier_name,
-            'items_summary' => $request->items_summary,
-            'invoice_date' => $request->invoice_date,
-            'image_path' => $imagePath,
-        ]);
+        $dto = StorePurchaseInvoiceDTO::fromRequest($request);
+        $this->adminEateryService->storePurchaseInvoice($dto, session('user_id'), session('user_role'));
 
         return redirect()->back()->with('success', 'Thêm mới hóa đơn mua bán thành công!');
     }
 
-    public function destroyFoodSupplyContract($id)
-    {
-        $this->verifyAdmin();
-        $contract = \App\Models\FoodSupplyContract::findOrFail($id);
-        $eatery = Eatery::findOrFail($contract->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
-        }
-
-        $contract->delete();
-        return redirect()->back()->with('success', 'Xóa hợp đồng thành công!');
-    }
-
+    /**
+     * Xóa hóa đơn mua bán thực phẩm
+     */
     public function destroyPurchaseInvoice($id)
     {
         $this->verifyAdmin();
-        $invoice = \App\Models\PurchaseInvoice::findOrFail($id);
-        $eatery = Eatery::findOrFail($invoice->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
-        }
+        $this->adminEateryService->destroyPurchaseInvoice((int)$id, session('user_id'), session('user_role'));
 
-        $invoice->delete();
         return redirect()->back()->with('success', 'Xóa hóa đơn thành công!');
-    }
-
-    public function destroyDailyFoodLog($id)
-    {
-        $this->verifyAdmin();
-        $log = \App\Models\DailyFoodLog::findOrFail($id);
-        $eatery = Eatery::findOrFail($log->eatery_id);
-        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
-            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
-        }
-
-        $log->delete();
-        return redirect()->back()->with('success', 'Xóa nhật ký kiểm tra thành công!');
     }
 
     /**
@@ -947,7 +500,6 @@ class AdminController extends Controller
     {
         $this->verifyAdmin();
         
-        // Chỉ có tài khoản hệ thống (admin) mới được xóa đánh giá của khách hàng, Seller không được tự ý xóa
         if (session('user_role') !== 'admin') {
             abort(403, 'Bạn không có quyền xóa đánh giá của khách hàng!');
         }
@@ -959,7 +511,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Danh sách tài khoản User với tính năng AJAX Tìm kiếm, Lọc trạng thái, Phân trang
+     * Danh sách tài khoản User
      */
     public function indexUsers(Request $request)
     {
@@ -968,33 +520,14 @@ class AdminController extends Controller
             abort(403, 'Bạn không có quyền quản lý tài khoản người dùng!');
         }
 
-        $query = \App\Models\User::query();
+        $users = $this->userService->searchAndPaginate($request);
+        $stats = $this->userService->getRoleStats();
+        
+        $totalUsers = $stats['total'];
+        $adminCount = $stats['admin'];
+        $sellerCount = $stats['seller'];
+        $userCount = $stats['user'];
 
-        // 1. Tìm kiếm theo tên hoặc email hoặc số điện thoại
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%')
-                  ->orWhere('phone', 'like', '%' . $search . '%');
-            });
-        }
-
-        // 2. Lọc theo trạng thái
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
-
-        // Thống kê tổng số
-        $totalUsers = \App\Models\User::count();
-        $adminCount = \App\Models\User::where('role', 'admin')->count();
-        $sellerCount = \App\Models\User::where('role', 'seller')->count();
-        $userCount = \App\Models\User::where('role', 'user')->count();
-
-        // Phân trang có giữ bộ lọc
-        $users = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-
-        // Nếu là request AJAX, chỉ trả về một phần view danh sách bảng
         if ($request->ajax()) {
             return view('admin.users.partial-table', compact('users'))->render();
         }
@@ -1037,15 +570,8 @@ class AdminController extends Controller
             'password.min' => 'Mật khẩu tối thiểu phải từ 6 ký tự!',
         ]);
 
-        \App\Models\User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-            'role' => $request->role,
-            'avatar' => $request->avatar ?: '🧑',
-            'phone' => $request->phone,
-            'status' => 'active',
-        ]);
+        $dto = StoreUserDTO::fromRequest($request);
+        $this->userService->storeUser($dto);
 
         return redirect('/admin/users')->with('success', 'Thêm mới tài khoản người dùng thành công!');
     }
@@ -1060,7 +586,7 @@ class AdminController extends Controller
             abort(403, 'Bạn không có quyền xem thông tin chi tiết người dùng!');
         }
 
-        $user = \App\Models\User::findOrFail($id);
+        $user = User::findOrFail($id);
         return view('admin.users.show', compact('user'));
     }
 
@@ -1074,7 +600,7 @@ class AdminController extends Controller
             abort(403, 'Bạn không có quyền chỉnh sửa tài khoản người dùng!');
         }
 
-        $user = \App\Models\User::findOrFail($id);
+        $user = User::findOrFail($id);
         return view('admin.users.edit', compact('user'));
     }
 
@@ -1087,8 +613,6 @@ class AdminController extends Controller
         if (session('user_role') !== 'admin') {
             abort(403, 'Bạn không có quyền cập nhật tài khoản người dùng!');
         }
-
-        $user = \App\Models\User::findOrFail($id);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -1103,20 +627,8 @@ class AdminController extends Controller
             'password.min' => 'Mật khẩu thay đổi phải từ 6 ký tự!',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'avatar' => $request->avatar ?: '🧑',
-            'phone' => $request->phone,
-            'status' => $request->status,
-        ];
-
-        if ($request->filled('password')) {
-            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
-        }
-
-        $user->update($data);
+        $dto = StoreUserDTO::fromRequest($request);
+        $this->userService->updateUser((int)$id, $dto);
 
         return redirect('/admin/users')->with('success', 'Cập nhật tài khoản người dùng thành công!');
     }
@@ -1131,20 +643,17 @@ class AdminController extends Controller
             abort(403, 'Bạn không có quyền xóa tài khoản người dùng!');
         }
 
-        $user = \App\Models\User::findOrFail($id);
-        
-        // Ngăn chặn admin tự xóa chính tài khoản của mình
-        if ($user->id === session('user_id')) {
-            return redirect()->back()->with('error', 'Bạn không được phép tự xóa tài khoản của chính mình!');
+        $res = $this->userService->destroyUser((int)$id, (int)session('user_id'));
+
+        if ($res['status'] === 'error') {
+            return redirect()->back()->with('error', $res['message']);
         }
 
-        $user->delete();
-
-        return redirect('/admin/users')->with('success', 'Đã xóa tài khoản người dùng khỏi hệ thống!');
+        return redirect('/admin/users')->with('success', $res['message']);
     }
 
     /**
-     * Bật/Tắt (Kích hoạt/Vô hiệu hóa) tài khoản người dùng nhanh chóng
+     * Bật/Tắt tài khoản người dùng
      */
     public function toggleUserStatus($id)
     {
@@ -1153,17 +662,12 @@ class AdminController extends Controller
             abort(403, 'Bạn không có quyền thay đổi trạng thái tài khoản!');
         }
 
-        $user = \App\Models\User::findOrFail($id);
+        $res = $this->userService->toggleUserStatus((int)$id, (int)session('user_id'));
 
-        if ($user->id === session('user_id')) {
-            return redirect()->back()->with('error', 'Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
+        if ($res['status'] === 'error') {
+            return redirect()->back()->with('error', $res['message']);
         }
 
-        $user->status = $user->status === 'active' ? 'disabled' : 'active';
-        $user->save();
-
-        $message = $user->status === 'active' ? 'Kích hoạt tài khoản thành công!' : 'Đã vô hiệu hóa tài khoản thành công!';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('success', $res['message']);
     }
 }
-

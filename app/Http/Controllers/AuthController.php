@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\DTOs\LoginDTO;
+use App\DTOs\RegisterDTO;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected AuthService $authService
+    ) {}
+
     public function showLogin(Request $request)
     {
         if (Auth::check() || session()->has('user_id')) {
@@ -22,23 +27,15 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            
-            $user = Auth::user();
-            
-            // Lưu thông tin người dùng vào Session tiện dụng
-            session([
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'user_role' => $user->role,
-            ]);
+        $dto = LoginDTO::fromRequest($request);
 
+        if ($this->authService->login($dto)) {
+            $user = Auth::user();
             if ($user->role === 'admin') {
                 return redirect()->intended('/admin/dashboard');
             }
@@ -74,40 +71,15 @@ class AuthController extends Controller
             'phone.required' => 'Vui lòng cung cấp số điện thoại liên hệ!',
         ]);
 
-        $role = $request->input('role', 'user');
-        if ($role === 'admin') {
-            $role = 'user'; // Bảo mật: Không cho phép tự ý đăng ký làm Admin
-        }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $role,
-            'phone' => $request->phone,
-            'status' => 'active',
-            'avatar' => '🧑',
-        ]);
-
-        Auth::login($user);
-
-        session([
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'user_role' => $user->role,
-        ]);
+        $dto = RegisterDTO::fromRequest($request);
+        $this->authService->register($dto);
 
         return redirect('/')->with('success', 'Đăng ký tài khoản thành công!');
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        
-        session()->forget(['user_id', 'user_name', 'user_role']);
-
+        $this->authService->logout();
         return redirect('/');
     }
 }
