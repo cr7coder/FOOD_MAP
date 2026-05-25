@@ -237,32 +237,12 @@
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối
-        let currentTheme = localStorage.getItem('theme') || 'light';
-        let tileUrl = currentTheme === 'light' 
-            ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-        let activeTileLayer = L.tileLayer(tileUrl, {
+        // 3. Sử dụng Tileset bản đồ màu sáng mặc định (Voyager)
+        let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
-
-        // Lắng nghe sự kiện đổi chế độ Sáng/Tối để đổi lớp nền bản đồ tức thì
-        document.addEventListener('theme-changed', function(e) {
-            const nextTheme = e.detail.theme;
-            const nextTileUrl = nextTheme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-            map.removeLayer(activeTileLayer);
-            activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                maxZoom: 20
-            }).addTo(map);
-        });
 
         // 4. Định nghĩa hàm vẽ các địa điểm lên Bản đồ (Hỗ trợ gọi lại khi lọc AJAX)
         window.renderEateryMarkers = function(eateriesList) {

@@ -485,25 +485,10 @@
         // Add standard zoom control at top right
         L.control.zoom({ position: 'topright' }).addTo(map);
 
-        // Dark/Light theme tiles mapper
-        const getTileUrl = (theme) => {
-            return theme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        };
-
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        let tileLayer = L.tileLayer(getTileUrl(currentTheme), {
+        // Sử dụng Tileset bản đồ màu sáng mặc định (Voyager)
+        let tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);
-
-        // Listen for global theme changes to hot-swap map styling
-        document.addEventListener('theme-changed', function(e) {
-            map.removeLayer(tileLayer);
-            tileLayer = L.tileLayer(getTileUrl(e.detail.theme), {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-            }).addTo(map);
-        });
 
         // 3. Add Custom Markers
         stopsData.forEach((stop, idx) => {

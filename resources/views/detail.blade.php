@@ -842,28 +842,10 @@
             scrollWheelZoom: false
         }).setView([eateryLat, eateryLng], 15);
 
-        // Lớp nền phù hợp chế độ Sáng/Tối
-        let currentTheme = localStorage.getItem('theme') || 'light';
-        let tileUrl = currentTheme === 'light' 
-            ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-        let activeTileLayer = L.tileLayer(tileUrl, {
+        // Lớp nền màu sáng mặc định (Voyager)
+        let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(miniMap);
-
-        // Lắng nghe sự kiện đổi chế độ Sáng/Tối để đổi lớp nền bản đồ tức thì
-        document.addEventListener('theme-changed', function(e) {
-            const nextTheme = e.detail.theme;
-            const nextTileUrl = nextTheme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            
-            miniMap.removeLayer(activeTileLayer);
-            activeTileLayer = L.tileLayer(nextTileUrl, {
-                attribution: '&copy; OpenStreetMap &copy; CARTO'
-            }).addTo(miniMap);
-        });
 
         // Custom Marker
         const customIcon = L.divIcon({
