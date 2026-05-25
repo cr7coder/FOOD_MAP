@@ -85,7 +85,7 @@
 }
 
 /* 📱 Detail Page Layout Responsive Overrides */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .detail-grid {
         grid-template-columns: 1fr !important;
         gap: 28px !important;
@@ -150,7 +150,7 @@
 }
 
 /* Responsive adjustments from original file */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .split-screen {
         flex-direction: column-reverse;
         height: auto;
@@ -212,7 +212,7 @@
 }
 
 /* 📱 Responsive overrides for Food Tour Layout */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .tour-layout {
         grid-template-columns: 1fr !important;
         grid-template-rows: 1fr 420px !important;
@@ -235,22 +235,25 @@
 }
 
 /* 💻 Laptop/Mid-sized Screen Header Scale-down Optimization (Prevents menu/auth overlaps) */
-@media (min-width: 1200px) and (max-width: 1440px) {
+@media (min-width: 1024px) and (max-width: 1440px) {
     .nav-wrapper {
-        gap: 15px !important;
+        gap: 12px !important;
+    }
+    .main-nav-container {
+        margin-left: 20px !important;
     }
     .nav-menu {
-        gap: 16px !important;
+        gap: 12px !important;
     }
     .nav-link {
-        font-size: 0.85rem !important;
+        font-size: 0.82rem !important;
     }
     .user-actions {
-        gap: 8px !important;
+        gap: 6px !important;
     }
     .user-actions span {
-        font-size: 0.82rem !important;
-        max-width: 140px !important;
+        font-size: 0.8rem !important;
+        max-width: 100px !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         white-space: nowrap !important;
@@ -258,6 +261,6 @@
         vertical-align: middle !important;
     }
     .logo {
-        font-size: 1.25rem !important;
+        font-size: 1.15rem !important;
     }
 }

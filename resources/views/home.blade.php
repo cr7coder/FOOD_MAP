@@ -511,7 +511,7 @@
             }, 1000);
             
             // Cuộn màn hình lên vị trí bản đồ trên mobile chuẩn xác ngay dưới thanh Header sticky (64px)
-            if (window.innerWidth <= 1200) {
+            if (window.innerWidth <= 1024) {
                 const mapContainer = document.querySelector('.split-map-container');
                 if (mapContainer) {
                     window.scrollTo({

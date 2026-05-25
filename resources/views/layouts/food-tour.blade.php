@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
     <!-- Mobile Native Overrides (Only load for mobile) -->
-    <link rel="stylesheet" media="screen and (max-width: 1200px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
+    <link rel="stylesheet" media="screen and (max-width: 1024px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
