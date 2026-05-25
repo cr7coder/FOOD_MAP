@@ -27,38 +27,7 @@
     </div>
 @endif
 
-<!-- Dynamic Animated Success Status Toast -->
-@if(session('success'))
-    <div id="admin-success-toast" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); z-index: 9999; background: #0f172a; color: #ffffff; border-radius: 16px; padding: 24px 32px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; border: 1px solid rgba(255,255,255,0.1); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 320px; max-width: 90%;">
-        <div style="background: #10b981; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">✓</div>
-        <div>
-            <strong style="display: block; font-size: 1.05rem; color: #ffffff; margin-bottom: 4px;">Thao tác thành công!</strong>
-            <span style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; display: block;">{{ session('success') }}</span>
-        </div>
-        <button type="button" onclick="const t = document.getElementById('admin-success-toast'); t.style.opacity='0'; t.style.transform='translate(-50%, -50%) scale(0.9)'; t.style.pointerEvents='none';" class="btn-admin btn-admin-accent" style="padding: 8px 24px; font-size: 0.78rem; border-radius: 8px; margin-top: 6px; font-weight: bold; width: 100%;">Đồng ý</button>
-    </div>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const toast = document.getElementById('admin-success-toast');
-            if (toast) {
-                setTimeout(() => {
-                    toast.style.transform = 'translate(-50%, -50%) scale(1)';
-                    toast.style.opacity = '1';
-                    toast.style.pointerEvents = 'auto';
-                }, 150);
-                
-                setTimeout(() => {
-                    if (toast.style.opacity !== '0') {
-                        toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
-                        toast.style.opacity = '0';
-                        toast.style.pointerEvents = 'none';
-                    }
-                }, 4000); // Automatically fade out after 4s
-            }
-        });
-    </script>
-@endif
+
 
 <!-- ==========================================================================
      SUB-TAB WORKSPACE SWITCHER
@@ -130,7 +99,7 @@
                                 <option value="">-- Chọn Xã --</option>
                                 @foreach($communes as $com)
                                     <option value="{{ $com->id }}" {{ old('commune_id', $eatery ? $eatery->commune_id : '') == $com->id ? 'selected' : '' }}>
-                                        📍 Xã {{ $com->name }}
+                                        📍 {{ $com->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -833,8 +802,8 @@
                                 <th style="width: 130px;">Đánh giá</th>
                                 <th>Nội dung nhận xét</th>
                                 <th style="width: 130px;">Thời gian</th>
-                                @if(session('user_role') === 'admin')
-                                <th style="text-align: center; width: 100px;">Thao tác</th>
+                                @if(session('user_role') === 'admin' || session('user_role') === 'seller')
+                                <th style="text-align: center; width: 120px;">Thao tác</th>
                                 @endif
                             </tr>
                         </thead>
@@ -853,6 +822,31 @@
                                     </td>
                                     <td>
                                         <p style="font-size: 0.86rem; color: var(--admin-text-main); line-height: 1.5; margin: 0; white-space: pre-line;">{{ $rev->comment }}</p>
+                                        
+                                        <!-- Hiển thị phản hồi đã có của chủ quán -->
+                                        @if($rev->seller_reply)
+                                        <div style="margin-top: 8px; padding: 10px 14px; background-color: #f8fafc; border-left: 3px solid var(--admin-primary); border-radius: 6px; font-size: 0.82rem;">
+                                            <strong style="color: var(--admin-primary); display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">💬 Phản hồi của bạn:</strong>
+                                            <p style="margin: 0; color: var(--admin-text-main); font-style: italic;">{{ $rev->seller_reply }}</p>
+                                        </div>
+                                        @endif
+
+                                        <!-- Form phản hồi (Ẩn mặc định) -->
+                                        @if(session('user_role') === 'seller')
+                                        <div id="reply-form-{{ $rev->id }}" style="display: none; margin-top: 10px; padding: 12px; border: 1.5px solid var(--admin-border); border-radius: 8px; background-color: #f8fafc;">
+                                            <form action="/admin/reviews/{{ $rev->id }}/reply" method="POST">
+                                                @csrf
+                                                <div class="admin-form-group" style="margin-bottom: 8px;">
+                                                    <label class="admin-form-label" style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">Nội dung phản hồi khách hàng:</label>
+                                                    <textarea name="seller_reply" rows="2" class="admin-form-input" style="font-size: 0.82rem; padding: 6px 10px;" placeholder="Cảm ơn bạn đã phản hồi tốt về quán. Chúng tôi sẽ cố gắng phát huy tốt hơn nữa...">{{ $rev->seller_reply }}</textarea>
+                                                </div>
+                                                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                                    <button type="button" class="btn-admin btn-admin-secondary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;" onclick="toggleReplyForm({{ $rev->id }})">Hủy</button>
+                                                    <button type="submit" class="btn-admin btn-admin-primary" style="padding: 4px 12px; font-size: 0.72rem; border-radius: 6px;">💾 Lưu phản hồi</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <span style="font-size: 0.76rem; color: var(--admin-text-muted);">
@@ -868,6 +862,12 @@
                                                 🗑️ Xóa
                                             </button>
                                         </form>
+                                    </td>
+                                    @elseif(session('user_role') === 'seller')
+                                    <td style="text-align: center;">
+                                        <button type="button" class="btn-admin {{ $rev->seller_reply ? 'btn-admin-secondary' : 'btn-admin-accent' }}" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; font-weight: 700; cursor: pointer;" onclick="toggleReplyForm({{ $rev->id }})">
+                                            {{ $rev->seller_reply ? '✏️ Sửa PH' : '💬 Phản hồi' }}
+                                        </button>
                                     </td>
                                     @endif
                                 </tr>
@@ -1223,32 +1223,48 @@
 <!-- ==========================================================================
      MODAL XEM TRỰC TIẾP VIDEO REVIEW
      ========================================================================== -->
-<div id="watchVideoModal" class="admin-reels-overlay" style="display: none;">
-    <div class="admin-card" style="width: 100%; max-width: 440px; padding: 20px; position: relative; border-radius: 16px; background-color: #0f0a20; box-shadow: 0 10px 25px rgba(0,0,0,0.35); overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-        <button type="button" style="position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.15); border: none; color: #ffffff; font-size: 1.15rem; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;" onclick="closeWatchVideoModal()">✕</button>
+<div id="watchVideoModal" class="admin-reels-overlay" style="display: none; background: rgba(8, 5, 18, 0.85); backdrop-filter: blur(15px); z-index: 11000;">
+    <div class="admin-card" style="width: 100%; max-width: 420px; padding: 24px; position: relative; border-radius: 28px; background: rgba(20, 15, 38, 0.75); backdrop-filter: blur(25px); box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 40px rgba(240, 78, 35, 0.25), inset 0 1px 0 rgba(255,255,255,0.2); overflow: hidden; border: 1.5px solid rgba(255,255,255,0.15); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
         
-        <h4 id="watchVideoTitle" style="color: #ffffff; font-size: 0.95rem; font-weight: 700; margin: 0 0 14px 0; padding-right: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">🎥 Xem Video Review</h4>
+        <!-- Glowing Close Button -->
+        <button type="button" style="position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'; this.style.borderColor='#ef4444'; this.style.transform='rotate(90deg)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.transform='rotate(0deg)';" onclick="closeWatchVideoModal()">✕</button>
+        
+        <!-- Premium Pulsing Live Dot Header -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span style="display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 12px #ef4444; animation: blink 1.2s infinite alternate;"></span>
+            <h4 id="watchVideoTitle" style="color: #ffffff; font-size: 1.05rem; font-weight: 800; margin: 0; padding-right: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Outfit', sans-serif; text-shadow: 0 0 8px rgba(255,255,255,0.3);">🎥 Xem Video Review</h4>
+        </div>
         
         <!-- Local HTML5 Video Player Container -->
-        <div id="watchLocalContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
-            <video id="watchVideoPlayer" controls style="width: 100%; height: 100%; object-fit: contain;"></video>
+        <div id="watchLocalContainer" style="display: none; width: 100%; height: 520px; background-color: #000000; border-radius: 20px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <video id="watchVideoPlayer" controls style="width: 100%; height: 100%; object-fit: cover;"></video>
         </div>
 
         <!-- YouTube Shorts Iframe Container -->
-        <div id="watchYoutubeContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden;">
+        <div id="watchYoutubeContainer" style="display: none; width: 100%; height: 520px; background-color: #000000; border-radius: 20px; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <iframe id="watchYoutubePlayer" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
         </div>
 
         <!-- TikTok Embed Container -->
-        <div id="watchTiktokContainer" style="display: none; width: 100%; height: 500px; background-color: #000000; border-radius: 12px; overflow: hidden; align-items: center; justify-content: center; padding: 20px;">
-            <div style="text-align: center; color: rgba(255,255,255,0.85); padding: 20px;">
-                <p style="font-size: 1.5rem; margin-bottom: 12px;">📱</p>
-                <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;">Video Tiktok ngắn</p>
-                <p style="font-size: 0.78rem; color: rgba(255,255,255,0.6); line-height: 1.4; margin-bottom: 20px;">Trình quản trị đề xuất mở link TikTok trực tiếp hoặc nhúng để trải nghiệm mượt mà nhất!</p>
-                <a id="watchTiktokLink" href="" target="_blank" class="btn-admin btn-admin-accent" style="padding: 10px 24px; font-size: 0.82rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                    🔗 Mở Trên TikTok
+        <div id="watchTiktokContainer" style="display: none; width: 100%; height: 520px; background-color: #0c081c; border-radius: 20px; overflow: hidden; align-items: center; justify-content: center; padding: 24px; border: 1.5px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="text-align: center; color: rgba(255,255,255,0.9); padding: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 16px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">📱</div>
+                <h5 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Video Tiktok ngắn</h5>
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 24px; padding: 0 10px;">Để có trải nghiệm mượt mà, tốc độ cao và đầy đủ tính năng tương tác của TikTok, hãy mở xem trực tiếp trên nền tảng nguồn!</p>
+                <a id="watchTiktokLink" href="" target="_blank" class="btn-admin" style="background: var(--primary-grad); border: none; padding: 12px 28px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: #fff; box-shadow: 0 4px 15px rgba(240, 78, 35, 0.4); transition: all 0.25s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(240, 78, 35, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(240, 78, 35, 0.4)';">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Mở Trên TikTok
                 </a>
             </div>
+        </div>
+        
+        <!-- Premium Meta Info Pill under player -->
+        <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+            <span>🌐 Nguồn phát: Tự động nhận diện</span>
+            <span style="color: #10b981; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
+                Sẵn sàng phát
+            </span>
         </div>
     </div>
 </div>
@@ -1264,6 +1280,17 @@
     let pickerMap;
     let marker;
     let isMapLocked = hasEatery;
+
+    window.toggleReplyForm = function(reviewId) {
+        const formDiv = document.getElementById('reply-form-' + reviewId);
+        if (formDiv) {
+            if (formDiv.style.display === 'none') {
+                formDiv.style.display = 'block';
+            } else {
+                formDiv.style.display = 'none';
+            }
+        }
+    };
 
     window.toggleMapLock = function() {
         const btn = document.getElementById('btnMapLockToggle');

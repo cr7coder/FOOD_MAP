@@ -153,7 +153,7 @@
                                 <option value="">-- Tất cả khu vực --</option>
                                 @foreach($communes as $com)
                                     <option value="{{ $com->id }}" {{ $comId == $com->id ? 'selected' : '' }}>
-                                        📍 Xã {{ $com->name }}
+                                        📍 {{ $com->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -264,34 +264,40 @@
                 <button class="reels-close-btn" style="pointer-events: auto;" onclick="closeReelsModal()">✕</button>
             </div>
             
-            <div class="reels-overlay-info" style="z-index: 10;">
-                <h3 class="reels-eatery-name" id="reelsEateryName">Bún Mạch Tràng Cổ Loa</h3>
-                <p class="reels-desc" id="reelsVideoDesc">Sợi bún tròn mướt màu ngà tự nhiên, xào chung với thịt heo tươi ngon và nghệ vàng thơm lừng. Không gian Cổ Loa cực chill!</p>
-                <span class="reels-signature-tag">🌟 Món đặc trưng: Bún Mạch Tràng Trộn Nghệ</span>
+            <div class="reels-overlay-info" style="z-index: 10; bottom: 20px; left: 16px; right: 80px;">
+                <h3 class="reels-eatery-name" id="reelsEateryName" style="font-size: 1.05rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.95); margin: 0; font-family: var(--font-heading); color: #ffffff;">Bún Mạch Tràng Cổ Loa</h3>
+                <p class="reels-desc" id="reelsVideoDesc" style="display: none !important;"></p>
+                <span class="reels-signature-tag" style="display: none !important;"></span>
             </div>
             
             <!-- Double click/Tap overlay to fly hearts -->
-            <div style="position: absolute; inset: 0; z-index: 5; pointer-events: auto;" onclick="triggerDoubleTapHeart(event)"></div>
+            <div id="reelTapOverlay" style="position: absolute; inset: 0; z-index: 5; pointer-events: auto;" onclick="triggerDoubleTapHeart(event)"></div>
         </div>
         
-        <!-- Right Action sidebar (TikTok Style) -->
-        <div class="reels-side-actions">
-            <button type="button" class="reels-action-btn" id="reelsLikeBtn" onclick="toggleReelsLike()">
-                <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">❤️</span>
-                <span class="reels-action-label" id="reelsLikeCount">3.8K</span>
-            </button>
+        <!-- Right Action sidebar (Premium Glassmorphic Cinema style) -->
+        <div class="reels-side-actions" style="right: 14px; bottom: 50px; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" id="reelsLikeBtn" onclick="toggleReelsLike()" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" stroke-width="2" style="filter: drop-shadow(0 0 4px rgba(255, 51, 102, 0.6));"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </button>
+                <span class="reels-action-label" id="reelsLikeCount" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">3.8K</span>
+            </div>
             
-            <button type="button" class="reels-action-btn" onclick="alert('Đã thêm quán ăn này vào Danh sách Yêu thích của bạn!')">
-                <span style="font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">⭐</span>
-                <span class="reels-action-label">4.8</span>
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" onclick="alert('Đã thêm quán ăn này vào Danh sách Yêu thích của bạn!')" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffb800" stroke="#ffb800" stroke-width="2" style="filter: drop-shadow(0 0 4px rgba(255, 184, 0, 0.6));"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </button>
+                <span class="reels-action-label" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">4.8</span>
+            </div>
             
-            <button type="button" class="reels-action-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã sao chép liên kết chia sẻ review của quán!');">
-                <span style="font-size: 1.6rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">🔗</span>
-                <span class="reels-action-label">Chia sẻ</span>
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <button type="button" class="reels-action-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã sao chép liên kết chia sẻ review của quán!');" style="background: rgba(255, 255, 255, 0.12); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.3);" onmouseover="this.style.transform='scale(1.15) translateY(-2px)'; this.style.backgroundColor='rgba(255, 255, 255, 0.25)';" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='rgba(255, 255, 255, 0.12)';">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px rgba(255,255,255,0.4));"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                </button>
+                <span class="reels-action-label" style="margin-top: 6px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 0.72rem;">Chia sẻ</span>
+            </div>
             
-            <div class="reels-music-disc">🍜</div>
+            <div class="reels-music-disc" style="border: 2px solid var(--primary); background: radial-gradient(circle, #f04e23 30%, #000 70%); font-size: 0.95rem; box-shadow: 0 0 10px rgba(240, 78, 35, 0.5);">🍜</div>
         </div>
     </div>
 </div>
@@ -369,17 +375,15 @@
 
         // Thiết lập map Leaflet
         searchMap = L.map('searchMap', {
-            zoomControl: false
+            zoomControl: false,
+            zoomSnap: 0.5,       // Bước zoom 0.5 giúp phản hồi nhanh nhạy
+            zoomDelta: 0.5,      // Độ nhảy zoom mỗi lần cuộn
+            wheelPxPerZoomLevel: 60, // Tốc độ zoom tiêu chuẩn nhanh & mượt
+            zoomAnimation: true,
+            fadeAnimation: true,
+            markerZoomAnimation: true
         }).setView([21.1352, 105.8458], initialZoom);
 
-        // Lắng nghe sự kiện resize để cập nhật kích thước bản đồ
-        window.addEventListener('resize', () => {
-            adjustMapContainerHeight();
-            if (searchMap) {
-                searchMap.invalidateSize();
-            }
-        });
-        
         L.control.zoom({ position: 'bottomright' }).addTo(searchMap);
 
         // 3. Sử dụng Tileset bản đồ màu sáng mặc định (Voyager)
@@ -388,7 +392,6 @@
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(searchMap);
-
         const group = [];
 
         // Khởi tạo GPS Giả lập và Vòng tròn Bán kính tìm kiếm của Khách hàng
@@ -424,22 +427,21 @@
                 // Get approved video reviews for this eatery
                 const approvedVideos = eat.review_videos || [];
                 const hasVideo = approvedVideos.length > 0;
-                const buttonText = hasVideo ? `🎥 Xem Video Review (${approvedVideos.length})` : '🎥 Đông Anh Food Tour';
+                const videoBtn = hasVideo 
+                    ? `<button onclick="openReelsModal('${eat.slug}', '${eat.name.replace(/'/g, "\\'")}', '${signatureDishName}', '${eat.image_path}')" class="btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; font-family: var(--font-heading); background: rgba(255, 126, 41, 0.08); border-color: rgba(255, 126, 41, 0.25); color: var(--primary); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 126, 41, 0.15)'" onmouseout="this.style.background='rgba(255, 126, 41, 0.08)'">🎬 Video</button>`
+                    : '';
 
                 const popupContent = `
                     <div class="map-popup-card">
                         <img src="${eat.image_path ? eat.image_path : 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'}" class="map-popup-img">
                         <h4 class="map-popup-title">${eat.name}</h4>
                         <p style="font-size: 0.76rem; color: var(--text-muted); margin: 2px 0;">📍 ${eat.address}</p>
-                        
-                        <!-- Premium Video Review Modal trigger button -->
-                        <button type="button" class="btn-accent" onclick="openReelsModal('${eat.slug}', '${eat.name.replace(/'/g, "\\'")}', '${signatureDishName}', '${eat.image_path}')" style="width: 100%; justify-content: center; font-size: 0.75rem; padding: 5px 0; border-radius: 6px; margin: 6px 0; gap: 4px;">
-                            ${buttonText}
-                        </button>
-                        
-                        <div class="map-popup-footer">
+                        <div class="map-popup-footer" style="margin-top: 8px;">
                             <span class="rating-stars" style="font-size: 0.8rem;">⭐ ${parseFloat(eat.rating).toFixed(1)}</span>
-                            <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;">Chi tiết</a>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                ${videoBtn}
+                                <a href="/dia-diem/dac-san/${eat.slug}" class="btn-primary" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px;">Chi tiết</a>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1081,6 +1083,28 @@
         let videoUrl = reel.video_url;
         let videoType = reel.video_type;
 
+        // Dynamically hide/show the right side action panel for YouTube videos
+        const sideActions = document.querySelector('.reels-side-actions');
+        const tapOverlay = document.getElementById('reelTapOverlay');
+        const isIframe = videoType === 'youtube_shorts' || videoType === 'tiktok' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be');
+        
+        if (sideActions) {
+            if (isIframe) {
+                sideActions.style.display = 'none';
+            } else {
+                sideActions.style.display = 'flex';
+            }
+        }
+
+        // Allow touch, click, zoom gestures to go directly to YouTube/TikTok player by setting pointer-events: none
+        if (tapOverlay) {
+            if (isIframe) {
+                tapOverlay.style.pointerEvents = 'none';
+            } else {
+                tapOverlay.style.pointerEvents = 'auto';
+            }
+        }
+
         if (videoType === 'tiktok') {
             const videoId = getTikTokVideoId(videoUrl);
             if (videoId) {
@@ -1088,7 +1112,7 @@
             } else {
                 wrapper.innerHTML = `<iframe src="${videoUrl}" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay;"></iframe>`;
             }
-        } else if (videoType === 'youtube_shorts') {
+        } else if (videoType === 'youtube_shorts' || videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
             const shortsId = getYouTubeShortsId(videoUrl);
             if (shortsId) {
                 wrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${shortsId}?autoplay=1" style="width: 100%; height: 100%; border: none; background: #000; pointer-events: auto;" allowfullscreen allow="autoplay; encrypted-media;"></iframe>`;

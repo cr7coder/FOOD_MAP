@@ -244,29 +244,200 @@
 
             <!-- Thực đơn món ăn -->
             <div class="detail-section glass-panel" style="padding: 28px;">
-                <h2 class="section-title"><span>📖</span> Thực đơn & Món ăn đặc trưng</h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                    <h2 class="section-title" style="margin-bottom: 0;"><span>📖</span> Thực đơn & Món ăn đặc trưng</h2>
+                    @if($eatery->dishes->count() > 0)
+                        <button onclick="openFullMenuModal()" class="btn-secondary" style="font-size: 0.85rem; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 126, 41, 0.05); border-color: rgba(255, 126, 41, 0.2); color: var(--primary);">
+                            📖 Xem toàn bộ thực đơn
+                        </button>
+                    @endif
+                </div>
                 
                 @if($eatery->dishes->count() > 0)
-                    <div class="menu-grid">
-                        @foreach($eatery->dishes as $dish)
-                            <div class="dish-card glass-panel" style="background: rgba(255,255,255,0.02);">
-                                <img src="{{ $dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80' }}" class="dish-img" alt="{{ $dish->name }}">
-                                <div class="dish-info">
-                                    <div>
-                                        @if($dish->is_signature)
-                                            <span class="tag-badge" style="padding: 1px 6px; font-size: 0.65rem; font-weight: 700; margin-bottom: 4px; display: inline-block;">★ Món đặc trưng</span>
-                                        @endif
-                                        <h3 class="dish-name">{{ $dish->name }}</h3>
-                                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">{{ $dish->description }}</p>
+                    <div style="position: relative; width: 100%;">
+                        <!-- Slider Navigation Arrows -->
+                        <button id="slideMenuPrev" class="menu-slider-btn prev-btn" onclick="scrollMenuSlider(-1)" aria-label="Previous slide">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <button id="slideMenuNext" class="menu-slider-btn next-btn" onclick="scrollMenuSlider(1)" aria-label="Next slide">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        
+                        <div class="menu-slider-wrapper" id="menuSliderWrapper">
+                            <div class="menu-slider-content" id="menuSliderContent">
+                                @foreach($eatery->dishes as $dish)
+                                    <div class="dish-card glass-panel" style="background: rgba(255,255,255,0.02); flex: 0 0 calc(50% - 10px); min-width: 290px;">
+                                        <img src="{{ $dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80' }}" class="dish-img" alt="{{ $dish->name }}">
+                                        <div class="dish-info" style="flex: 1;">
+                                            <div>
+                                                @if($dish->is_signature)
+                                                    <span class="tag-badge" style="padding: 1px 6px; font-size: 0.65rem; font-weight: 700; margin-bottom: 4px; display: inline-block;">★ Món đặc trưng</span>
+                                                @endif
+                                                <h3 class="dish-name">{{ $dish->name }}</h3>
+                                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">{{ $dish->description }}</p>
+                                            </div>
+                                            <span class="dish-price">{{ number_format($dish->price, 0, ',', '.') }}đ</span>
+                                        </div>
                                     </div>
-                                    <span class="dish-price">{{ number_format($dish->price, 0, ',', '.') }}đ</span>
-                                </div>
+                                @endforeach
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                 @else
                     <p style="color: var(--text-muted); font-style: italic; text-align: center;">Chưa cập nhật thực đơn chi tiết cho địa điểm này.</p>
                 @endif
+            </div>
+
+            <!-- Styles cho Slider thực đơn -->
+            <style>
+                .menu-slider-wrapper {
+                    overflow-x: auto;
+                    scroll-behavior: smooth;
+                    width: 100%;
+                    padding: 10px 0;
+                    scrollbar-width: none; /* Firefox */
+                }
+                .menu-slider-wrapper::-webkit-scrollbar {
+                    display: none; /* Safari and Chrome */
+                }
+                .menu-slider-content {
+                    display: flex;
+                    gap: 20px;
+                    transition: all 0.4s ease;
+                }
+                .menu-slider-btn {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.08);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    color: var(--text-main);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    backdrop-filter: blur(12px);
+                    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+                }
+                .menu-slider-btn:hover {
+                    background: var(--primary-grad);
+                    border-color: rgba(255, 255, 255, 0.25);
+                    color: #ffffff;
+                    box-shadow: 0 10px 25px rgba(255, 111, 0, 0.45);
+                    transform: translateY(-50%) scale(1.08);
+                }
+                .menu-slider-btn:active {
+                    transform: translateY(-50%) scale(0.95);
+                }
+                .menu-slider-btn.prev-btn {
+                    left: -24px;
+                }
+                .menu-slider-btn.next-btn {
+                    right: -24px;
+                }
+                
+                /* Modal tab buttons */
+                .modal-tab-btn {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid var(--border-glow);
+                    color: var(--text-muted);
+                    padding: 8px 18px;
+                    border-radius: 30px;
+                    font-size: 0.82rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    white-space: nowrap;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .modal-tab-btn:hover {
+                    background: rgba(255, 255, 255, 0.08);
+                    color: var(--text-main);
+                    transform: translateY(-1px);
+                }
+                .modal-tab-btn.active {
+                    background: var(--primary-grad);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    color: #ffffff;
+                    box-shadow: 0 4px 15px rgba(255, 111, 0, 0.3);
+                }
+
+                @media (max-width: 768px) {
+                    .menu-slider-btn {
+                        display: none;
+                    }
+                    .menu-slider-content .dish-card {
+                        flex: 0 0 85% !important;
+                    }
+                }
+            </style>
+
+            <!-- Full Menu Detail Modal -->
+            <div id="fullMenuModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(12px); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                <div class="lightbox-content" style="background: var(--bg-card); border: 1px solid var(--border-glow); width: 90%; max-width: 780px; max-height: 85vh; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); overflow: hidden; transform: scale(0.9); transition: transform 0.3s ease; display: flex; flex-direction: column; position: relative;">
+                    <!-- Modal Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-glow); padding: 20px 24px; background: rgba(255,255,255,0.01);">
+                        <h3 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; font-family: var(--font-heading);">
+                            📖 Thực Đơn Chi Tiết - {{ $eatery->name }}
+                        </h3>
+                        <button onclick="closeFullMenuModal()" style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#f04e23'" onmouseout="this.style.color='var(--text-muted)'">✕</button>
+                    </div>
+                    
+                    <!-- Modal Content (Scrollable List of Dishes) -->
+                    <div style="overflow-y: auto; padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Thanh tìm kiếm & Lọc nhanh -->
+                        <div style="position: relative; margin-bottom: 4px;">
+                            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; pointer-events: none;">🔍</span>
+                            <input type="text" id="dishSearchInput" oninput="filterModalDishes()" placeholder="Tìm món ăn ngon theo tên hoặc mô tả..." style="width: 100%; padding: 12px 16px 12px 46px; background: rgba(255,255,255,0.03); border: 1.5px solid var(--border-glow); border-radius: 14px; color: var(--text-main); font-size: 0.88rem; outline: none; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 12px rgba(255, 126, 41, 0.15)'" onblur="this.style.borderColor='var(--border-glow)'; this.style.boxShadow='none'">
+                        </div>
+
+                        <!-- Bộ lọc nhóm món ăn -->
+                        <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; -ms-overflow-style: none;">
+                            <button class="modal-tab-btn active" onclick="filterModalTab('all')" data-tab="all">📋 Tất cả ({{ $eatery->dishes->count() }})</button>
+                            @if($eatery->dishes->where('is_signature', true)->count() > 0)
+                                <button class="modal-tab-btn" onclick="filterModalTab('signature')" data-tab="signature">★ Món đặc trưng ({{ $eatery->dishes->where('is_signature', true)->count() }})</button>
+                            @endif
+                            <button class="modal-tab-btn" onclick="filterModalTab('best-price')" data-tab="best-price">💰 Giá tiết kiệm (≤ 200k)</button>
+                        </div>
+
+                        <!-- Grid hiển thị món ăn -->
+                        <div id="modalMenuGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            @foreach($eatery->dishes as $dish)
+                                <div class="dish-card glass-panel" 
+                                     data-name="{{ strtolower($dish->name) }}" 
+                                     data-desc="{{ strtolower($dish->description) }}" 
+                                     data-signature="{{ $dish->is_signature ? 'true' : 'false' }}" 
+                                     data-price="{{ $dish->price }}"
+                                     style="background: rgba(255,255,255,0.02); display: flex; gap: 16px; padding: 16px; border-radius: 12px; border: 1px solid var(--border-glow); transition: opacity 0.25s ease, transform 0.25s ease; opacity: 1; transform: translateY(0);">
+                                    <img src="{{ $dish->image_path ?: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=150&q=80' }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" alt="{{ $dish->name }}">
+                                    <div style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+                                        <div>
+                                            @if($dish->is_signature)
+                                                <span class="tag-badge" style="padding: 1px 6px; font-size: 0.65rem; font-weight: 700; margin-bottom: 4px; display: inline-block;">★ Món đặc trưng</span>
+                                            @endif
+                                            <h4 style="font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin: 0;">{{ $dish->name }}</h4>
+                                            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 4px 0 0 0; line-height: 1.4;">{{ $dish->description }}</p>
+                                        </div>
+                                        <span style="color: var(--primary); font-weight: 700; font-size: 0.95rem; font-family: var(--font-heading); margin-top: 4px;">{{ number_format($dish->price, 0, ',', '.') }}đ</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div style="border-top: 1px dashed var(--border-glow); padding: 16px 24px; background: rgba(255,255,255,0.01); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Đang hiển thị: <strong style="color: var(--accent);" id="modalVisibleCount">{{ $eatery->dishes->count() }} món</strong></span>
+                        <button onclick="closeFullMenuModal()" class="btn-primary" style="font-size: 0.85rem; padding: 8px 20px; border-radius: 8px; cursor: pointer;">Đóng thực đơn</button>
+                    </div>
+                </div>
             </div>
             
             <!-- Đánh giá bình luận -->
@@ -323,38 +494,83 @@
                 
                 <!-- Danh sách bình luận -->
                 @if($eatery->reviews->count() > 0)
-                    <div class="review-list">
-                        @foreach($eatery->reviews as $rev)
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <div>
-                                        <span class="review-user">{{ $rev->user_name }}</span>
-                                        <div style="color: #ffc107; font-size: 0.8rem; margin-top: 2px;">
-                                            @for($i=1; $i<=5; $i++)
-                                                {{ $i <= $rev->rating ? '★' : '☆' }}
-                                            @endfor
+                    <div class="review-list" style="display: flex; flex-direction: column; gap: 24px; margin-top: 24px;">
+                        @foreach($eatery->reviews->take(5) as $rev)
+                            <div class="review-card glass-panel" style="padding: 24px; border-radius: 20px; border: 1px solid var(--border-glow); background: rgba(255, 255, 255, 0.015); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.015); transition: all 0.3s ease; display: flex; flex-direction: column; gap: 16px;">
+                                <!-- User Info Header -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 14px;">
+                                        <!-- Avatar with gradient -->
+                                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, #ff8b3d 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 126, 41, 0.2); text-transform: uppercase;">
+                                            {{ substr($rev->user_name, 0, 2) }}
+                                        </div>
+                                        
+                                        <!-- Name & Stars -->
+                                        <div>
+                                            <span style="font-weight: 700; color: var(--text-main); font-size: 1.05rem; display: block;">{{ $rev->user_name }}</span>
+                                            <div style="color: #ffb03a; font-size: 0.95rem; margin-top: 2px; display: flex; gap: 3px;">
+                                                @for($i=1; $i<=5; $i++)
+                                                    @if($i <= $rev->rating)
+                                                        <span style="color: #ffb03a; text-shadow: 0 0 8px rgba(255, 176, 58, 0.4);">★</span>
+                                                    @else
+                                                        <span style="color: var(--border-glow);">★</span>
+                                                    @endif
+                                                @endfor
+                                            </div>
                                         </div>
                                     </div>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted);">
-                                        {{ $rev->created_at->format('d/m/Y H:i') }}
+                                    
+                                    <!-- Date Badge -->
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 4px 12px; border-radius: 30px; border: 1px solid var(--border-glow); display: inline-flex; align-items: center; gap: 4px;">
+                                        📅 {{ $rev->created_at->format('d/m/Y H:i') }}
                                     </span>
                                 </div>
-                                <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">{{ $rev->comment }}</p>
+
+                                <!-- Review Comment Text -->
+                                <p style="font-size: 0.98rem; color: var(--text-main); line-height: 1.7; margin: 0; white-space: pre-line; font-weight: 450;">{{ $rev->comment }}</p>
                                 
+                                <!-- Attached Media (Photos/Videos) -->
                                 @if($rev->media && $rev->media->count() > 0)
-                                    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
                                         @foreach($rev->media as $mediaItem)
                                             @if($mediaItem->file_type === 'image')
-                                                <img src="{{ $mediaItem->file_path }}" alt="Review Image" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glow);">
+                                                <div style="position: relative; width: 100px; height: 100px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--border-glow); box-shadow: 0 4px 12px rgba(0,0,0,0.12); cursor: pointer; transition: all 0.25s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='var(--primary)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-glow)'">
+                                                    <img src="{{ $mediaItem->file_path }}" alt="Review Image" style="width: 100%; height: 100%; object-fit: cover;">
+                                                </div>
                                             @else
-                                                <video src="{{ $mediaItem->file_path }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glow);" controls></video>
+                                                <div style="position: relative; width: 140px; height: 100px; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--border-glow); box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+                                                    <video src="{{ $mediaItem->file_path }}" style="width: 100%; height: 100%; object-fit: cover;" controls></video>
+                                                </div>
                                             @endif
                                         @endforeach
+                                    </div>
+                                @endif
+
+                                <!-- Official Seller Reply Box -->
+                                @if($rev->seller_reply)
+                                    <div class="seller-reply-bubble" style="margin-top: 8px; padding: 18px 22px; background: rgba(255, 126, 41, 0.04); border: 1.5px solid rgba(255, 126, 41, 0.15); border-radius: 18px; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(255, 126, 41, 0.02); position: relative;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                            <strong style="color: var(--primary); display: flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 800;">
+                                                <span style="font-size: 1.2rem;">🏪</span> Phản hồi từ chủ quán
+                                            </strong>
+                                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Chủ cửa hàng</span>
+                                        </div>
+                                        <p style="margin: 0; color: var(--text-main); line-height: 1.65; font-style: italic; font-weight: 500;">
+                                            "{{ $rev->seller_reply }}"
+                                        </p>
                                     </div>
                                 @endif
                             </div>
                         @endforeach
                     </div>
+
+                    @if($eatery->reviews->count() > 5)
+                        <div style="display: flex; justify-content: center; margin-top: 24px;">
+                            <button onclick="openAllReviewsModal()" class="btn-secondary" style="font-size: 0.95rem; padding: 12px 28px; border-radius: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 126, 41, 0.05); border: 1.5px solid rgba(255, 126, 41, 0.2); color: var(--primary); transition: all 0.3s ease; outline: none;" onmouseover="this.style.background='rgba(255, 126, 41, 0.1)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255, 126, 41, 0.05)'; this.style.transform='none'">
+                                💬 Xem tất cả đánh giá & phản hồi ({{ $eatery->reviews->count() }} nhận xét)
+                            </button>
+                        </div>
+                    @endif
                 @else
                     <p style="color: var(--text-muted); font-style: italic; text-align: center; padding: 20px 0;">Chưa có đánh giá nào. Hãy là người đầu tiên chia sẻ cảm nhận về địa điểm này!</p>
                 @endif
@@ -825,6 +1041,116 @@
         </form>
     </div>
 </div>
+
+<!-- Modal hiển thị toàn bộ đánh giá & Phân loại sao -->
+<div id="allReviewsModal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); align-items: center; justify-content: center; opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+    <div class="lightbox-content" style="background: var(--bg-card); border: 1px solid var(--border-glow); width: 90%; max-width: 780px; height: 85vh; border-radius: 24px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45); overflow: hidden; transform: scale(0.9); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); display: flex; flex-direction: column; position: relative;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glow); padding: 20px 28px; background: rgba(255, 255, 255, 0.015);">
+            <div>
+                <h4 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                    💬 Toàn bộ Đánh giá & Phản hồi
+                </h4>
+                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">
+                    {{ $eatery->name }} • {{ $eatery->reviews->count() }} lượt nhận xét
+                </p>
+            </div>
+            <button onclick="closeAllReviewsModal()" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-glow); width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.color='#ff7e29'; this.style.borderColor='rgba(255, 126, 41, 0.3)'; this.style.background='rgba(255, 126, 41, 0.05)'" onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border-glow)'; this.style.background='rgba(255,255,255,0.04)'">✕</button>
+        </div>
+        
+        <!-- Star Filter Tabs Segmented Control -->
+        <div style="padding: 16px 28px; border-bottom: 1px solid var(--border-glow); background: rgba(255, 255, 255, 0.005); overflow-x: auto; scrollbar-width: none;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="review-modal-tab active" onclick="filterReviewStars('all')" data-star="all" style="white-space: nowrap; font-size: 0.85rem; font-weight: 700; padding: 10px 18px; border-radius: 30px; border: 1.5px solid rgba(255, 126, 41, 0.2); background: rgba(255, 126, 41, 0.06); color: var(--primary); cursor: pointer; transition: all 0.25s ease;">
+                    🌟 Tất cả ({{ $eatery->reviews->count() }})
+                </button>
+                @for($s = 5; $s >= 1; $s--)
+                    @php
+                        $countForStar = $eatery->reviews->where('rating', $s)->count();
+                    @endphp
+                    <button class="review-modal-tab" onclick="filterReviewStars({{ $s }})" data-star="{{ $s }}" style="white-space: nowrap; font-size: 0.85rem; font-weight: 600; padding: 8px 16px; border-radius: 30px; border: 1.5px solid var(--border-glow); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.25s ease;" onmouseover="if(!this.classList.contains('active')){ this.style.borderColor='rgba(255, 126, 41, 0.2)'; this.style.color='var(--text-main)'; }" onmouseout="if(!this.classList.contains('active')){ this.style.borderColor='var(--border-glow)'; this.style.color='var(--text-muted)'; }">
+                        {{ $s }} ★ ({{ $countForStar }})
+                    </button>
+                @endfor
+            </div>
+        </div>
+
+        <!-- Scrollable Reviews List Container -->
+        <div id="modalReviewListScroll" style="flex: 1; overflow-y: auto; padding: 28px; display: flex; flex-direction: column; gap: 20px; background: rgba(0,0,0,0.02);">
+            @foreach($eatery->reviews as $rev)
+                <div class="modal-review-card-item" data-rating="{{ $rev->rating }}" style="padding: 24px; border-radius: 20px; border: 1px solid var(--border-glow); background: var(--bg-card); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.01); display: flex; flex-direction: column; gap: 14px; transition: all 0.3s ease;">
+                    <!-- Header -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <!-- Avatar -->
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, #ff8b3d 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.05rem; box-shadow: 0 4px 12px rgba(255, 126, 41, 0.2); text-transform: uppercase;">
+                                {{ substr($rev->user_name, 0, 2) }}
+                            </div>
+                            <!-- Name & Stars -->
+                            <div>
+                                <span style="font-weight: 700; color: var(--text-main); font-size: 1rem; display: block;">{{ $rev->user_name }}</span>
+                                <div style="color: #ffb03a; font-size: 0.9rem; margin-top: 2px; display: flex; gap: 2px;">
+                                    @for($i=1; $i<=5; $i++)
+                                        @if($i <= $rev->rating)
+                                            <span style="color: #ffb03a; text-shadow: 0 0 6px rgba(255, 176, 58, 0.4);">★</span>
+                                        @else
+                                            <span style="color: var(--border-glow);">★</span>
+                                        @endif
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                        <span style="font-size: 0.78rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 4px 12px; border-radius: 30px; border: 1px solid var(--border-glow);">
+                            📅 {{ $rev->created_at->format('d/m/Y H:i') }}
+                        </span>
+                    </div>
+
+                    <!-- Text -->
+                    <p style="font-size: 0.95rem; color: var(--text-main); line-height: 1.65; margin: 0; white-space: pre-line; font-weight: 450;">{{ $rev->comment }}</p>
+
+                    <!-- Media -->
+                    @if($rev->media && $rev->media->count() > 0)
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px;">
+                            @foreach($rev->media as $mediaItem)
+                                @if($mediaItem->file_type === 'image')
+                                    <div style="position: relative; width: 90px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-glow); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.25s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.borderColor='var(--primary)'" onmouseout="this.style.transform='none'; this.style.borderColor='var(--border-glow)'">
+                                        <img src="{{ $mediaItem->file_path }}" alt="Review Media" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                @else
+                                    <div style="position: relative; width: 130px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-glow); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                        <video src="{{ $mediaItem->file_path }}" style="width: 100%; height: 100%; object-fit: cover;" controls></video>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <!-- Reply -->
+                    @if($rev->seller_reply)
+                        <div class="seller-reply-bubble" style="margin-top: 4px; padding: 16px 20px; background: rgba(255, 126, 41, 0.04); border: 1px solid rgba(255, 126, 41, 0.12); border-radius: 16px; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(255, 126, 41, 0.01);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                                <strong style="color: var(--primary); display: flex; align-items: center; gap: 6px; font-size: 0.9rem; font-weight: 800;">
+                                    <span style="font-size: 1.15rem;">🏪</span> Phản hồi từ chủ quán
+                                </strong>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Chủ cửa hàng</span>
+                            </div>
+                            <p style="margin: 0; color: var(--text-main); line-height: 1.6; font-style: italic; font-weight: 500;">
+                                "{{ $rev->seller_reply }}"
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+
+            <!-- Empty State for filtered stars -->
+            <div id="modalReviewsEmptyState" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center;">
+                <div style="font-size: 3.5rem; margin-bottom: 16px; filter: drop-shadow(0 0 10px rgba(255,126,41,0.25));">💬</div>
+                <h5 style="margin: 0 0 8px 0; font-size: 1.15rem; color: var(--text-main); font-weight: 700;">Chưa có nhận xét nào!</h5>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--text-muted); max-width: 320px; line-height: 1.5;">Không tìm thấy đánh giá nào có mức xếp hạng sao này cho quán ăn.</p>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -846,7 +1172,6 @@
         let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(miniMap);
-
         // Custom Marker
         const customIcon = L.divIcon({
             html: `<div style="background-color: var(--primary); width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">${categoryIcon}</div>`,
@@ -1193,6 +1518,180 @@
             userCurrentDistanceKm = 'denied';
         });
     }
+
+    // 8. Slider Thực đơn & Popup Modal Xem toàn bộ thực đơn
+    window.scrollMenuSlider = function(direction) {
+        const slider = document.getElementById('menuSliderWrapper');
+        if (slider) {
+            const card = slider.querySelector('.dish-card');
+            if (card) {
+                const cardWidth = card.offsetWidth + 20; // card + gap
+                slider.scrollBy({
+                    left: direction * cardWidth * 1.5,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    };
+
+    window.openFullMenuModal = function() {
+        const modal = document.getElementById('fullMenuModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('.lightbox-content').style.transform = 'scale(1)';
+            }, 10);
+        }
+    };
+
+    window.closeFullMenuModal = function() {
+        const modal = document.getElementById('fullMenuModal');
+        if (modal) {
+            modal.style.opacity = '0';
+            modal.querySelector('.lightbox-content').style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    };
+
+    let currentFilterTab = 'all';
+
+    window.filterModalTab = function(tab) {
+        currentFilterTab = tab;
+        
+        // Update active class on tab buttons
+        document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+            if (btn.getAttribute('data-tab') === tab) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        filterModalDishes();
+    };
+
+    window.filterModalDishes = function() {
+        const query = document.getElementById('dishSearchInput').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('#modalMenuGrid .dish-card');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const desc = card.getAttribute('data-desc');
+            const isSignature = card.getAttribute('data-signature') === 'true';
+            const price = parseFloat(card.getAttribute('data-price') || '0');
+            
+            let matchesTab = false;
+            if (currentFilterTab === 'all') {
+                matchesTab = true;
+            } else if (currentFilterTab === 'signature') {
+                matchesTab = isSignature;
+            } else if (currentFilterTab === 'best-price') {
+                matchesTab = price <= 200000;
+            }
+            
+            const matchesQuery = name.includes(query) || desc.includes(query);
+            
+            if (matchesTab && matchesQuery) {
+                card.style.display = 'flex';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 10);
+                visibleCount++;
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    if (card.style.opacity === '0') {
+                        card.style.display = 'none';
+                    }
+                }, 250);
+            }
+        });
+        
+        const countSpan = document.getElementById('modalVisibleCount');
+        if (countSpan) {
+            countSpan.textContent = visibleCount + ' món';
+        }
+    };
+
+    // 9. Điều khiển Modal Xem Toàn Bộ Đánh giá & Phân loại sao
+    window.openAllReviewsModal = function() {
+        const modal = document.getElementById('allReviewsModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('.lightbox-content').style.transform = 'scale(1)';
+            }, 10);
+            document.body.style.overflow = 'hidden'; // Khóa cuộn trang nền
+        }
+    };
+
+    window.closeAllReviewsModal = function() {
+        const modal = document.getElementById('allReviewsModal');
+        if (modal) {
+            modal.style.opacity = '0';
+            modal.querySelector('.lightbox-content').style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+            document.body.style.overflow = ''; // Khôi phục cuộn trang nền
+        }
+    };
+
+    window.filterReviewStars = function(star) {
+        // Cập nhật trạng thái Tab hoạt động
+        document.querySelectorAll('.review-modal-tab').forEach(tab => {
+            const tabStar = tab.getAttribute('data-star');
+            if (tabStar === star.toString()) {
+                tab.classList.add('active');
+                tab.style.border = '1.5px solid rgba(255, 126, 41, 0.2)';
+                tab.style.background = 'rgba(255, 126, 41, 0.06)';
+                tab.style.color = 'var(--primary)';
+                tab.style.fontWeight = '700';
+            } else {
+                tab.classList.remove('active');
+                tab.style.border = '1.5px solid var(--border-glow)';
+                tab.style.background = 'transparent';
+                tab.style.color = 'var(--text-muted)';
+                tab.style.fontWeight = '600';
+            }
+        });
+
+        // Lọc danh sách thẻ đánh giá trong Modal
+        const cards = document.querySelectorAll('#modalReviewListScroll .modal-review-card-item');
+        let matchedCount = 0;
+
+        cards.forEach(card => {
+            const cardRating = card.getAttribute('data-rating');
+            
+            if (star === 'all' || cardRating === star.toString()) {
+                card.style.display = 'flex';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 10);
+                matchedCount++;
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                card.style.display = 'none';
+            }
+        });
+
+        // Hiển thị giao diện Trạng thái Rỗng nếu không có nhận xét phù hợp
+        const emptyState = document.getElementById('modalReviewsEmptyState');
+        if (matchedCount === 0) {
+            emptyState.style.display = 'flex';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    };
 
     // Tự động gọi tính khoảng cách ngay khi trang vừa tải xong
     window.addEventListener('load', getUserDistance);

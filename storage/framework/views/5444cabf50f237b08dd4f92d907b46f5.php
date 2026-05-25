@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Bản đồ số Ẩm thực Đông Anh - Số hóa Ẩm thực Địa phương'); ?>
 
-@section('title', 'Bản đồ số Ẩm thực Đông Anh - Số hóa Ẩm thực Địa phương')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <!-- Hero banner with active typewriter effect -->
 <section class="hero-banner">
     <div class="container" style="max-width: 800px;">
@@ -30,16 +28,16 @@
 <!-- Categories Slider -->
 <div class="container" style="margin-bottom: 24px;">
     <div class="categories-slider">
-        <a href="/" class="category-card glass-panel {{ !$selectedCatSlug ? 'active' : '' }}">
+        <a href="/" class="category-card glass-panel <?php echo e(!$selectedCatSlug ? 'active' : ''); ?>">
             <span class="cat-icon">🗺️</span>
             <span class="cat-name">Tất cả</span>
         </a>
-        @foreach($categories as $cat)
-            <a href="/?cat={{ $cat->slug }}" class="category-card glass-panel {{ $selectedCatSlug === $cat->slug ? 'active' : '' }} {{ $cat->slug === 'dac-san-dia-phuong' ? 'specialty-highlight-card' : '' }}">
-                <span class="cat-icon">{{ $cat->icon }}</span>
-                <span class="cat-name">{{ $cat->name }}</span>
+        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <a href="/?cat=<?php echo e($cat->slug); ?>" class="category-card glass-panel <?php echo e($selectedCatSlug === $cat->slug ? 'active' : ''); ?> <?php echo e($cat->slug === 'dac-san-dia-phuong' ? 'specialty-highlight-card' : ''); ?>">
+                <span class="cat-icon"><?php echo e($cat->icon); ?></span>
+                <span class="cat-name"><?php echo e($cat->name); ?></span>
             </a>
-        @endforeach
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 </div>
 
@@ -49,78 +47,81 @@
     <!-- Left column: Scrollable feed of eateries -->
     <div class="split-list">
         <div id="listHeaderContainer">
-            @if($selectedCatSlug === 'dac-san-dia-phuong')
+            <?php if($selectedCatSlug === 'dac-san-dia-phuong'): ?>
                 <div style="margin-bottom: 20px; border-bottom: 1.5px dashed rgba(212, 175, 55, 0.3); padding-bottom: 16px;">
                     <span class="heritage-badge" style="margin-bottom: 8px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; border: 1px solid rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.1); color: #ffb300; padding: 4px 10px; border-radius: 20px; display: inline-block;">🏛️ BẢN ĐỒ DI SẢN SỐ CỐ ĐÔ</span>
                     <h2 style="font-size: 1.6rem; font-family: var(--font-heading); font-weight: 800; margin: 4px 0 6px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                         <span style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Không Gian Số Di Sản Ẩm Thực</span>
                         <span id="resultsCountSpan" style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">
-                            ({{ $eateries->count() }} di sản)
+                            (<?php echo e($eateries->count()); ?> di sản)
                         </span>
                     </h2>
                     <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin: 0;">
                         Khám phá nguồn gốc lịch sử, câu chuyện làng nghề và gặp gỡ các nghệ nhân gìn giữ tinh hoa ẩm thực Kinh Bắc qua hàng ngàn năm dựng nước & giữ nước.
                     </p>
                 </div>
-            @else
+            <?php else: ?>
                 <h2 style="font-size: 1.25rem; margin: 6px 0 0 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.4; color: var(--text-main);">
                     <span style="margin-right: 4px;">📍</span> 
-                    @if($selectedCatSlug)
-                        Danh sách: <span style="color: var(--primary);">{{ $categories->where('slug', $selectedCatSlug)->first()->name }}</span>
-                    @else
+                    <?php if($selectedCatSlug): ?>
+                        Danh sách: <span style="color: var(--primary);"><?php echo e($categories->where('slug', $selectedCatSlug)->first()->name); ?></span>
+                    <?php else: ?>
                         Địa điểm nổi bật tại Đông Anh
-                    @endif
+                    <?php endif; ?>
                     <span id="resultsCountSpan" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 6px; display: inline-block; white-space: nowrap;">
-                        ({{ $eateries->count() }} kết quả)
+                        (<?php echo e($eateries->count()); ?> kết quả)
                     </span>
                 </h2>
-            @endif
+            <?php endif; ?>
         </div>
         
         <div id="eateriesListContainer" style="display: flex; flex-direction: column; gap: 24px; width: 100%;">
-            @if($eateries->count() > 0)
-                @foreach($eateries as $eat)
+            <?php if($eateries->count() > 0): ?>
+                <?php $__currentLoopData = $eateries; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $eat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="eatery-card glass-panel" 
-                         data-slug="{{ $eat->slug }}"
-                         data-name="{{ $eat->name }}"
-                         data-address="{{ $eat->address }}"
-                         data-desc="{{ $eat->description }}"
-                         data-commune="{{ $eat->commune->name }}"
-                         data-category="{{ $eat->category->slug }}"
-                         onclick="focusOnEatery({{ $eat->latitude }}, {{ $eat->longitude }}, '{{ $eat->slug }}')">
+                         data-slug="<?php echo e($eat->slug); ?>"
+                         data-name="<?php echo e($eat->name); ?>"
+                         data-address="<?php echo e($eat->address); ?>"
+                         data-desc="<?php echo e($eat->description); ?>"
+                         data-commune="<?php echo e($eat->commune->name); ?>"
+                         data-category="<?php echo e($eat->category->slug); ?>"
+                         onclick="focusOnEatery(<?php echo e($eat->latitude); ?>, <?php echo e($eat->longitude); ?>, '<?php echo e($eat->slug); ?>')">
                         <div class="eatery-img-wrapper">
-                            <img src="{{ $eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80' }}" class="eatery-img" alt="{{ $eat->name }}">
+                            <img src="<?php echo e($eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80'); ?>" class="eatery-img" alt="<?php echo e($eat->name); ?>">
                             <div style="position: absolute; top: 8px; left: 8px; max-width: calc(100% - 16px); display: flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #ffffff; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);">
-                                <span>{{ $eat->category->icon }}</span>
-                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $eat->category->name }}</span>
+                                <span><?php echo e($eat->category->icon); ?></span>
+                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo e($eat->category->name); ?></span>
                             </div>
                         </div>
                         <div class="eatery-info">
                             <div class="eatery-header">
-                                <h3 class="eatery-title">{{ $eat->name }}</h3>
+                                <h3 class="eatery-title"><?php echo e($eat->name); ?></h3>
                                 <div class="rating-stars">
-                                    <span>⭐</span> {{ $eat->average_rating }}
+                                    <span>⭐</span> <?php echo e($eat->average_rating); ?>
+
                                 </div>
                             </div>
-                            <p class="eatery-desc">{{ $eat->description }}</p>
+                            <p class="eatery-desc"><?php echo e($eat->description); ?></p>
                             <div class="eatery-footer">
                                 <div class="eatery-meta-item">
-                                    <span>📍</span> {{ $eat->commune->name }}
+                                    <span>📍</span> <?php echo e($eat->commune->name); ?>
+
                                 </div>
                                 <div class="eatery-meta-item" style="color: var(--primary); font-weight: 600;">
-                                    {{ $eat->price_range }}
+                                    <?php echo e($eat->price_range); ?>
+
                                 </div>
                             </div>
                         </div>
                     </div>
-                @endforeach
-            @else
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php else: ?>
                 <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-muted); width: 100%;">
                     <p style="font-size: 1.2rem; margin-bottom: 8px;">😔 Không tìm thấy địa điểm nào phù hợp</p>
                     <p style="font-size: 0.9rem;">Hãy thử lọc danh mục khác hoặc xóa bộ lọc để khám phá lại toàn bộ Đông Anh!</p>
                     <a href="/" class="btn-primary" style="margin-top: 16px; padding: 8px 16px; text-decoration: none; display: inline-block;">Xem tất cả</a>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
     
@@ -186,12 +187,12 @@
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
     // 1. Khởi tạo dữ liệu JSON của các quán ăn được truyền từ PHP Controller
-    const eateries = @json($eateries);
+    const eateries = <?php echo json_encode($eateries, 15, 512) ?>;
     let map;
     let markers = {};
 
@@ -231,12 +232,33 @@
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // 3. Sử dụng Tileset bản đồ màu sáng mặc định (Voyager)
-        let activeTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        // 3. Sử dụng Tileset phù hợp chế độ Sáng/Tối (Sử dụng Google Maps chính thức cho bản đồ sáng)
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+        let tileUrl = currentTheme === 'light' 
+            ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
+            : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            
+        let activeTileLayer = L.tileLayer(tileUrl, {
+            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
+
+        // Lắng nghe sự kiện đổi chế độ Sáng/Tối để đổi lớp nền bản đồ tức thì
+        document.addEventListener('theme-changed', function(e) {
+            const nextTheme = e.detail.theme;
+            const nextTileUrl = nextTheme === 'light'
+                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
+                : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            
+            map.removeLayer(activeTileLayer);
+            activeTileLayer = L.tileLayer(nextTileUrl, {
+                attribution: nextTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+        });
+
         // 4. Định nghĩa hàm vẽ các địa điểm lên Bản đồ (Hỗ trợ gọi lại khi lọc AJAX)
         window.renderEateryMarkers = function(eateriesList) {
             // Xóa toàn bộ markers cũ trên bản đồ
@@ -482,7 +504,7 @@
         }
 
         // 7. Tự động cuộn xuống danh sách quán ăn khi người dùng lọc theo Danh mục trên Mobile
-        @if(request()->has('cat'))
+        <?php if(request()->has('cat')): ?>
         setTimeout(() => {
             if (window.innerWidth <= 768) {
                 const splitList = document.querySelector('.split-list');
@@ -494,7 +516,7 @@
                 }
             }
         }, 500);
-        @endif
+        <?php endif; ?>
 
     });
 
@@ -517,7 +539,7 @@
             }, 1000);
             
             // Cuộn màn hình lên vị trí bản đồ trên mobile chuẩn xác ngay dưới thanh Header sticky (64px)
-            if (window.innerWidth <= 1024) {
+            if (window.innerWidth <= 992) {
                 const mapContainer = document.querySelector('.split-map-container');
                 if (mapContainer) {
                     window.scrollTo({
@@ -864,4 +886,6 @@
         setTimeout(() => heart.remove(), 1000);
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\FOODDA\FOOD_MAP\resources\views/home.blade.php ENDPATH**/ ?>

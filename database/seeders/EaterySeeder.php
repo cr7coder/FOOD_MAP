@@ -11,11 +11,6 @@ use Illuminate\Database\Seeder;
  * EaterySeeder — Tạo dữ liệu mẫu bảng eateries
  *
  * Chạy: php artisan db:seed --class=EaterySeeder
- *
- * LƯU Ý QUAN TRỌNG:
- *  - Seeder dùng firstOrCreate theo slug → KHÔNG BAO GIỜ ghi đè dữ liệu hiện có.
- *  - Nếu bạn đã tự thêm/sửa quán từ backend, dữ liệu đó sẽ được giữ nguyên.
- *  - Chỉ chạy seeder này nếu muốn thêm các bản ghi mẫu còn thiếu.
  */
 class EaterySeeder extends Seeder
 {
@@ -31,7 +26,7 @@ class EaterySeeder extends Seeder
                 'slug'          => 'bun-mach-trang-co-loa',
                 'user_id'       => 2,
                 'category_id'   => $cat('dac-san-dia-phuong'),
-                'commune_id'    => $com('co-loa'),
+                'commune_id'    => $com('thon-mach-trang'),
                 'description'   => 'Bún Mạch Tràng nổi tiếng khắp vùng Cổ Loa với những sợi bún màu ngà tự nhiên, dai ngon dẻo thơm do không dùng chất tẩy đường và được làm bằng công thức gia truyền từ ngàn đời nay. Ăn kèm thịt xào nghệ, chả rươi hoặc nước dùng thanh ngọt thì ngon tuyệt cú mèo.',
                 'address'       => 'Thôn Mạch Tràng, Xã Cổ Loa, Huyện Đông Anh, Hà Nội',
                 'phone'         => '0987654321',
@@ -48,7 +43,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Nhà hàng Sinh Thái Lộc Vừng',
                 'slug'          => 'nha-hang-sinh-thai-loc-vung',
                 'category_id'   => $cat('lau-nuong'),
-                'commune_id'    => $com('van-noi'),
+                'commune_id'    => $com('thon-dong'),
                 'description'   => 'Nằm bên bờ hồ Vân Trì lộng gió, Nhà hàng Lộc Vừng sở hữu không gian sinh thái sân vườn cực kỳ rộng lớn, thoáng mát với những rặng lộc vừng rủ bóng mát mẻ. Chuyên các món ăn đồng quê, cá sông tươi sống, lẩu riêu cua bắp bò phục vụ gia đình, hội nhóm họp mặt.',
                 'address'       => 'Khu đầm Vân Trì, Xã Vân Nội, Huyện Đông Anh, Hà Nội',
                 'phone'         => '0912345678',
@@ -65,7 +60,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Cà Phê Gió Vĩnh Ngọc',
                 'slug'          => 'ca-phe-gio-vinh-ngoc',
                 'category_id'   => $cat('quan-cafe'),
-                'commune_id'    => $com('vinh-ngoc'),
+                'commune_id'    => $com('thon-dong-tru'),
                 'description'   => 'Nằm ngay sát chân cầu Nhật Tân trên bờ đê Vĩnh Ngọc thơ mộng, Gió Cafe là điểm check-in cực hot tại Đông Anh. Khách hàng vừa có thể thưởng thức ly cà phê trứng thơm ngậy vừa ngắm trọn vẹn hoàng hôn buông xuống sông Hồng tuyệt đẹp và cầu Nhật Tân lung linh về đêm.',
                 'address'       => 'Đường bờ đê Vĩnh Ngọc, Xã Vĩnh Ngọc, Huyện Đông Anh, Hà Nội',
                 'phone'         => '0933445566',
@@ -82,7 +77,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Cháo se Gia Truyền Liên Hà',
                 'slug'          => 'chao-se-gia-truyen-lien-ha',
                 'category_id'   => $cat('dac-san-dia-phuong'),
-                'commune_id'    => $com('lien-ha'),
+                'commune_id'    => $com('thon-dai-bi'),
                 'description'   => 'Món cháo se trứ danh của làng Đại Vĩ, xã Liên Hà được nấu hết sức công phu. Gạo nếp cái hoa vàng được ngâm, xay nhuyễn rồi lọc lấy bột khô, sau đó được se bằng tay thành từng sợi nhỏ dài như sợi bánh canh rồi thả vào nồi nước dùng hầm từ xương ống ngọt lịm kèm thịt băm phi thơm hành.',
                 'address'       => 'Đầu làng Đại Vĩ, Xã Liên Hà, Huyện Đông Anh, Hà Nội',
                 'phone'         => '0977889900',
@@ -99,7 +94,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Phở Bò Gia Truyền Cao Lỗ',
                 'slug'          => 'pho-bo-gia-truyen-cao-lo',
                 'category_id'   => $cat('bun-pho'),
-                'commune_id'    => $com('thi-tran-dong-anh'),
+                'commune_id'    => $com('to-dan-pho-so-6'),
                 'description'   => 'Tiệm phở bò nổi tiếng lâu năm ngay trung tâm thị trấn Đông Anh. Nước dùng được hầm hoàn toàn từ xương bò trong suốt 18 tiếng kèm các loại thảo mộc quế, hồi, thảo quả tạo ra vị ngọt thanh tự nhiên. Miếng thịt bò tái lăn mềm ngọt thơm lừng mùi tỏi phi.',
                 'address'       => 'Số 88 Cao Lỗ, Thị trấn Đông Anh, Hà Nội',
                 'phone'         => '0243123456',
@@ -116,7 +111,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Khách Sạn Đông Anh Luxury Hotel',
                 'slug'          => 'khach-san-dong-anh-luxury-hotel',
                 'category_id'   => $cat('khach-san-nha-nghi'),
-                'commune_id'    => $com('thi-tran-dong-anh'),
+                'commune_id'    => $com('to-dan-pho-so-6'),
                 'description'   => 'Đông Anh Luxury Hotel là khách sạn cao cấp bậc nhất tại trung tâm huyện Đông Anh, đạt tiêu chuẩn 3 sao quốc tế. Với hệ thống phòng ốc sang trọng, đầy đủ tiện nghi điều hòa, tủ lạnh, tivi thông minh cùng bãi đỗ xe rộng rãi, chúng tôi cam kết mang lại kỳ nghỉ tuyệt vời và ấm cúng cho khách lưu trú.',
                 'address'       => 'Số 120 Đường Cao Lỗ, Thị trấn Đông Anh, Hà Nội',
                 'phone'         => '0243987654',
@@ -133,7 +128,7 @@ class EaterySeeder extends Seeder
                 'name'          => 'Tiệm Lẩu Nướng Cổ Loa Hội Quán',
                 'slug'          => 'tiem-lau-nuong-co-loa-hoi-quan',
                 'category_id'   => $cat('lau-nuong'),
-                'commune_id'    => $com('co-loa'),
+                'commune_id'    => $com('thon-mach-trang'),
                 'description'   => 'Tiệm lẩu nướng nằm sát đền Cổ Loa cổ kính, là điểm đến ẩm thực quen thuộc của thực khách phương xa khi về vãn cảnh đền. Nhà hàng nổi tiếng với phong cách nướng ngói độc đáo cùng nước lẩu Thái chua cay thơm nồng đậm đà. Đồ ăn tươi rói và giá cả cực kỳ hợp túi tiền.',
                 'address'       => 'Đường trước cổng Đền Cổ Loa, Xã Cổ Loa, Huyện Đông Anh, Hà Nội',
                 'phone'         => '0966778899',
