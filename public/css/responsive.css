@@ -235,7 +235,7 @@
 }
 
 /* 💻 Laptop/Mid-sized Screen Header Scale-down Optimization (Prevents menu/auth overlaps) */
-@media (min-width: 992px) and (max-width: 1320px) {
+@media (min-width: 992px) and (max-width: 1440px) {
     .nav-wrapper {
         gap: 15px !important;
     }
@@ -250,6 +250,12 @@
     }
     .user-actions span {
         font-size: 0.82rem !important;
+        max-width: 140px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
     }
     .logo {
         font-size: 1.25rem !important;
