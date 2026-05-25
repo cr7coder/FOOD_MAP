@@ -66,7 +66,7 @@ class AdminController extends Controller
         if ($isSeller) {
             $eateriesQuery->where('user_id', $sellerId);
         }
-        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->get();
+        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->paginate(10);
 
         // Lấy danh sách Video Reviews
         $videosQuery = \App\Models\ReviewVideo::with(['eatery.category', 'user']);
