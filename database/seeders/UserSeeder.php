@@ -18,37 +18,45 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name'     => 'Quản trị viên',
+                'name'     => 'Nguyễn Văn Admin',
                 'email'    => 'admin@foodmap.vn',
                 'password' => Hash::make('admin123'),
                 'role'     => 'admin',
-                'avatar'   => null,
+                'avatar'   => '👨‍💼',
+                'phone'    => '0901234567',
+                'status'   => 'active',
             ],
             [
-                'name'     => 'Chủ Quán Mạch Tràng',
+                'name'     => 'Trần Thị Bích',
                 'email'    => 'seller@foodmap.vn',
                 'password' => Hash::make('seller123'),
                 'role'     => 'seller',
-                'avatar'   => null,
+                'avatar'   => '👨‍🍳',
+                'phone'    => '0912345678',
+                'status'   => 'active',
             ],
             [
                 'name'     => 'Thực Thần Đông Anh',
                 'email'    => 'user@foodmap.vn',
                 'password' => Hash::make('user123'),
                 'role'     => 'user',
-                'avatar'   => null,
+                'avatar'   => '🧑',
+                'phone'    => '0987654321',
+                'status'   => 'active',
             ],
             [
                 'name'     => 'Thành viên Đông Anh',
                 'email'    => 'member@foodmap.vn',
                 'password' => Hash::make('member123'),
                 'role'     => 'user',
-                'avatar'   => null,
+                'avatar'   => '👧',
+                'phone'    => '0977665544',
+                'status'   => 'active',
             ],
         ];
 
         foreach ($users as $user) {
-            User::firstOrCreate(
+            User::updateOrCreate(
                 ['email' => $user['email']],
                 $user
             );

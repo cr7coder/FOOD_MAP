@@ -362,7 +362,7 @@
                                         </button>
                                         
                                         <!-- Directions link -->
-                                        <a href="https://www.google.com/maps/dir/?api=1&destination=<?php echo e($stop->eatery->latitude); ?>,<?php echo e($stop->eatery->longitude); ?>" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.4) <?php else: ?> rgba(255, 126, 41, 0.4) <?php endif; ?>; color: var(--primary);">
+                                        <a href="https://www.google.com/maps/dir/?api=1<?php echo e($index === 0 ? '' : '&origin='.$tour->stops[$index - 1]->eatery->latitude.','.$tour->stops[$index - 1]->eatery->longitude); ?>&destination=<?php echo e($stop->eatery->latitude); ?>,<?php echo e($stop->eatery->longitude); ?>" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; border-color: <?php if($tour->mood === 'cooking'): ?> rgba(16, 185, 129, 0.4) <?php else: ?> rgba(255, 126, 41, 0.4) <?php endif; ?>; color: var(--primary);">
                                             🗺️ Chỉ đường
                                         </a>
 
@@ -460,10 +460,106 @@
     let checkInReviews = {};
     let currentRouteDrawId = 0;
 
+    // Helper to render beautiful review badge inside timeline cards
+    function renderStopReviewBadge(index) {
+        const review = checkInReviews[index];
+        if (!review) return;
+
+        const storyDiv = document.querySelector(`#stop-item-${index} .timeline-card-story`);
+        if (storyDiv) {
+            const prevBadge = document.getElementById(`review-badge-${index}`);
+            if (prevBadge) prevBadge.remove();
+            
+            const starsText = review.rating ? '⭐'.repeat(review.rating) : 'Chưa đánh giá sao';
+            let imageHtml = '';
+            if (review.image) {
+                imageHtml = `
+                    <div style="position: relative; height: 140px; border-radius: 12px; overflow: hidden; margin-top: 8px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                        <img src="${review.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); font-size: 0.65rem; color: #ffffff; padding: 2px 8px; border-radius: 20px; font-weight: 700;">📸 Ảnh kỷ niệm</span>
+                    </div>
+                `;
+            }
+
+            const commentText = review.comment ? `"${review.comment}"` : "Không có bình luận.";
+
+            const badgeBgColor = tourMood === 'cooking' ? 'rgba(16, 185, 129, 0.06)' : 'rgba(255, 126, 41, 0.06)';
+            const badgeBorderColor = tourMood === 'cooking' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 126, 41, 0.2)';
+            const badgeHtml = `
+                <div id="review-badge-${index}" style="margin-top: 12px; padding: 10px; border-radius: 10px; background: ${badgeBgColor}; border: 1.5px solid ${badgeBorderColor}; font-size: 0.75rem; animation: fadeIn 0.4s ease;">
+                    <div style="color: #ffb03a; font-weight: 800; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                        <span>${starsText}</span> <span style="color: var(--text-main); font-size: 0.7rem; font-weight: 700;">Đánh giá của bạn</span>
+                    </div>
+                    <p style="margin: 0; color: var(--text-muted); font-style: italic; line-height: 1.45;">${commentText}</p>
+                    ${imageHtml}
+                </div>
+            `;
+            const buttonGroup = storyDiv.querySelector('div[style*="display: flex; gap: 8px"]');
+            if (buttonGroup) {
+                buttonGroup.insertAdjacentHTML('beforebegin', badgeHtml);
+            } else {
+                storyDiv.appendChild(badgeHtml);
+            }
+        }
+    }
+
+    // Save current active food tour progress to LocalStorage
+    function saveTourStateToLocalStorage() {
+        const state = {
+            isJourneyMode: isJourneyMode,
+            activeStopIndex: activeStopIndex,
+            completedStops: Array.from(completedStops),
+            checkInReviews: checkInReviews
+        };
+        localStorage.setItem(`food_tour_state_<?php echo e($tour->slug); ?>`, JSON.stringify(state));
+    }
+
+    // Load active food tour progress from LocalStorage
+    function loadTourStateFromLocalStorage() {
+        const saved = localStorage.getItem(`food_tour_state_<?php echo e($tour->slug); ?>`);
+        if (!saved) return false;
+        try {
+            const state = JSON.parse(saved);
+            if (state && state.isJourneyMode) {
+                isJourneyMode = state.isJourneyMode;
+                activeStopIndex = state.activeStopIndex !== undefined ? state.activeStopIndex : 0;
+                completedStops = new Set(state.completedStops || []);
+                checkInReviews = state.checkInReviews || {};
+                
+                // Restore timeline card statuses and badges immediately
+                completedStops.forEach(idx => {
+                    const stopItem = document.getElementById(`stop-item-${idx}`);
+                    if (stopItem) {
+                        stopItem.classList.add('completed');
+                        const btn = document.querySelector(`#stop-item-${idx} .checkin-action-btn`);
+                        if (btn) {
+                            btn.style.background = '#047857';
+                        }
+                        const checkIcon = document.querySelector(`.check-icon-${idx}`);
+                        if (checkIcon) checkIcon.innerText = '✅';
+                        const checkText = document.querySelector(`.check-text-${idx}`);
+                        if (checkText) checkText.innerText = 'Đã Check-in!';
+                    }
+                    renderStopReviewBadge(idx);
+                });
+
+                // Trigger UI panel changes and map restoration
+                enterJourneyMode(activeStopIndex, true);
+                return true;
+            }
+        } catch (e) {
+            console.error("Lỗi phục hồi trạng thái Food Tour từ LocalStorage:", e);
+        }
+        return false;
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         initTourMap();
-        // Focus the start location initially before tour starts
-        focusStartLocation();
+        // Try restoring tour state first
+        if (!loadTourStateFromLocalStorage()) {
+            // Focus the start location initially before tour starts
+            focusStartLocation();
+        }
     });
 
     // 2. Initialize Leaflet Map
@@ -481,29 +577,35 @@
 
         // Leaflet Init
         map = L.map('tourMap', {
-            zoomControl: false
+            zoomControl: false,
+            zoomSnap: 0.5,       // Bước zoom 0.5 giúp phản hồi nhanh nhạy
+            zoomDelta: 0.5,      // Độ nhảy zoom mỗi lần cuộn
+            wheelPxPerZoomLevel: 60, // Tốc độ zoom tiêu chuẩn nhanh & mượt
+            zoomAnimation: true,
+            fadeAnimation: true,
+            markerZoomAnimation: true
         }).setView([centerLat, centerLng], 14);
 
         // Add standard zoom control at top right
         L.control.zoom({ position: 'topright' }).addTo(map);
 
-        // Dark/Light theme tiles mapper
+        // Dark/Light theme tiles mapper (Sử dụng Google Maps chính thức cho bản đồ sáng)
         const getTileUrl = (theme) => {
             return theme === 'light'
-                ? 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
+                ? 'https://mt1.google.com/vt/lyrs=m&hl=vi&x={x}&y={y}&z={z}'
                 : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         };
 
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         let tileLayer = L.tileLayer(getTileUrl(currentTheme), {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+            attribution: currentTheme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap contributors &copy; CARTO'
         }).addTo(map);
 
         // Listen for global theme changes to hot-swap map styling
         document.addEventListener('theme-changed', function(e) {
             map.removeLayer(tileLayer);
             tileLayer = L.tileLayer(getTileUrl(e.detail.theme), {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                attribution: e.detail.theme === 'light' ? '&copy; Google Maps' : '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(map);
         });
 
@@ -553,7 +655,7 @@
                     </div>
                     
                     <!-- 4. Directions Link (Cyan gradient matching design) -->
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; border-radius: 10px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 0.68rem; box-shadow: 0 3px 8px rgba(13, 148, 136, 0.2); margin-bottom: 8px; transition: all 0.2s;">
+                    <a href="https://www.google.com/maps/dir/?api=1${idx > 0 ? '&origin=' + stopsData[idx - 1].latitude + ',' + stopsData[idx - 1].longitude : ''}&destination=${stop.latitude},${stop.longitude}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; border-radius: 10px; background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: #ffffff; text-decoration: none; font-weight: 800; font-size: 0.68rem; box-shadow: 0 3px 8px rgba(13, 148, 136, 0.2); margin-bottom: 8px; transition: all 0.2s;">
                         🗺️ Chỉ đường chặng này
                     </a>
                     
@@ -804,6 +906,10 @@
                 }
             }, 1300);
         }
+
+        if (isJourneyMode) {
+            saveTourStateToLocalStorage();
+        }
     }
 
     // Sets the glowing sidebar timeline line height matching current stops completed
@@ -846,13 +952,14 @@
     }
 
     // 7. Focus / Fullscreen Start Journey Mode
-    function enterJourneyMode(targetStopIndex = 0) {
+    function enterJourneyMode(targetStopIndex = 0, isRestore = false) {
         if (!isUserLoggedIn) {
             openAuthGateModal();
             return;
         }
 
         isJourneyMode = true;
+        saveTourStateToLocalStorage();
         
         // Automatically dim and complete starting timeline item visually
         const startItem = document.getElementById('start-timeline-item');
@@ -861,27 +968,29 @@
             startItem.style.opacity = '0.5';
         }
         
-        // Reset journey memory state for a fresh new experience
-        completedStops.clear();
-        checkInReviews = {};
-        
-        // Clear all previously rendered stop badge checkins in UI
-        document.querySelectorAll('[id^="review-badge-"]').forEach(badge => badge.remove());
-        document.querySelectorAll('.timeline-item').forEach(item => {
-            item.classList.remove('completed');
-            const btn = item.querySelector('.checkin-action-btn');
-            if (btn) {
-                btn.style.background = '#ff7e29';
-            }
-            const checkIcon = item.querySelector('[class^="check-icon-"]');
-            if (checkIcon) {
-                checkIcon.innerText = '✍️';
-            }
-            const checkText = item.querySelector('[class^="check-text-"]');
-            if (checkText) {
-                checkText.innerText = 'Đánh giá & Check-in';
-            }
-        });
+        if (!isRestore) {
+            // Reset journey memory state for a fresh new experience
+            completedStops.clear();
+            checkInReviews = {};
+            
+            // Clear all previously rendered stop badge checkins in UI
+            document.querySelectorAll('[id^="review-badge-"]').forEach(badge => badge.remove());
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.classList.remove('completed');
+                const btn = item.querySelector('.checkin-action-btn');
+                if (btn) {
+                    btn.style.background = '#ff7e29';
+                }
+                const checkIcon = item.querySelector('[class^="check-icon-"]');
+                if (checkIcon) {
+                    checkIcon.innerText = '✍️';
+                }
+                const checkText = item.querySelector('[class^="check-text-"]');
+                if (checkText) {
+                    checkText.innerText = 'Đánh giá & Check-in';
+                }
+            });
+        }
 
         document.getElementById('tourLayout').classList.add('start-journey-active');
         document.getElementById('setupControlsPanel').style.display = 'none';
@@ -948,6 +1057,7 @@
 
     function exitJourneyMode() {
         isJourneyMode = false;
+        localStorage.removeItem(`food_tour_state_<?php echo e($tour->slug); ?>`);
         
         // Restore start timeline item state
         const startItem = document.getElementById('start-timeline-item');
@@ -1064,6 +1174,7 @@
                 }
 
                 updateJourneyProgress();
+                saveTourStateToLocalStorage();
             }
         } else {
             // Open Review Modal to get stars and feedback!
@@ -1164,42 +1275,10 @@
         }
         
         // Render beautiful badge inside card story
-        const storyDiv = document.querySelector(`#stop-item-${index} .timeline-card-story`);
-        if (storyDiv) {
-            const prevBadge = document.getElementById(`review-badge-${index}`);
-            if (prevBadge) prevBadge.remove();
-            
-            const starsText = selectedModalStarRating ? '⭐'.repeat(selectedModalStarRating) : 'Chưa đánh giá sao';
-            let imageHtml = '';
-            if (checkInReviews[index].image) {
-                imageHtml = `
-                    <div style="position: relative; height: 140px; border-radius: 12px; overflow: hidden; margin-top: 8px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                        <img src="${checkInReviews[index].image}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); font-size: 0.65rem; color: #ffffff; padding: 2px 8px; border-radius: 20px; font-weight: 700;">📸 Ảnh kỷ niệm</span>
-                    </div>
-                `;
-            }
+        renderStopReviewBadge(index);
 
-            const commentText = checkInReviews[index].comment ? `"${checkInReviews[index].comment}"` : "Không có bình luận.";
-
-            const badgeBgColor = tourMood === 'cooking' ? 'rgba(16, 185, 129, 0.06)' : 'rgba(255, 126, 41, 0.06)';
-            const badgeBorderColor = tourMood === 'cooking' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 126, 41, 0.2)';
-            const badgeHtml = `
-                <div id="review-badge-${index}" style="margin-top: 12px; padding: 10px; border-radius: 10px; background: ${badgeBgColor}; border: 1.5px solid ${badgeBorderColor}; font-size: 0.75rem; animation: fadeIn 0.4s ease;">
-                    <div style="color: #ffb03a; font-weight: 800; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-                        <span>${starsText}</span> <span style="color: var(--text-main); font-size: 0.7rem; font-weight: 700;">Đánh giá của bạn</span>
-                    </div>
-                    <p style="margin: 0; color: var(--text-muted); font-style: italic; line-height: 1.45;">${commentText}</p>
-                    ${imageHtml}
-                </div>
-            `;
-            const buttonGroup = storyDiv.querySelector('div[style*="display: flex; gap: 8px"]');
-            if (buttonGroup) {
-                buttonGroup.insertAdjacentHTML('beforebegin', badgeHtml);
-            } else {
-                storyDiv.appendChild(badgeHtml);
-            }
-        }
+        // Save state to LocalStorage
+        saveTourStateToLocalStorage();
         
         // Close modal
         closeReviewModal();

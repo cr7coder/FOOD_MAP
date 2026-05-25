@@ -10,9 +10,18 @@ class EateryController extends Controller
 {
     public function show($slug)
     {
-        $eatery = Eatery::with(['category', 'commune', 'dishes', 'reviews' => function($q) {
-            $q->orderBy('created_at', 'desc');
-        }])->where('slug', $slug)->firstOrFail();
+        $eatery = Eatery::with([
+            'category', 
+            'commune', 
+            'dishes', 
+            'foodSafetyCertificate', 
+            'foodSupplyContracts', 
+            'purchaseInvoices', 
+            'dailyFoodLogs',
+            'reviews' => function($q) {
+                $q->orderBy('created_at', 'desc');
+            }
+        ])->where('slug', $slug)->firstOrFail();
         
         // Tự động phân tích danh mục ẩm thực để chọn Schema Type thích hợp của Google
         $schemaType = 'LocalBusiness';

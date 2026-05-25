@@ -47,7 +47,29 @@ class AdminController extends Controller
         if ($isSeller) {
             $eateriesQuery->where('user_id', $sellerId);
         }
-        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->get();
+
+        // Áp dụng bộ lọc tìm kiếm phía máy chủ để tối ưu bộ nhớ & truy vấn
+        if ($q = request('q')) {
+            $eateriesQuery->where(function($query) use ($q) {
+                $query->where('name', 'like', '%' . $q . '%')
+                      ->orWhere('address', 'like', '%' . $q . '%')
+                      ->orWhere('phone', 'like', '%' . $q . '%');
+            });
+        }
+
+        if ($categoryName = request('category')) {
+            $eateriesQuery->whereHas('category', function($query) use ($categoryName) {
+                $query->where('name', $categoryName);
+            });
+        }
+
+        if ($communeName = request('commune')) {
+            $eateriesQuery->whereHas('commune', function($query) use ($communeName) {
+                $query->where('name', $communeName);
+            });
+        }
+
+        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
         // Lấy danh sách Video Reviews (Admin xem hết, Seller xem các cơ sở của họ)
         $videosQuery = \App\Models\ReviewVideo::with(['eatery.category', 'user']);
@@ -171,7 +193,15 @@ class AdminController extends Controller
     {
         $this->verifyAdmin();
 
-        $eatery = Eatery::with('dishes')->findOrFail($id);
+        $eatery = Eatery::with([
+            'dishes',
+            'reviewVideos',
+            'foodSafetyCertificate',
+            'foodSupplyContracts',
+            'purchaseInvoices',
+            'dailyFoodLogs',
+            'reviews'
+        ])->findOrFail($id);
         
         // Ngăn chặn Seller chỉnh sửa quán ăn của người khác
         if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
@@ -265,7 +295,7 @@ class AdminController extends Controller
             'description' => $request->description,
         ]);
 
-        return redirect('/admin/dashboard')->with('success', 'Cập nhật thông tin quán thành công!');
+        return redirect()->back()->with('success', 'Cập nhật thông tin quán thành công!');
     }
 
     public function destroyEatery($id)
@@ -397,6 +427,57 @@ class AdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Thêm món ăn vào thực đơn thành công!');
+    }
+
+    /**
+     * Cập nhật thông tin món ăn trong thực đơn
+     */
+    public function updateDish(Request $request, $id)
+    {
+        $this->verifyAdmin();
+
+        $request->validate([
+            'dish_name' => 'required|string|max:100',
+            'dish_price' => 'required|numeric|min:0',
+            'dish_description' => 'nullable|string',
+            'dish_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'dish_image_url' => 'nullable|url',
+            'is_signature' => 'nullable|boolean',
+        ]);
+
+        $dish = \App\Models\Dish::findOrFail($id);
+        $eatery = Eatery::findOrFail($dish->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản trị thực đơn của cơ sở này!');
+        }
+
+        $imagePath = $dish->image_path;
+
+        // Xử lý upload ảnh món ăn mới qua Google Drive (có fallback cục bộ)
+        if ($request->hasFile('dish_image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('dish_image'), 'dishes');
+        } elseif ($request->has('dish_image_url')) {
+            if ($request->dish_image_url) {
+                $url = $request->dish_image_url;
+                if (preg_match('/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=))([a-zA-Z0-9_-]{25,50})/i', $url, $matches)) {
+                    $imagePath = 'https://drive.google.com/uc?export=download&id=' . $matches[1];
+                } else {
+                    $imagePath = $url;
+                }
+            } else {
+                $imagePath = null;
+            }
+        }
+
+        $dish->update([
+            'name' => $request->dish_name,
+            'price' => $request->dish_price,
+            'description' => $request->dish_description,
+            'image_path' => $imagePath,
+            'is_signature' => $request->has('is_signature'),
+        ]);
+
+        return redirect()->back()->with('success', 'Cập nhật món ăn thành công!');
     }
 
     /**
@@ -668,6 +749,448 @@ class AdminController extends Controller
         $video->delete();
 
         return redirect()->back()->with('success', '🗑️ Xóa video review thành công!');
+    }
+
+    /**
+     * Cập nhật Giấy Chứng Nhận An Toàn Thực Phẩm
+     */
+    public function storeFoodSafetyCertificate(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'certificate_number' => 'required|string|max:100',
+            'issued_by' => 'required|string|max:150',
+            'issued_at' => 'required|date',
+            'expired_at' => 'required|date|after:issued_at',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền cập nhật hồ sơ của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/certificates/default-cert.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'certificates');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\FoodSafetyCertificate::updateOrCreate(
+            ['eatery_id' => $request->eatery_id],
+            [
+                'certificate_number' => $request->certificate_number,
+                'issued_by' => $request->issued_by,
+                'issued_at' => $request->issued_at,
+                'expired_at' => $request->expired_at,
+                'image_path' => $imagePath,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Cập nhật Giấy chứng nhận ATTP thành công!');
+    }
+
+    /**
+     * Ghi nhật ký kiểm tra an toàn thực phẩm hàng ngày
+     */
+    public function storeDailyFoodLog(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'log_date' => 'required|date',
+            'ingredients_origin' => 'required|string|max:255',
+            'storage_condition' => 'required|string|max:255',
+            'checker_name' => 'required|string|max:100',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
+        }
+
+        \App\Models\DailyFoodLog::create([
+            'eatery_id' => $request->eatery_id,
+            'log_date' => $request->log_date,
+            'ingredients_origin' => $request->ingredients_origin,
+            'storage_condition' => $request->storage_condition,
+            'checker_name' => $request->checker_name,
+        ]);
+
+        return redirect()->back()->with('success', 'Ghi nhật ký kiểm tra vệ sinh hàng ngày thành công!');
+    }
+
+    /**
+     * Thêm hợp đồng cung cấp thực phẩm
+     */
+    public function storeFoodSupplyContract(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'supplier_name' => 'required|string|max:150',
+            'items_supplied' => 'required|string|max:255',
+            'signed_at' => 'required|date',
+            'expired_at' => 'required|date|after:signed_at',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/contracts/default-contract.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'contracts');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\FoodSupplyContract::create([
+            'eatery_id' => $request->eatery_id,
+            'supplier_name' => $request->supplier_name,
+            'items_supplied' => $request->items_supplied,
+            'signed_at' => $request->signed_at,
+            'expired_at' => $request->expired_at,
+            'image_path' => $imagePath,
+        ]);
+
+        return redirect()->back()->with('success', 'Thêm mới hợp đồng cung cấp thành công!');
+    }
+
+    /**
+     * Thêm hóa đơn mua bán thực phẩm
+     */
+    public function storePurchaseInvoice(Request $request)
+    {
+        $this->verifyAdmin();
+        $request->validate([
+            'eatery_id' => 'required|exists:eateries,id',
+            'supplier_name' => 'required|string|max:150',
+            'items_summary' => 'required|string|max:255',
+            'invoice_date' => 'required|date',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'image_url' => 'nullable|url',
+        ]);
+
+        $eatery = Eatery::findOrFail($request->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
+        }
+
+        $imagePath = '/uploads/invoices/default-invoice.jpg';
+        if ($request->hasFile('image')) {
+            $imagePath = \App\Helpers\GoogleDriveHelper::upload($request->file('image'), 'invoices');
+        } elseif ($request->image_url) {
+            $imagePath = $request->image_url;
+        }
+
+        \App\Models\PurchaseInvoice::create([
+            'eatery_id' => $request->eatery_id,
+            'supplier_name' => $request->supplier_name,
+            'items_summary' => $request->items_summary,
+            'invoice_date' => $request->invoice_date,
+            'image_path' => $imagePath,
+        ]);
+
+        return redirect()->back()->with('success', 'Thêm mới hóa đơn mua bán thành công!');
+    }
+
+    public function destroyFoodSupplyContract($id)
+    {
+        $this->verifyAdmin();
+        $contract = \App\Models\FoodSupplyContract::findOrFail($id);
+        $eatery = Eatery::findOrFail($contract->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hợp đồng của cơ sở này!');
+        }
+
+        $contract->delete();
+        return redirect()->back()->with('success', 'Xóa hợp đồng thành công!');
+    }
+
+    public function destroyPurchaseInvoice($id)
+    {
+        $this->verifyAdmin();
+        $invoice = \App\Models\PurchaseInvoice::findOrFail($id);
+        $eatery = Eatery::findOrFail($invoice->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý hóa đơn của cơ sở này!');
+        }
+
+        $invoice->delete();
+        return redirect()->back()->with('success', 'Xóa hóa đơn thành công!');
+    }
+
+    public function destroyDailyFoodLog($id)
+    {
+        $this->verifyAdmin();
+        $log = \App\Models\DailyFoodLog::findOrFail($id);
+        $eatery = Eatery::findOrFail($log->eatery_id);
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền quản lý nhật ký của cơ sở này!');
+        }
+
+        $log->delete();
+        return redirect()->back()->with('success', 'Xóa nhật ký kiểm tra thành công!');
+    }
+
+    /**
+     * Xóa đánh giá spam hoặc phá hoại của khách hàng (Chỉ dành cho Admin tối cao)
+     */
+    public function destroyReview($id)
+    {
+        $this->verifyAdmin();
+        
+        // Chỉ có tài khoản hệ thống (admin) mới được xóa đánh giá của khách hàng, Seller không được tự ý xóa
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xóa đánh giá của khách hàng!');
+        }
+
+        $review = \App\Models\Review::findOrFail($id);
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Đã xóa đánh giá của khách hàng khỏi hệ thống!');
+    }
+
+    /**
+     * Phản hồi nhận xét của khách hàng (Dành riêng cho Seller sở hữu cơ sở)
+     */
+    public function replyReview(Request $request, $id)
+    {
+        $this->verifyAdmin();
+        
+        $request->validate([
+            'seller_reply' => 'nullable|string|max:1000',
+        ], [
+            'seller_reply.max' => 'Nội dung phản hồi không được vượt quá 1000 ký tự!',
+        ]);
+
+        $review = \App\Models\Review::findOrFail($id);
+        $eatery = Eatery::findOrFail($review->eatery_id);
+
+        // Security check: Seller must own this eatery
+        if (session('user_role') === 'seller' && $eatery->user_id !== session('user_id')) {
+            abort(403, 'Bạn không có quyền phản hồi nhận xét của cơ sở này!');
+        }
+
+        $review->seller_reply = $request->input('seller_reply');
+        $review->save();
+
+        return redirect()->back()->with('success', 'Đã lưu phản hồi của bạn tới khách hàng!');
+    }
+
+    /**
+     * Danh sách tài khoản User với tính năng AJAX Tìm kiếm, Lọc trạng thái, Phân trang
+     */
+    public function indexUsers(Request $request)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền quản lý tài khoản người dùng!');
+        }
+
+        $query = \App\Models\User::query();
+
+        // 1. Tìm kiếm theo tên hoặc email hoặc số điện thoại
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%')
+                  ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        // 2. Lọc theo trạng thái
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Thống kê tổng số
+        $totalUsers = \App\Models\User::count();
+        $adminCount = \App\Models\User::where('role', 'admin')->count();
+        $sellerCount = \App\Models\User::where('role', 'seller')->count();
+        $userCount = \App\Models\User::where('role', 'user')->count();
+
+        // Phân trang có giữ bộ lọc
+        $users = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+
+        // Nếu là request AJAX, chỉ trả về một phần view danh sách bảng
+        if ($request->ajax()) {
+            return view('admin.users.partial-table', compact('users'))->render();
+        }
+
+        return view('admin.users.index', compact('users', 'totalUsers', 'adminCount', 'sellerCount', 'userCount'));
+    }
+
+    /**
+     * Mở form tạo User mới
+     */
+    public function createUser()
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm người dùng mới!');
+        }
+
+        return view('admin.users.create');
+    }
+
+    /**
+     * Lưu trữ User mới
+     */
+    public function storeUser(Request $request)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm người dùng mới!');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string|in:admin,seller,user',
+            'phone' => 'nullable|string|max:15',
+            'avatar' => 'nullable|string|max:10',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'password.min' => 'Mật khẩu tối thiểu phải từ 6 ký tự!',
+        ]);
+
+        \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => $request->role,
+            'avatar' => $request->avatar ?: '🧑',
+            'phone' => $request->phone,
+            'status' => 'active',
+        ]);
+
+        return redirect('/admin/users')->with('success', 'Thêm mới tài khoản người dùng thành công!');
+    }
+
+    /**
+     * Xem thông tin chi tiết User
+     */
+    public function showUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xem thông tin chi tiết người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        return view('admin.users.show', compact('user'));
+    }
+
+    /**
+     * Mở form sửa thông tin User
+     */
+    public function editUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền chỉnh sửa tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        return view('admin.users.edit', compact('user'));
+    }
+
+    /**
+     * Cập nhật thông tin User
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền cập nhật tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'role' => 'required|string|in:admin,seller,user',
+            'phone' => 'nullable|string|max:15',
+            'avatar' => 'nullable|string|max:10',
+            'status' => 'required|string|in:active,disabled',
+            'password' => 'nullable|string|min:6',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'password.min' => 'Mật khẩu thay đổi phải từ 6 ký tự!',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+            'avatar' => $request->avatar ?: '🧑',
+            'phone' => $request->phone,
+            'status' => $request->status,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect('/admin/users')->with('success', 'Cập nhật tài khoản người dùng thành công!');
+    }
+
+    /**
+     * Xóa tài khoản User
+     */
+    public function destroyUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xóa tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        
+        // Ngăn chặn admin tự xóa chính tài khoản của mình
+        if ($user->id === session('user_id')) {
+            return redirect()->back()->with('error', 'Bạn không được phép tự xóa tài khoản của chính mình!');
+        }
+
+        $user->delete();
+
+        return redirect('/admin/users')->with('success', 'Đã xóa tài khoản người dùng khỏi hệ thống!');
+    }
+
+    /**
+     * Bật/Tắt (Kích hoạt/Vô hiệu hóa) tài khoản người dùng nhanh chóng
+     */
+    public function toggleUserStatus($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thay đổi trạng thái tài khoản!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+
+        if ($user->id === session('user_id')) {
+            return redirect()->back()->with('error', 'Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
+        }
+
+        $user->status = $user->status === 'active' ? 'disabled' : 'active';
+        $user->save();
+
+        $message = $user->status === 'active' ? 'Kích hoạt tài khoản thành công!' : 'Đã vô hiệu hóa tài khoản thành công!';
+        return redirect()->back()->with('success', $message);
     }
 }
 

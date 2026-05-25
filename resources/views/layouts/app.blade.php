@@ -28,8 +28,8 @@
     <!-- Custom Theme Styling -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     
-    <!-- Mobile Native Overrides (Only load for mobile) -->
-    <link rel="stylesheet" media="screen and (max-width: 992px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
+    <!-- Mobile Native Overrides (Only load for mobile and high zoom desktops) -->
+    <link rel="stylesheet" media="screen and (max-width: 1200px)" href="{{ asset('css/mobile-native.css') }}?v={{ time() }}">
     
     <!-- Dynamic Schema.org JSON-LD Structured Data for Google Indexing -->
     @yield('seo_schema')
@@ -43,15 +43,7 @@
                 <span>🍜</span> Dong Anh Food Map
             </a>
             
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
-            
-            <div class="nav-collapse" id="navCollapse">
+            <div class="nav-collapse main-nav-container" id="navCollapse">
                 <nav>
                 <ul class="nav-menu">
                     <li><a href="/" class="nav-link {{ request()->is('/') && !request()->has('cat') ? 'active' : '' }}">Trang chủ</a></li>
@@ -65,27 +57,34 @@
                         <li><a href="/admin/dashboard" class="nav-link {{ request()->is('admin*') ? 'active' : '' }}">Quản lý quán</a></li>
                     @endif
                 </ul>
-            </nav>
+                </nav>
             
-            <div class="user-actions">
-
-                @if(session()->has('user_id'))
-                    <span style="font-size: 0.9rem; color: var(--text-muted);">
-                        Chào, <strong style="color: var(--primary);">{{ session('user_name') }}</strong>
-                        @if(session('user_role') === 'admin')
-                            (Admin)
-                        @elseif(session('user_role') === 'seller')
-                            (Chủ quán)
-                        @endif
-                    </span>
-                    <form action="/auth/logout" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn-secondary" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng xuất</button>
-                    </form>
-                @endif
-            </div>
-            
+                <div class="user-actions">
+                    @if(session()->has('user_id'))
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">
+                            Chào, <strong style="color: var(--primary);">{{ session('user_name') }}</strong>
+                            @if(session('user_role') === 'admin')
+                                (Admin)
+                            @elseif(session('user_role') === 'seller')
+                                (Chủ quán)
+                            @endif
+                        </span>
+                        <form action="/auth/logout" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn-secondary" style="padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng xuất</button>
+                        </form>
+                    @else
+                        <a href="/auth/login" class="btn-secondary" style="text-decoration: none; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng nhập</a>
+                        <a href="/auth/register" class="btn-primary" style="text-decoration: none; padding: 6px 14px; font-size: 0.85rem; border-radius: 8px;">Đăng ký</a>
+                    @endif
+                </div>
             </div> <!-- End nav-collapse -->
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 

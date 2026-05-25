@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             DishSeeder::class,
             ReviewSeeder::class,
             ReviewVideoSeeder::class,
+            FoodSafetyTrustSeeder::class,
 
             // 4. Bảng Food Tours (độc lập với eateries)
             FoodTourSeeder::class,

@@ -12,6 +12,10 @@ class AuthController extends Controller
     public function showLogin(Request $request)
     {
         if (Auth::check() || session()->has('user_id')) {
+            $role = session('user_role') ?: (Auth::user() ? Auth::user()->role : 'user');
+            if ($role === 'admin' || $role === 'seller') {
+                return redirect('/admin/dashboard');
+            }
             return redirect('/');
         }
         if ($request->has('redirect')) {
@@ -39,7 +43,7 @@ class AuthController extends Controller
                 'user_role' => $user->role,
             ]);
 
-            if ($user->role === 'admin') {
+            if ($user->role === 'admin' || $user->role === 'seller') {
                 return redirect()->intended('/admin/dashboard');
             }
             return redirect()->intended('/');
@@ -53,6 +57,10 @@ class AuthController extends Controller
     public function showRegister(Request $request)
     {
         if (Auth::check() || session()->has('user_id')) {
+            $role = session('user_role') ?: (Auth::user() ? Auth::user()->role : 'user');
+            if ($role === 'admin' || $role === 'seller') {
+                return redirect('/admin/dashboard');
+            }
             return redirect('/');
         }
         if ($request->has('redirect')) {
@@ -66,8 +74,12 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:50',
             'email' => 'required|string|email|max:100|unique:users',
+            'phone' => 'required|string|max:15',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'nullable|string|in:user,seller',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'phone.required' => 'Vui lòng cung cấp số điện thoại liên hệ!',
         ]);
 
         $role = $request->input('role', 'user');
@@ -80,6 +92,9 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $role,
+            'phone' => $request->phone,
+            'status' => 'active',
+            'avatar' => '🧑',
         ]);
 
         Auth::login($user);
@@ -90,6 +105,9 @@ class AuthController extends Controller
             'user_role' => $user->role,
         ]);
 
+        if ($user->role === 'seller' || $user->role === 'admin') {
+            return redirect('/admin/dashboard')->with('success', 'Đăng ký tài khoản thành công!');
+        }
         return redirect('/')->with('success', 'Đăng ký tài khoản thành công!');
     }
 

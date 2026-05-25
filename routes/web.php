@@ -60,6 +60,7 @@ Route::prefix('admin')->group(function () {
     
     // Quản lý Thực đơn & Món ăn đặc trưng
     Route::post('/dishes', [AdminController::class, 'storeDish'])->name('admin.dish.store');
+    Route::put('/dishes/{id}', [AdminController::class, 'updateDish'])->name('admin.dish.update');
     Route::post('/dishes/{id}/toggle-signature', [AdminController::class, 'toggleSignatureDish'])->name('admin.dish.toggle-signature');
     Route::delete('/dishes/{id}', [AdminController::class, 'destroyDish'])->name('admin.dish.destroy');
 
@@ -69,4 +70,27 @@ Route::prefix('admin')->group(function () {
     Route::delete('/videos/{id}', [AdminController::class, 'destroyVideo'])->name('admin.video.destroy');
     Route::post('/videos/{id}/approve', [AdminController::class, 'approveVideo'])->name('admin.video.approve');
     Route::post('/videos/{id}/reject', [AdminController::class, 'rejectVideo'])->name('admin.video.reject');
+
+    // Quản lý Minh Bạch An Toàn & Truy Xuất Thực Phẩm (Trust Hub)
+    Route::post('/trust/certificate', [AdminController::class, 'storeFoodSafetyCertificate'])->name('admin.trust.certificate.store');
+    Route::post('/trust/logs', [AdminController::class, 'storeDailyFoodLog'])->name('admin.trust.logs.store');
+    Route::delete('/trust/logs/{id}', [AdminController::class, 'destroyDailyFoodLog'])->name('admin.trust.logs.destroy');
+    Route::post('/trust/contracts', [AdminController::class, 'storeFoodSupplyContract'])->name('admin.trust.contracts.store');
+    Route::delete('/trust/contracts/{id}', [AdminController::class, 'destroyFoodSupplyContract'])->name('admin.trust.contracts.destroy');
+    Route::post('/trust/invoices', [AdminController::class, 'storePurchaseInvoice'])->name('admin.trust.invoices.store');
+    Route::delete('/trust/invoices/{id}', [AdminController::class, 'destroyPurchaseInvoice'])->name('admin.trust.invoices.destroy');
+
+    // Quản lý đánh giá của khách hàng
+    Route::delete('/reviews/{id}', [AdminController::class, 'destroyReview'])->name('admin.review.destroy');
+    Route::post('/reviews/{id}/reply', [AdminController::class, 'replyReview'])->name('admin.review.reply');
+
+    // Quản lý tài khoản User (Chỉ dành cho Admin tối cao)
+    Route::get('/users', [AdminController::class, 'indexUsers'])->name('admin.users.index');
+    Route::get('/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::get('/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
+    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+    Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
+    Route::post('/users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('admin.users.toggle-status');
 });
