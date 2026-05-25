@@ -20,6 +20,60 @@
 </head>
 <body>
 
+    <!-- Beautiful Dead-Center Success/Error Alert Modal System -->
+    <?php if(session('success') || session('error')): ?>
+        <div id="admin-toast-container" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease; pointer-events: auto;">
+            <div id="admin-toast" style="background: rgba(30, 41, 59, 0.98); backdrop-filter: blur(10px); color: #ffffff; border: 1.5px solid <?php echo e(session('success') ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'); ?>; padding: 36px 32px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 440px; width: 90%; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;">
+                <div style="background: <?php echo e(session('success') ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'); ?>; width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px auto; color: <?php echo e(session('success') ? '#10b981' : '#ef4444'); ?>; box-shadow: 0 0 20px <?php echo e(session('success') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'); ?>;">
+                    <?php echo e(session('success') ? '✅' : '⚠️'); ?>
+
+                </div>
+                <h3 style="font-size: 1.45rem; font-weight: 800; text-transform: uppercase; color: <?php echo e(session('success') ? '#10b981' : '#ef4444'); ?>; letter-spacing: 0.05em; margin-bottom: 12px;">
+                    <?php echo e(session('success') ? 'Thành công!' : 'Đã có lỗi!'); ?>
+
+                </h3>
+                <p style="font-size: 1.02rem; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 28px; padding: 0 10px;">
+                    <?php echo e(session('success') ?: session('error')); ?>
+
+                </p>
+                <button onclick="closeAdminToast()" style="width: 100%; padding: 12px 24px; border-radius: 10px; border: none; background: <?php echo e(session('success') ? '#10b981' : '#ef4444'); ?>; color: #ffffff; font-weight: 700; font-size: 0.92rem; cursor: pointer; box-shadow: 0 4px 12px <?php echo e(session('success') ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'); ?>; transition: all 0.2s;" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter='none'">
+                    Đồng ý
+                </button>
+            </div>
+        </div>
+
+        <script>
+            function showAdminToast() {
+                const container = document.getElementById('admin-toast-container');
+                const toast = document.getElementById('admin-toast');
+                if (container && toast) {
+                    setTimeout(() => {
+                        container.style.opacity = '1';
+                        toast.style.transform = 'scale(1)';
+                    }, 50);
+
+                    // Tự động đóng sau 4.5 giây
+                    setTimeout(closeAdminToast, 4500);
+                }
+            }
+
+            function closeAdminToast() {
+                const container = document.getElementById('admin-toast-container');
+                const toast = document.getElementById('admin-toast');
+                if (container && toast) {
+                    container.style.opacity = '0';
+                    toast.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        container.remove();
+                    }, 300);
+                }
+            }
+
+            // Gọi chạy ngay khi DOM load
+            document.addEventListener('DOMContentLoaded', showAdminToast);
+        </script>
+    <?php endif; ?>
+
     <div class="admin-layout-wrapper">
         
         <!-- ==========================================================================
@@ -40,6 +94,13 @@
             <a href="/admin/eateries/<?php echo e($eatery->id); ?>/edit" class="admin-menu-item active">
                 <span>⚙️</span> <?php echo e(Str::limit($eatery->name, 18, '...')); ?>
 
+            </a>
+            <?php endif; ?>
+
+            <?php if(session('user_role') === 'admin'): ?>
+            <div class="admin-sidebar-section-title">Quản trị hệ thống</div>
+            <a href="/admin/users" class="admin-menu-item <?php echo e(request()->is('admin/users*') ? 'active' : ''); ?>">
+                <span>👥</span> Quản lý User
             </a>
             <?php endif; ?>
 

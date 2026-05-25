@@ -107,30 +107,30 @@
     </div>
 
     <!-- Premium CabaFood Style Search & Filters Bar -->
-    <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; background-color: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid var(--admin-border);">
+    <form method="GET" action="/admin/dashboard" id="filterForm" onsubmit="event.preventDefault();" style="width: 100%; display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; background-color: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid var(--admin-border);">
         <div style="flex: 2; min-width: 260px; position: relative;">
-            <input type="text" id="eaterySearchInput" class="admin-form-input" placeholder="🔍 Tìm theo tên cơ sở, địa chỉ hoặc số điện thoại..." style="padding-left: 14px;">
+            <input type="text" name="q" id="eaterySearchInput" value="{{ request('q') }}" class="admin-form-input" placeholder="🔍 Tìm theo tên cơ sở, địa chỉ hoặc số điện thoại..." style="padding-left: 14px; width: 100%;">
         </div>
         <div style="flex: 1; min-width: 160px;">
-            <select id="categoryFilter" class="admin-form-input">
+            <select name="category" id="categoryFilter" class="admin-form-input">
                 <option value="">Tất cả danh mục</option>
                 @foreach($categories as $cat)
-                    <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                    <option value="{{ $cat->name }}" {{ request('category') == $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
                 @endforeach
             </select>
         </div>
         <div style="flex: 1; min-width: 160px;">
-            <select id="communeFilter" class="admin-form-input">
+            <select name="commune" id="communeFilter" class="admin-form-input">
                 <option value="">Tất cả khu vực xã</option>
                 @foreach($communes as $com)
-                    <option value="{{ $com->name }}">{{ $com->name }}</option>
+                    <option value="{{ $com->name }}" {{ request('commune') == $com->name ? 'selected' : '' }}>{{ $com->name }}</option>
                 @endforeach
             </select>
         </div>
-        <button type="button" onclick="resetFilters()" class="btn-admin btn-admin-secondary" style="padding: 10px 16px;">
+        <a href="/admin/dashboard" id="btnResetFilters" class="btn-admin btn-admin-secondary" style="padding: 10px 16px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 42px; box-sizing: border-box;">
             🔄 Reset
-        </button>
-    </div>
+        </a>
+    </form>
 
     <!-- Eateries Table List -->
     @if($eateries->count() > 0)
@@ -156,7 +156,7 @@
                             data-category="{{ $eat->category->name }}" 
                             data-commune="{{ $eat->commune->name }}">
                             <td>
-                                <img src="{{ $eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80' }}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid var(--admin-border);">
+                                <img src="{{ $eat->image_path ?: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?auto=format&fit=crop&w=300&q=80' }}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid var(--admin-border);" loading="lazy">
                             </td>
                             <td>
                                 <strong style="color: var(--admin-text-main); font-size: 0.92rem; display: block;">{{ $eat->name }}</strong>
@@ -204,6 +204,30 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Custom Premium Pagination Links for Optimized DB Loading --}}
+        @if($eateries->hasPages())
+            <div class="admin-pagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;">
+                {{-- Previous Page Link --}}
+                @if($eateries->onFirstPage())
+                    <span style="padding: 8px 16px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; border: 1px solid var(--admin-border);">Trang trước</span>
+                @else
+                    <a href="{{ $eateries->previousPageUrl() }}" style="padding: 8px 16px; border-radius: 8px; background: #ffffff; color: var(--admin-primary); border: 1px solid var(--admin-border); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--admin-primary-light)'" onmouseout="this.style.backgroundColor='#ffffff'">Trang trước</a>
+                @endif
+
+                {{-- Page Numbers Display --}}
+                <span style="font-size: 0.88rem; font-weight: bold; color: var(--admin-text-main); background: var(--admin-primary-light); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(79, 70, 229, 0.15);">
+                    Trang {{ $eateries->currentPage() }} / {{ $eateries->lastPage() }}
+                </span>
+
+                {{-- Next Page Link --}}
+                @if($eateries->hasMorePages())
+                    <a href="{{ $eateries->nextPageUrl() }}" style="padding: 8px 16px; border-radius: 8px; background: #ffffff; color: var(--admin-primary); border: 1px solid var(--admin-border); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--admin-primary-light)'" onmouseout="this.style.backgroundColor='#ffffff'">Trang sau</a>
+                @else
+                    <span style="padding: 8px 16px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; font-size: 0.85rem; font-weight: 600; cursor: not-allowed; border: 1px solid var(--admin-border);">Trang sau</span>
+                @endif
+            </div>
+        @endif
     @else
         <div style="text-align: center; padding: 40px 0; color: var(--admin-text-muted);">
             <p style="font-size: 1rem; margin-bottom: 12px;">📭 Chưa có địa điểm nào được ghim lên bản đồ số.</p>
@@ -223,42 +247,121 @@
         const searchInput = document.getElementById("eaterySearchInput");
         const categoryFilter = document.getElementById("categoryFilter");
         const communeFilter = document.getElementById("communeFilter");
-        const tableRows = document.querySelectorAll(".eatery-table-row");
+        const btnResetFilters = document.getElementById("btnResetFilters");
 
-        function filterTable() {
-            const query = searchInput.value.toLowerCase().trim();
-            const selectedCat = categoryFilter.value.toLowerCase();
-            const selectedCom = communeFilter.value.toLowerCase();
+        function performSearch(pageUrl = null) {
+            let url;
+            if (pageUrl) {
+                url = new URL(pageUrl);
+            } else {
+                url = new URL(window.location.href);
+                url.searchParams.set('q', searchInput ? searchInput.value : '');
+                url.searchParams.set('category', categoryFilter ? categoryFilter.value : '');
+                url.searchParams.set('commune', communeFilter ? communeFilter.value : '');
+                url.searchParams.delete('page'); // Reset về trang 1 khi lọc mới
+            }
 
-            tableRows.forEach(row => {
-                const name = row.getAttribute("data-name").toLowerCase();
-                const address = row.getAttribute("data-address").toLowerCase();
-                const phone = row.getAttribute("data-phone").toLowerCase();
-                const category = row.getAttribute("data-category").toLowerCase();
-                const commune = row.getAttribute("data-commune").toLowerCase();
+            // Cập nhật mượt mà thanh địa chỉ URL của trình duyệt không tải lại trang
+            window.history.pushState({}, '', url);
 
-                const matchesQuery = name.includes(query) || address.includes(query) || phone.includes(query);
-                const matchesCategory = selectedCat === "" || category.includes(selectedCat);
-                const matchesCommune = selectedCom === "" || commune.includes(selectedCom);
+            // Fetch kết quả phân trang mới bằng AJAX
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
 
-                if (matchesQuery && matchesCategory && matchesCommune) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
+                    // Thay thế thân bảng hiển thị dữ liệu quán ăn
+                    const newTable = doc.querySelector('.admin-table-container');
+                    const currentTable = document.querySelector('.admin-table-container');
+                    
+                    if (currentTable && newTable) {
+                        currentTable.innerHTML = newTable.innerHTML;
+                    } else if (newTable) {
+                        location.reload();
+                        return;
+                    } else {
+                        if (currentTable) {
+                            currentTable.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--admin-text-muted);"><p style="font-size: 1rem; margin-bottom: 12px;">📭 Không tìm thấy kết quả phù hợp.</p></div>`;
+                        }
+                    }
+
+                    // Thay thế thanh liên kết phân trang
+                    const newPagination = doc.querySelector('.admin-pagination');
+                    const currentPagination = document.querySelector('.admin-pagination');
+                    
+                    if (currentPagination && newPagination) {
+                        currentPagination.outerHTML = newPagination.outerHTML;
+                        bindPaginationLinks();
+                    } else if (currentPagination) {
+                        currentPagination.remove();
+                    } else if (newPagination) {
+                        const tableContainer = document.querySelector('.admin-table-container');
+                        if (tableContainer) {
+                            tableContainer.insertAdjacentHTML('afterend', newPagination.outerHTML);
+                            bindPaginationLinks();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Lỗi AJAX Search: ", err);
+                });
+        }
+
+        function bindPaginationLinks() {
+            const paginationLinks = document.querySelectorAll('.admin-pagination a');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('href');
+                    performSearch(url);
+                });
+            });
+        }
+
+        // Lắng nghe sự kiện gõ tìm kiếm với Debounce 300ms phản hồi cực nhạy
+        if (searchInput) {
+            let debounceTimeout = null;
+            searchInput.addEventListener("input", function() {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    performSearch();
+                }, 300);
+            });
+
+            // Ngăn chặn nút Enter gửi form gây reload trang
+            searchInput.addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    performSearch();
                 }
             });
         }
 
-        if(searchInput) searchInput.addEventListener("input", filterTable);
-        if(categoryFilter) categoryFilter.addEventListener("change", filterTable);
-        if(communeFilter) communeFilter.addEventListener("change", filterTable);
+        if (categoryFilter) {
+            categoryFilter.addEventListener("change", function() {
+                performSearch();
+            });
+        }
 
-        window.resetFilters = function() {
-            if(searchInput) searchInput.value = "";
-            if(categoryFilter) categoryFilter.value = "";
-            if(communeFilter) communeFilter.value = "";
-            filterTable();
-        };
+        if (communeFilter) {
+            communeFilter.addEventListener("change", function() {
+                performSearch();
+            });
+        }
+
+        if (btnResetFilters) {
+            btnResetFilters.addEventListener("click", function(e) {
+                e.preventDefault();
+                if (searchInput) searchInput.value = "";
+                if (categoryFilter) categoryFilter.value = "";
+                if (communeFilter) communeFilter.value = "";
+                performSearch();
+            });
+        }
+
+        // Khởi động lắng nghe liên kết phân trang lần đầu
+        bindPaginationLinks();
     });
 </script>
 @endsection

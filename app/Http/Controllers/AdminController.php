@@ -47,7 +47,29 @@ class AdminController extends Controller
         if ($isSeller) {
             $eateriesQuery->where('user_id', $sellerId);
         }
-        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->get();
+
+        // Áp dụng bộ lọc tìm kiếm phía máy chủ để tối ưu bộ nhớ & truy vấn
+        if ($q = request('q')) {
+            $eateriesQuery->where(function($query) use ($q) {
+                $query->where('name', 'like', '%' . $q . '%')
+                      ->orWhere('address', 'like', '%' . $q . '%')
+                      ->orWhere('phone', 'like', '%' . $q . '%');
+            });
+        }
+
+        if ($categoryName = request('category')) {
+            $eateriesQuery->whereHas('category', function($query) use ($categoryName) {
+                $query->where('name', $categoryName);
+            });
+        }
+
+        if ($communeName = request('commune')) {
+            $eateriesQuery->whereHas('commune', function($query) use ($communeName) {
+                $query->where('name', $communeName);
+            });
+        }
+
+        $eateries = $eateriesQuery->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
 
         // Lấy danh sách Video Reviews (Admin xem hết, Seller xem các cơ sở của họ)
         $videosQuery = \App\Models\ReviewVideo::with(['eatery.category', 'user']);
@@ -177,7 +199,8 @@ class AdminController extends Controller
             'foodSafetyCertificate',
             'foodSupplyContracts',
             'purchaseInvoices',
-            'dailyFoodLogs'
+            'dailyFoodLogs',
+            'reviews'
         ])->findOrFail($id);
         
         // Ngăn chặn Seller chỉnh sửa quán ăn của người khác
@@ -272,7 +295,7 @@ class AdminController extends Controller
             'description' => $request->description,
         ]);
 
-        return redirect('/admin/dashboard')->with('success', 'Cập nhật thông tin quán thành công!');
+        return redirect()->back()->with('success', 'Cập nhật thông tin quán thành công!');
     }
 
     public function destroyEatery($id)
@@ -915,6 +938,232 @@ class AdminController extends Controller
 
         $log->delete();
         return redirect()->back()->with('success', 'Xóa nhật ký kiểm tra thành công!');
+    }
+
+    /**
+     * Xóa đánh giá spam hoặc phá hoại của khách hàng (Chỉ dành cho Admin tối cao)
+     */
+    public function destroyReview($id)
+    {
+        $this->verifyAdmin();
+        
+        // Chỉ có tài khoản hệ thống (admin) mới được xóa đánh giá của khách hàng, Seller không được tự ý xóa
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xóa đánh giá của khách hàng!');
+        }
+
+        $review = \App\Models\Review::findOrFail($id);
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Đã xóa đánh giá của khách hàng khỏi hệ thống!');
+    }
+
+    /**
+     * Danh sách tài khoản User với tính năng AJAX Tìm kiếm, Lọc trạng thái, Phân trang
+     */
+    public function indexUsers(Request $request)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền quản lý tài khoản người dùng!');
+        }
+
+        $query = \App\Models\User::query();
+
+        // 1. Tìm kiếm theo tên hoặc email hoặc số điện thoại
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%')
+                  ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        // 2. Lọc theo trạng thái
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Thống kê tổng số
+        $totalUsers = \App\Models\User::count();
+        $adminCount = \App\Models\User::where('role', 'admin')->count();
+        $sellerCount = \App\Models\User::where('role', 'seller')->count();
+        $userCount = \App\Models\User::where('role', 'user')->count();
+
+        // Phân trang có giữ bộ lọc
+        $users = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+
+        // Nếu là request AJAX, chỉ trả về một phần view danh sách bảng
+        if ($request->ajax()) {
+            return view('admin.users.partial-table', compact('users'))->render();
+        }
+
+        return view('admin.users.index', compact('users', 'totalUsers', 'adminCount', 'sellerCount', 'userCount'));
+    }
+
+    /**
+     * Mở form tạo User mới
+     */
+    public function createUser()
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm người dùng mới!');
+        }
+
+        return view('admin.users.create');
+    }
+
+    /**
+     * Lưu trữ User mới
+     */
+    public function storeUser(Request $request)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thêm người dùng mới!');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string|in:admin,seller,user',
+            'phone' => 'nullable|string|max:15',
+            'avatar' => 'nullable|string|max:10',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'password.min' => 'Mật khẩu tối thiểu phải từ 6 ký tự!',
+        ]);
+
+        \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => $request->role,
+            'avatar' => $request->avatar ?: '🧑',
+            'phone' => $request->phone,
+            'status' => 'active',
+        ]);
+
+        return redirect('/admin/users')->with('success', 'Thêm mới tài khoản người dùng thành công!');
+    }
+
+    /**
+     * Xem thông tin chi tiết User
+     */
+    public function showUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xem thông tin chi tiết người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        return view('admin.users.show', compact('user'));
+    }
+
+    /**
+     * Mở form sửa thông tin User
+     */
+    public function editUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền chỉnh sửa tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        return view('admin.users.edit', compact('user'));
+    }
+
+    /**
+     * Cập nhật thông tin User
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền cập nhật tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+            'role' => 'required|string|in:admin,seller,user',
+            'phone' => 'nullable|string|max:15',
+            'avatar' => 'nullable|string|max:10',
+            'status' => 'required|string|in:active,disabled',
+            'password' => 'nullable|string|min:6',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'password.min' => 'Mật khẩu thay đổi phải từ 6 ký tự!',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+            'avatar' => $request->avatar ?: '🧑',
+            'phone' => $request->phone,
+            'status' => $request->status,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect('/admin/users')->with('success', 'Cập nhật tài khoản người dùng thành công!');
+    }
+
+    /**
+     * Xóa tài khoản User
+     */
+    public function destroyUser($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền xóa tài khoản người dùng!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+        
+        // Ngăn chặn admin tự xóa chính tài khoản của mình
+        if ($user->id === session('user_id')) {
+            return redirect()->back()->with('error', 'Bạn không được phép tự xóa tài khoản của chính mình!');
+        }
+
+        $user->delete();
+
+        return redirect('/admin/users')->with('success', 'Đã xóa tài khoản người dùng khỏi hệ thống!');
+    }
+
+    /**
+     * Bật/Tắt (Kích hoạt/Vô hiệu hóa) tài khoản người dùng nhanh chóng
+     */
+    public function toggleUserStatus($id)
+    {
+        $this->verifyAdmin();
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Bạn không có quyền thay đổi trạng thái tài khoản!');
+        }
+
+        $user = \App\Models\User::findOrFail($id);
+
+        if ($user->id === session('user_id')) {
+            return redirect()->back()->with('error', 'Bạn không thể tự vô hiệu hóa tài khoản của chính mình!');
+        }
+
+        $user->status = $user->status === 'active' ? 'disabled' : 'active';
+        $user->save();
+
+        $message = $user->status === 'active' ? 'Kích hoạt tài khoản thành công!' : 'Đã vô hiệu hóa tài khoản thành công!';
+        return redirect()->back()->with('success', $message);
     }
 }
 

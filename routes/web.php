@@ -79,4 +79,17 @@ Route::prefix('admin')->group(function () {
     Route::delete('/trust/contracts/{id}', [AdminController::class, 'destroyFoodSupplyContract'])->name('admin.trust.contracts.destroy');
     Route::post('/trust/invoices', [AdminController::class, 'storePurchaseInvoice'])->name('admin.trust.invoices.store');
     Route::delete('/trust/invoices/{id}', [AdminController::class, 'destroyPurchaseInvoice'])->name('admin.trust.invoices.destroy');
+
+    // Quản lý đánh giá của khách hàng
+    Route::delete('/reviews/{id}', [AdminController::class, 'destroyReview'])->name('admin.review.destroy');
+
+    // Quản lý tài khoản User (Chỉ dành cho Admin tối cao)
+    Route::get('/users', [AdminController::class, 'indexUsers'])->name('admin.users.index');
+    Route::get('/users/create', [AdminController::class, 'createUser'])->name('admin.users.create');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::get('/users/{id}', [AdminController::class, 'showUser'])->name('admin.users.show');
+    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('admin.users.edit');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+    Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
+    Route::post('/users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('admin.users.toggle-status');
 });

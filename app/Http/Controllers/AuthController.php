@@ -66,8 +66,12 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:50',
             'email' => 'required|string|email|max:100|unique:users',
+            'phone' => 'required|string|max:15',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'nullable|string|in:user,seller',
+        ], [
+            'email.unique' => 'Email này đã tồn tại trên hệ thống!',
+            'phone.required' => 'Vui lòng cung cấp số điện thoại liên hệ!',
         ]);
 
         $role = $request->input('role', 'user');
@@ -80,6 +84,9 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $role,
+            'phone' => $request->phone,
+            'status' => 'active',
+            'avatar' => '🧑',
         ]);
 
         Auth::login($user);

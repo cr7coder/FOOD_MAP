@@ -5,7 +5,7 @@
 @section('content')
 
 <!-- Welcome Workspace Banner -->
-<div class="admin-welcome-banner" style="background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); margin-bottom: 24px;">
+<div class="admin-welcome-banner" style="margin-bottom: 24px;">
     <div>
         <h1 style="font-size: 1.45rem;">🏢 {{ $eatery ? $eatery->name : 'Thêm cơ sở mới' }}</h1>
         <p>{{ $eatery ? 'Không gian làm việc & điều phối hồ sơ pháp lý cơ sở' : 'Khai báo hồ sơ ban đầu cho cơ sở kinh doanh mới' }}</p>
@@ -27,14 +27,37 @@
     </div>
 @endif
 
-<!-- Success Status Alert Banner -->
+<!-- Dynamic Animated Success Status Toast -->
 @if(session('success'))
-    <div class="admin-alert admin-alert-success">
-        <span>🎉</span>
+    <div id="admin-success-toast" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); z-index: 9999; background: #0f172a; color: #ffffff; border-radius: 16px; padding: 24px 32px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; border: 1px solid rgba(255,255,255,0.1); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 320px; max-width: 90%;">
+        <div style="background: #10b981; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">✓</div>
         <div>
-            <strong>Thành công!</strong> {{ session('success') }}
+            <strong style="display: block; font-size: 1.05rem; color: #ffffff; margin-bottom: 4px;">Thao tác thành công!</strong>
+            <span style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4; display: block;">{{ session('success') }}</span>
         </div>
+        <button type="button" onclick="const t = document.getElementById('admin-success-toast'); t.style.opacity='0'; t.style.transform='translate(-50%, -50%) scale(0.9)'; t.style.pointerEvents='none';" class="btn-admin btn-admin-accent" style="padding: 8px 24px; font-size: 0.78rem; border-radius: 8px; margin-top: 6px; font-weight: bold; width: 100%;">Đồng ý</button>
     </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toast = document.getElementById('admin-success-toast');
+            if (toast) {
+                setTimeout(() => {
+                    toast.style.transform = 'translate(-50%, -50%) scale(1)';
+                    toast.style.opacity = '1';
+                    toast.style.pointerEvents = 'auto';
+                }, 150);
+                
+                setTimeout(() => {
+                    if (toast.style.opacity !== '0') {
+                        toast.style.transform = 'translate(-50%, -50%) scale(0.9)';
+                        toast.style.opacity = '0';
+                        toast.style.pointerEvents = 'none';
+                    }
+                }, 4000); // Automatically fade out after 4s
+            }
+        });
+    </script>
 @endif
 
 <!-- ==========================================================================
@@ -42,20 +65,23 @@
      ========================================================================== -->
 <div class="admin-sub-tabs">
     <button type="button" class="admin-sub-tab-btn active" onclick="switchSubTab(event, 'tab-info')">
-        📍 1. Thông tin & Bản đồ
+        1. Thông tin & Bản đồ
     </button>
     @if($eatery)
     <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-dishes')">
-        🍔 2. Thực đơn món ngon ({{ $eatery->dishes->count() }})
+        2. Thực đơn món ngon ({{ $eatery->dishes->count() }})
     </button>
     <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-videos')">
-        🎥 3. Video Review của quán ({{ $eatery->reviewVideos->count() }})
+        3. Video Review của quán ({{ $eatery->reviewVideos->count() }})
     </button>
     <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-attp')">
-        🛡️ 4. Giấy VSATTP & Nhật ký
+        4. Giấy VSATTP & Nhật ký
     </button>
     <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-contracts')">
-        🧾 5. Hợp đồng & Hóa đơn
+        5. Hợp đồng & Hóa đơn
+    </button>
+    <button type="button" class="admin-sub-tab-btn" onclick="switchSubTab(event, 'tab-reviews')">
+        6. Đánh giá từ khách hàng ({{ $eatery->reviews->count() }})
     </button>
     @endif
 </div>
@@ -183,7 +209,14 @@
                     </div>
 
                     <div class="admin-form-group">
-                        <label class="admin-form-label">🎯 Click chọn trực tiếp trên Bản đồ</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label class="admin-form-label" style="margin-bottom: 0;">🎯 Click chọn trực tiếp trên Bản đồ</label>
+                            @if($eatery)
+                                <button type="button" id="btnMapLockToggle" class="btn-admin" style="padding: 4px 10px; font-size: 0.72rem; border-radius: 6px; background-color: var(--admin-danger-light); color: var(--admin-danger); border: 1.5px solid rgba(239, 68, 68, 0.15); display: inline-flex; align-items: center; gap: 4px;" onclick="toggleMapLock()">
+                                    🔒 Đã khóa click (Bấm để sửa vị trí)
+                                </button>
+                            @endif
+                        </div>
                         <div class="admin-map-picker" id="pickerMap"></div>
                     </div>
 
@@ -516,8 +549,11 @@
             
             <!-- VSATTP Certificate Form -->
             <div style="padding: 20px; border: 1.5px solid var(--admin-border); border-radius: 12px; background-color: #ffffff;">
-                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-primary); display: flex; align-items: center; gap: 6px;">
-                    <span>📜</span> Giấy Chứng Nhận An Toàn VSATTP
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 16px; color: var(--admin-primary); display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span style="display: flex; align-items: center; gap: 6px;"><span>📜</span> Giấy Chứng Nhận An Toàn VSATTP</span>
+                    @if($eatery->foodSafetyCertificate)
+                        <button type="button" class="btn-admin btn-admin-accent" style="padding: 4px 8px; font-size: 0.68rem; border-radius: 6px; font-weight: 700;" onclick="openViewCertModal('{{ addslashes($eatery->foodSafetyCertificate->certificate_number) }}', '{{ addslashes($eatery->foodSafetyCertificate->issued_by) }}', '{{ $eatery->foodSafetyCertificate->issued_at->format('d/m/Y') }}', '{{ $eatery->foodSafetyCertificate->expired_at->format('d/m/Y') }}', '{{ $eatery->foodSafetyCertificate->image_path }}')">👁️ Xem Giấy Phép</button>
+                    @endif
                 </h3>
                 
                 <form action="/admin/trust/certificate" method="POST" enctype="multipart/form-data">
@@ -606,15 +642,18 @@
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             @foreach($eatery->dailyFoodLogs->take(3) as $log)
                                 <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; font-size: 0.8rem;">
-                                    <div>
+                                    <div style="cursor: pointer; flex: 1;" onclick="openViewLogModal('{{ \Carbon\Carbon::parse($log->log_date)->format('d/m/Y') }}', '{{ addslashes($log->ingredients_origin) }}', '{{ addslashes($log->storage_condition) }}', '{{ addslashes($log->checker_name) }}')">
                                         <span style="font-weight: 800; color: var(--admin-accent);">📅 {{ $log->log_date->format('d/m/Y') }}</span> - 
                                         <span style="color: var(--admin-text-main);">{{ Str::limit($log->ingredients_origin, 28) }}</span>
                                     </div>
-                                    <form action="/admin/trust/logs/{{ $log->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký ngày này?')" style="display: inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa nhật ký">🗑️</button>
-                                    </form>
+                                    <div style="display: flex; gap: 6px; align-items: center;">
+                                        <button type="button" class="btn-admin btn-admin-accent" style="padding: 4px 8px; font-size: 0.68rem; border-radius: 6px; font-weight: 700;" onclick="openViewLogModal('{{ \Carbon\Carbon::parse($log->log_date)->format('d/m/Y') }}', '{{ addslashes($log->ingredients_origin) }}', '{{ addslashes($log->storage_condition) }}', '{{ addslashes($log->checker_name) }}')">👁️ Xem</button>
+                                        <form action="/admin/trust/logs/{{ $log->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhật ký ngày này?')" style="display: inline; margin: 0;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa nhật ký">🗑️</button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -683,16 +722,19 @@
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         @foreach($eatery->foodSupplyContracts as $contract)
                             <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; gap: 12px; align-items: center; background-color: #ffffff;">
-                                <img src="{{ $contract->image_path }}" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border);">
-                                <div style="flex: 1; min-width: 0;">
+                                <img src="{{ $contract->image_path }}" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border); cursor: pointer;" onclick="openViewContractModal('{{ addslashes($contract->supplier_name) }}', '{{ addslashes($contract->items_supplied) }}', '{{ \Carbon\Carbon::parse($contract->signed_at)->format('d/m/Y') }}', '{{ \Carbon\Carbon::parse($contract->expired_at)->format('d/m/Y') }}', '{{ $contract->image_path }}')">
+                                <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openViewContractModal('{{ addslashes($contract->supplier_name) }}', '{{ addslashes($contract->items_supplied) }}', '{{ \Carbon\Carbon::parse($contract->signed_at)->format('d/m/Y') }}', '{{ \Carbon\Carbon::parse($contract->expired_at)->format('d/m/Y') }}', '{{ $contract->image_path }}')">
                                     <h5 style="margin: 0; font-weight: 700; font-size: 0.82rem; color: var(--admin-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $contract->supplier_name }}</h5>
                                     <span style="font-size: 0.7rem; color: var(--admin-accent); display: block; margin-top: 1px;">🌾 {{ $contract->items_supplied }}</span>
                                 </div>
-                                <form action="/admin/trust/contracts/{{ $contract->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này?')" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa hợp đồng">🗑️</button>
-                                </form>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <button type="button" class="btn-admin btn-admin-accent" style="padding: 4px 8px; font-size: 0.68rem; border-radius: 6px; font-weight: 700;" onclick="openViewContractModal('{{ addslashes($contract->supplier_name) }}', '{{ addslashes($contract->items_supplied) }}', '{{ \Carbon\Carbon::parse($contract->signed_at)->format('d/m/Y') }}', '{{ \Carbon\Carbon::parse($contract->expired_at)->format('d/m/Y') }}', '{{ $contract->image_path }}')">👁️ Xem</button>
+                                    <form action="/admin/trust/contracts/{{ $contract->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hợp đồng này?')" style="display: inline; margin: 0;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem; padding: 2px;" title="Xóa hợp đồng">🗑️</button>
+                                    </form>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -742,16 +784,19 @@
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         @foreach($eatery->purchaseInvoices as $invoice)
                             <div style="padding: 10px; border: 1.5px solid var(--admin-border); border-radius: 8px; display: flex; gap: 12px; align-items: center; background-color: #ffffff;">
-                                <img src="{{ $invoice->image_path }}" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border); filter: blur(0.5px);">
-                                <div style="flex: 1; min-width: 0;">
+                                <img src="{{ $invoice->image_path }}" style="width: 36px; height: 46px; object-fit: cover; border-radius: 4px; border: 1px solid var(--admin-border); filter: blur(0.5px); cursor: pointer;" onclick="openViewInvoiceModal('{{ addslashes($invoice->supplier_name) }}', '{{ addslashes($invoice->items_summary) }}', '{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d/m/Y') }}', '{{ $invoice->image_path }}')">
+                                <div style="flex: 1; min-width: 0; cursor: pointer;" onclick="openViewInvoiceModal('{{ addslashes($invoice->supplier_name) }}', '{{ addslashes($invoice->items_summary) }}', '{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d/m/Y') }}', '{{ $invoice->image_path }}')">
                                     <h5 style="margin: 0; font-weight: 700; font-size: 0.82rem; color: var(--admin-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $invoice->supplier_name }}</h5>
                                     <span style="font-size: 0.7rem; color: var(--admin-text-muted); display: block; margin-top: 1px;">🧾 {{ $invoice->items_summary }}</span>
                                 </div>
-                                <form action="/admin/trust/invoices/{{ $invoice->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')" style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem;" title="Xóa hóa đơn">🗑️</button>
-                                </form>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <button type="button" class="btn-admin btn-admin-primary" style="padding: 4px 8px; font-size: 0.68rem; border-radius: 6px; font-weight: 700;" onclick="openViewInvoiceModal('{{ addslashes($invoice->supplier_name) }}', '{{ addslashes($invoice->items_summary) }}', '{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('d/m/Y') }}', '{{ $invoice->image_path }}')">👁️ Xem</button>
+                                    <form action="/admin/trust/invoices/{{ $invoice->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')" style="display: inline; margin: 0;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" style="background: none; border: none; color: var(--admin-danger); cursor: pointer; font-size: 0.9rem; padding: 2px;" title="Xóa hóa đơn">🗑️</button>
+                                    </form>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -763,31 +808,302 @@
         </div>
     </div>
 </div>
+
+<!-- ==========================================================================
+     TAB 6: CUSTOMER REVIEWS & FEEDBACK
+     ========================================================================== -->
+<div id="tab-reviews" class="admin-tab-section" style="display: none;">
+    <div class="admin-card">
+        <div class="admin-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <h2 class="admin-card-title">
+                <span>💬</span> Đánh Giá & Phản Hồi Từ Khách Hàng
+            </h2>
+            <span class="admin-badge admin-badge-primary" style="font-size: 0.8rem; font-weight: 700; padding: 6px 14px;">
+                ★ {{ number_format($eatery->reviews->avg('rating') ?: 5.0, 1) }} / 5.0 ({{ $eatery->reviews->count() }} lượt đánh giá)
+            </span>
+        </div>
+
+        <div style="padding: 8px 0;">
+            @if($eatery->reviews->count() > 0)
+                <div class="admin-table-container">
+                    <table class="admin-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">Khách hàng</th>
+                                <th style="width: 130px;">Đánh giá</th>
+                                <th>Nội dung nhận xét</th>
+                                <th style="width: 130px;">Thời gian</th>
+                                @if(session('user_role') === 'admin')
+                                <th style="text-align: center; width: 100px;">Thao tác</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($eatery->reviews->sortByDesc('created_at') as $rev)
+                                <tr>
+                                    <td>
+                                        <strong style="color: var(--admin-text-main); font-size: 0.88rem;">{{ $rev->user_name }}</strong>
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <span style="color: var(--admin-warning); font-weight: 800; font-size: 0.95rem; letter-spacing: 1px;">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                {{ $i <= $rev->rating ? '★' : '☆' }}
+                                            @endfor
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <p style="font-size: 0.86rem; color: var(--admin-text-main); line-height: 1.5; margin: 0; white-space: pre-line;">{{ $rev->comment }}</p>
+                                    </td>
+                                    <td>
+                                        <span style="font-size: 0.76rem; color: var(--admin-text-muted);">
+                                            {{ \Carbon\Carbon::parse($rev->created_at)->format('H:i d/m/Y') }}
+                                        </span>
+                                    </td>
+                                    @if(session('user_role') === 'admin')
+                                    <td style="text-align: center;">
+                                        <form action="/admin/reviews/{{ $rev->id }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này khỏi hệ thống?')" style="display: inline; margin: 0;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-admin btn-admin-danger" style="padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; font-weight: 700; cursor: pointer;">
+                                                🗑️ Xóa
+                                            </button>
+                                        </form>
+                                    </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div style="text-align: center; padding: 50px 0; border: 1.5px dashed var(--admin-border); border-radius: 12px; color: var(--admin-text-muted);">
+                    <p style="font-size: 1rem; margin-bottom: 6px;">💬 Quán ăn này chưa có đánh giá nào từ khách hàng.</p>
+                    <p style="font-size: 0.82rem;">Hãy khuyến khích khách hàng ghé thăm và gửi đánh giá để tăng độ uy tín cho cơ sở!</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
 @endif
 
 <!-- ==========================================================================
-     MODAL XEM CHI TIẾT MÓN ĂN
+     MODAL XEM CHI TIẾT MÓN ĂN (SaaS Luxury Layout)
      ========================================================================== -->
 <div id="viewDishModal" class="admin-reels-overlay" style="display: none;">
-    <div class="admin-card" style="width: 100%; max-width: 480px; padding: 24px; position: relative; border-radius: 16px; background-color: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden;">
-        <button type="button" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--admin-text-muted); font-size: 1.25rem; cursor: pointer; z-index: 10;" onclick="closeViewDishModal()">✕</button>
+    <div class="admin-card" style="width: 100%; max-width: 500px; padding: 0; position: relative; border-radius: 20px; background-color: #ffffff; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15); overflow: hidden; border: none;">
+        <!-- Beautiful floating close icon -->
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.6); border: none; color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(4px); transition: all 0.2s;" onclick="closeViewDishModal()" onmouseover="this.style.background='rgba(15, 23, 42, 0.8)'" onmouseout="this.style.background='rgba(15, 23, 42, 0.6)'">✕</button>
         
-        <div style="margin: -24px -24px 20px -24px; position: relative; height: 220px; overflow: hidden; background-color: #f1f5f9;">
+        <!-- Premium Image Banner with Gradient Overlay -->
+        <div style="position: relative; height: 260px; overflow: hidden; background-color: #f1f5f9;">
             <img id="viewDishImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
-            <span id="viewDishBadge" class="admin-badge admin-badge-success" style="position: absolute; bottom: 12px; left: 12px; font-size: 0.7rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); display: none;">★ Món đặc trưng</span>
-        </div>
-
-        <div style="padding: 0 4px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px;">
-                <h3 id="viewDishName" style="font-size: 1.2rem; font-weight: 800; color: var(--admin-text-main); margin: 0; line-height: 1.3;"></h3>
-                <span id="viewDishPrice" style="font-size: 1.15rem; font-weight: 800; color: var(--admin-success); white-space: nowrap;"></span>
-            </div>
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%); z-index: 5;"></div>
             
-            <p id="viewDishDesc" style="font-size: 0.88rem; color: var(--admin-text-muted); line-height: 1.6; margin-top: 12px; border-top: 1px solid var(--admin-border); padding-top: 12px; max-height: 120px; overflow-y: auto;"></p>
+            <!-- Absolute floating signature badge -->
+            <span id="viewDishBadge" class="admin-badge" style="position: absolute; top: 16px; left: 16px; font-size: 0.72rem; font-weight: 800; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); display: none; z-index: 10; border: 1px solid rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px;">★ MÓN ĐẶC TRƯNG NỔI BẬT</span>
+            
+            <!-- Floating dish name in banner -->
+            <div style="position: absolute; bottom: 20px; left: 24px; right: 24px; z-index: 10;">
+                <h3 id="viewDishName" style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.4); line-height: 1.3; letter-spacing: -0.01em;"></h3>
+            </div>
         </div>
 
-        <div style="margin-top: 20px; text-align: right;">
-            <button type="button" class="btn-admin btn-admin-secondary" style="padding: 8px 20px; font-size: 0.8rem; border-radius: 8px;" onclick="closeViewDishModal()">Đóng cửa sổ</button>
+        <!-- Structured Details Panel -->
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                
+                <!-- Price Section (Giá bán) -->
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <span style="font-size: 0.7rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">💵 Giá bán niêm yết</span>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 500;">Giá thực tế tại cửa hàng</span>
+                    </div>
+                    <span id="viewDishPrice" style="font-size: 1.45rem; font-weight: 800; color: #10b981; letter-spacing: -0.02em;"></span>
+                </div>
+                
+                <!-- Description Section (Mô tả hương vị) -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px; padding-left: 2px;">📝 Mô tả hương vị & Công thức</span>
+                    <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; min-height: 80px; max-height: 160px; overflow-y: auto;">
+                        <p id="viewDishDesc" style="font-size: 0.88rem; color: #334155; line-height: 1.6; margin: 0; white-space: pre-line;"></p>
+                    </div>
+                </div>
+                
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL XEM CHI TIẾT HỢP ĐỒNG SẠCH (SaaS Luxury Layout)
+     ========================================================================== -->
+<div id="viewContractModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 500px; padding: 0; position: relative; border-radius: 20px; background-color: #ffffff; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15); overflow: hidden; border: none;">
+        <!-- Beautiful floating close icon -->
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.6); border: none; color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(4px); transition: all 0.2s;" onclick="closeViewContractModal()" onmouseover="this.style.background='rgba(15, 23, 42, 0.8)'" onmouseout="this.style.background='rgba(15, 23, 42, 0.6)'">✕</button>
+        
+        <!-- Premium Image Banner with Gradient Overlay -->
+        <div style="position: relative; height: 260px; overflow: hidden; background-color: #f1f5f9;">
+            <img id="viewContractImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%); z-index: 5;"></div>
+            
+            <div style="position: absolute; bottom: 20px; left: 24px; right: 24px; z-index: 10;">
+                <span class="admin-badge" style="font-size: 0.68rem; font-weight: 800; background: #4f46e5; color: #ffffff; margin-bottom: 6px; padding: 4px 10px; border-radius: 12px; display: inline-block;">📜 HỢP ĐỒNG CUNG CẤP</span>
+                <h3 id="viewContractSupplier" style="font-size: 1.3rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.4); line-height: 1.3;"></h3>
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                <!-- Items Supplied -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">🌾 Danh mục nguyên liệu sạch</span>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main);">
+                        <span id="viewContractItems"></span>
+                    </div>
+                </div>
+
+                <!-- Sign & Expiry Dates -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
+                        <span style="font-size: 0.68rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">📅 Ngày ký kết</span>
+                        <span id="viewContractSigned" style="font-size: 0.85rem; font-weight: 700; color: var(--admin-text-main);"></span>
+                    </div>
+                    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px;">
+                        <span style="font-size: 0.68rem; font-weight: 800; color: #b45309; text-transform: uppercase; display: block; margin-bottom: 2px;">⏳ Ngày hết hạn</span>
+                        <span id="viewContractExpired" style="font-size: 0.85rem; font-weight: 700; color: #b45309;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL XEM CHI TIẾT HÓA ĐƠN MUA HÀNG (SaaS Luxury Layout)
+     ========================================================================== -->
+<div id="viewInvoiceModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 500px; padding: 0; position: relative; border-radius: 20px; background-color: #ffffff; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15); overflow: hidden; border: none;">
+        <!-- Beautiful floating close icon -->
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.6); border: none; color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(4px); transition: all 0.2s;" onclick="closeViewInvoiceModal()" onmouseover="this.style.background='rgba(15, 23, 42, 0.8)'" onmouseout="this.style.background='rgba(15, 23, 42, 0.6)'">✕</button>
+        
+        <!-- Premium Image Banner with Gradient Overlay -->
+        <div style="position: relative; height: 260px; overflow: hidden; background-color: #f1f5f9;">
+            <img id="viewInvoiceImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%); z-index: 5;"></div>
+            
+            <div style="position: absolute; bottom: 20px; left: 24px; right: 24px; z-index: 10;">
+                <span class="admin-badge" style="font-size: 0.68rem; font-weight: 800; background: #10b981; color: #ffffff; margin-bottom: 6px; padding: 4px 10px; border-radius: 12px; display: inline-block;">🧾 HÓA ĐƠN MUA HÀNG</span>
+                <h3 id="viewInvoiceSupplier" style="font-size: 1.3rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.4); line-height: 1.3;"></h3>
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                <!-- Summary -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">🛒 Chi tiết thực phẩm nhập mua</span>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main);">
+                        <span id="viewInvoiceSummary"></span>
+                    </div>
+                </div>
+
+                <!-- Date -->
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
+                    <span style="font-size: 0.68rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">📅 Ngày giao dịch / xuất phiếu</span>
+                    <span id="viewInvoiceDate" style="font-size: 0.88rem; font-weight: 700; color: var(--admin-text-main);"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL XEM CHI TIẾT GIẤY PHÉP VSATTP (SaaS Luxury Layout)
+     ========================================================================== -->
+<div id="viewCertModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 500px; padding: 0; position: relative; border-radius: 20px; background-color: #ffffff; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15); overflow: hidden; border: none;">
+        <!-- Beautiful floating close icon -->
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.6); border: none; color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(4px); transition: all 0.2s;" onclick="closeViewCertModal()" onmouseover="this.style.background='rgba(15, 23, 42, 0.8)'" onmouseout="this.style.background='rgba(15, 23, 42, 0.6)'">✕</button>
+        
+        <!-- Premium Image Banner with Gradient Overlay -->
+        <div style="position: relative; height: 260px; overflow: hidden; background-color: #f1f5f9;">
+            <img id="viewCertImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%); z-index: 5;"></div>
+            
+            <div style="position: absolute; bottom: 20px; left: 24px; right: 24px; z-index: 10;">
+                <span class="admin-badge" style="font-size: 0.68rem; font-weight: 800; background: #10b981; color: #ffffff; margin-bottom: 6px; padding: 4px 10px; border-radius: 12px; display: inline-block;">🛡️ CHỨNG NHẬN VSATTP</span>
+                <h3 id="viewCertNumber" style="font-size: 1.3rem; font-weight: 800; color: #ffffff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.4); line-height: 1.3;"></h3>
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                <!-- Issued By -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">🏛️ Cơ quan cấp chứng nhận</span>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main);">
+                        <span id="viewCertIssuedBy"></span>
+                    </div>
+                </div>
+
+                <!-- Sign & Expiry Dates -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px;">
+                        <span style="font-size: 0.68rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">📅 Ngày cấp giấy</span>
+                        <span id="viewCertIssuedAt" style="font-size: 0.85rem; font-weight: 700; color: var(--admin-text-main);"></span>
+                    </div>
+                    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px;">
+                        <span style="font-size: 0.68rem; font-weight: 800; color: #b45309; text-transform: uppercase; display: block; margin-bottom: 2px;">⏳ Ngày hết hạn</span>
+                        <span id="viewCertExpiredAt" style="font-size: 0.85rem; font-weight: 700; color: #b45309;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL XEM CHI TIẾT NHẬT KÝ HÀNG NGÀY (SaaS Luxury Layout)
+     ========================================================================== -->
+<div id="viewLogModal" class="admin-reels-overlay" style="display: none;">
+    <div class="admin-card" style="width: 100%; max-width: 500px; padding: 0; position: relative; border-radius: 20px; background-color: #ffffff; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.15); overflow: hidden; border: none;">
+        <!-- Beautiful floating close icon -->
+        <button type="button" style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.6); border: none; color: #ffffff; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; backdrop-filter: blur(4px); transition: all 0.2s;" onclick="closeViewLogModal()" onmouseover="this.style.background='rgba(15, 23, 42, 0.8)'" onmouseout="this.style.background='rgba(15, 23, 42, 0.6)'">✕</button>
+        
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 32px 24px; color: #ffffff; position: relative;">
+            <span class="admin-badge" style="font-size: 0.68rem; font-weight: 800; background: #4f46e5; color: #ffffff; margin-bottom: 8px; padding: 4px 10px; border-radius: 12px; display: inline-block;">📅 NHẬT KÝ AN TOÀN THỰC PHẨM</span>
+            <h3 id="viewLogDate" style="font-size: 1.45rem; font-weight: 800; color: #ffffff; margin: 0;"></h3>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                <!-- Ingredients Origin -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">🌾 Nguồn gốc nguyên liệu nhập sạch</span>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main); line-height: 1.5;">
+                        <span id="viewLogOrigin"></span>
+                    </div>
+                </div>
+
+                <!-- Storage Condition -->
+                <div>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: var(--admin-text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">❄️ Nhiệt độ bảo quản & Tình trạng đạt</span>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; font-size: 0.88rem; font-weight: 600; color: var(--admin-text-main); line-height: 1.5;">
+                        <span id="viewLogStorage"></span>
+                    </div>
+                </div>
+
+                <!-- Checker -->
+                <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <span style="font-size: 0.68rem; font-weight: 800; color: #166534; text-transform: uppercase; display: block; margin-bottom: 2px;">👤 Người kiểm tra thực hiện</span>
+                        <span id="viewLogChecker" style="font-size: 0.9rem; font-weight: 700; color: #166534;"></span>
+                    </div>
+                    <span style="font-size: 1.25rem;">✅</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -947,9 +1263,32 @@
     const initLng = {{ $eatery ? $eatery->longitude : 105.8394 }};
     let pickerMap;
     let marker;
+    let isMapLocked = hasEatery;
+
+    window.toggleMapLock = function() {
+        const btn = document.getElementById('btnMapLockToggle');
+        if (!btn) return;
+        
+        isMapLocked = !isMapLocked;
+        
+        if (isMapLocked) {
+            btn.innerHTML = '🔒 Đã khóa click (Bấm để sửa vị trí)';
+            btn.style.backgroundColor = 'var(--admin-danger-light)';
+            btn.style.color = 'var(--admin-danger)';
+            btn.style.borderColor = 'rgba(239, 68, 68, 0.15)';
+        } else {
+            btn.innerHTML = '🔓 Đang mở click (Bấm bản đồ để chỉnh)';
+            btn.style.backgroundColor = 'var(--admin-success-light)';
+            btn.style.color = 'var(--admin-success)';
+            btn.style.borderColor = 'rgba(16, 185, 129, 0.15)';
+        }
+    };
 
     // 1. Chuyển đổi Tab làm việc chính
     window.switchSubTab = function(event, tabId) {
+        // Store in localStorage to persist active tab across page reloads
+        localStorage.setItem('activeAdminTab', tabId);
+
         // Toggle tab button active classes
         document.querySelectorAll('.admin-sub-tab-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
@@ -1101,6 +1440,60 @@
         document.getElementById('viewDishModal').style.display = 'none';
     };
 
+    // 4.5. Xem chi tiết Hợp đồng Modal Logic
+    window.openViewContractModal = function(supplier, items, signed, expired, img) {
+        document.getElementById('viewContractSupplier').innerText = supplier;
+        document.getElementById('viewContractItems').innerText = items;
+        document.getElementById('viewContractSigned').innerText = signed;
+        document.getElementById('viewContractExpired').innerText = expired;
+        document.getElementById('viewContractImg').src = img;
+        document.getElementById('viewContractModal').style.display = 'flex';
+    };
+
+    window.closeViewContractModal = function() {
+        document.getElementById('viewContractModal').style.display = 'none';
+    };
+
+    // 4.6. Xem chi tiết Hóa đơn Modal Logic
+    window.openViewInvoiceModal = function(supplier, summary, date, img) {
+        document.getElementById('viewInvoiceSupplier').innerText = supplier;
+        document.getElementById('viewInvoiceSummary').innerText = summary;
+        document.getElementById('viewInvoiceDate').innerText = date;
+        document.getElementById('viewInvoiceImg').src = img;
+        document.getElementById('viewInvoiceModal').style.display = 'flex';
+    };
+
+    window.closeViewInvoiceModal = function() {
+        document.getElementById('viewInvoiceModal').style.display = 'none';
+    };
+
+    // 4.7. Xem chi tiết Chứng nhận VSATTP Modal Logic
+    window.openViewCertModal = function(number, issuer, issued, expired, img) {
+        document.getElementById('viewCertNumber').innerText = "Số hiệu: " + number;
+        document.getElementById('viewCertIssuedBy').innerText = issuer;
+        document.getElementById('viewCertIssuedAt').innerText = issued;
+        document.getElementById('viewCertExpiredAt').innerText = expired;
+        document.getElementById('viewCertImg').src = img || "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=80";
+        document.getElementById('viewCertModal').style.display = 'flex';
+    };
+
+    window.closeViewCertModal = function() {
+        document.getElementById('viewCertModal').style.display = 'none';
+    };
+
+    // 4.8. Xem chi tiết Nhật ký kiểm tra VSATTP Modal Logic
+    window.openViewLogModal = function(date, origin, storage, checker) {
+        document.getElementById('viewLogDate').innerText = "Ngày kiểm tra: " + date;
+        document.getElementById('viewLogOrigin').innerText = origin;
+        document.getElementById('viewLogStorage').innerText = storage;
+        document.getElementById('viewLogChecker').innerText = checker;
+        document.getElementById('viewLogModal').style.display = 'flex';
+    };
+
+    window.closeViewLogModal = function() {
+        document.getElementById('viewLogModal').style.display = 'none';
+    };
+
     // 5. Sửa Món ăn Modal Logic
     window.openEditDishModal = function(id, name, price, description, imagePath, isSignature) {
         const form = document.getElementById('editDishForm');
@@ -1170,6 +1563,18 @@
     };
 
     document.addEventListener("DOMContentLoaded", function() {
+        // Restore active sub tab if stored in localStorage
+        const storedTabId = localStorage.getItem('activeAdminTab');
+        if (storedTabId) {
+            const tabBtn = Array.from(document.querySelectorAll('.admin-sub-tab-btn')).find(btn => {
+                const clickAttr = btn.getAttribute('onclick');
+                return clickAttr && clickAttr.includes(storedTabId);
+            });
+            if (tabBtn) {
+                window.switchSubTab({ currentTarget: tabBtn }, storedTabId);
+            }
+        }
+
         // Khởi tạo bản đồ chọn tọa độ
         pickerMap = L.map('pickerMap', {
             zoomControl: true
@@ -1195,6 +1600,11 @@
 
         // Sự kiện click bản đồ nhặt tọa độ điền tự động vào Form
         pickerMap.on('click', function(e) {
+            if (isMapLocked) {
+                alert("📍 Bản đồ định vị đang được KHÓA để tránh click nhầm vị trí.\n\nHãy nhấn nút '🔒 Đã khóa click' ở phía trên bản đồ để MỞ KHÓA nếu bạn muốn chỉnh sửa tọa độ của quán!");
+                return;
+            }
+
             const lat = e.latlng.lat.toFixed(6);
             const lng = e.latlng.lng.toFixed(6);
             
@@ -1281,9 +1691,18 @@
                         marker = L.marker(newLatLng, { icon: customIcon }).addTo(pickerMap);
                     }
                     pickerMap.setView(newLatLng, 15);
-
                     helperText.innerText = "✅ Trích xuất tọa độ thành công!";
                     helperText.style.color = "var(--admin-success)";
+                    
+                    // Mở khóa map tự động khi trích xuất thành công để admin thấy marker di chuyển
+                    isMapLocked = false;
+                    const mapBtn = document.getElementById('btnMapLockToggle');
+                    if (mapBtn) {
+                        mapBtn.innerHTML = '🔓 Đang mở click (Bấm bản đồ để chỉnh)';
+                        mapBtn.style.backgroundColor = 'var(--admin-success-light)';
+                        mapBtn.style.color = 'var(--admin-success)';
+                        mapBtn.style.borderColor = 'rgba(16, 185, 129, 0.15)';
+                    }
                 } else {
                     helperText.innerText = "❌ " + data.message;
                     helperText.style.color = "var(--admin-danger)";
